@@ -5,7 +5,7 @@ erik@a8.nl (05-03-15)
 license: GNU-GPL2
 """
 
-import unittest
+from unittester import *
 from consoleprinter import *
 
 
@@ -128,11 +128,12 @@ class ConsoleTest(unittest.TestCase):
         console_warning("Warning")
 
 
+
 def main():
     """
     main
     """
-    unittest.main()
+    unit_test_main(globals())
 
 
 if __name__ == "__main__":

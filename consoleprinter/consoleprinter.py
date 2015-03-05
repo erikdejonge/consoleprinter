@@ -26,6 +26,8 @@ class SystemGlobals(object):
     g_console_printed = set()
     g_width_console_columns = []
     g_safe_alphabet = None
+    g_running_in_debugger_unit_tests = None
+    g_running_in_debugger = None
     g_slugified_unicode_lut = {}
     g_memory = {}
 
