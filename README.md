@@ -34,6 +34,6 @@ Console detects when run in PyCharm or Intellij, and adds links to the orinating
         console_warning("Can't find tests, looked in test*.py")
 
 ```
-```
+```bash
 2.48 | unittester.py:85 | == | Can't find tests, looked in test*.py | File "/Users/rabshakeh/workspace/unittester/unittester/unittester.py", line 85 (run_unit_test) | ==
 ``
