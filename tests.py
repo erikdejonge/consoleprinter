@@ -4,7 +4,6 @@ console
 erik@a8.nl (05-03-15)
 license: GNU-GPL2
 """
-
 from unittester import *
 from consoleprinter import *
 
@@ -126,7 +125,6 @@ class ConsoleTest(unittest.TestCase):
         test_warning
         """
         console_warning("Warning")
-
 
 
 def main():
