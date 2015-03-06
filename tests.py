@@ -4,6 +4,12 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 from unittester import *
 from consoleprinter import *
 
@@ -116,13 +122,13 @@ class ConsoleTest(unittest.TestCase):
         """
         console("hello world")
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
-        print "linenumbers"
+
 
         for color in colors:
             console(color, color=color)
 
-        print
-        print "plain"
+        
+
 
         for color in colors:
             console(color, color=color, plainprint=True)
