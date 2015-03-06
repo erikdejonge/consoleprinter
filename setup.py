@@ -20,4 +20,14 @@ setup(name='consoleprinter',
       license='GPL',
       packages=['consoleprinter'],
       zip_safe=True,
-      install_requires=['ujson'])
+      install_requires=['ujson'],
+      classifiers=[
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 3",
+          "Development Status :: Beta",
+          "Intended Audience :: Developers",
+          "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+          "Operating System :: POSIX",
+          "Topic :: Software Development :: Libraries :: Python Modules",
+          "Topic :: System",
+      ])
