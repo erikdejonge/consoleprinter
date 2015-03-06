@@ -6,11 +6,12 @@ license: GNU-GPL2
 """
 from setuptools import setup
 setup(name='consoleprinter',
-      version='5',
+      version='6',
       description='Console printer with linenumbers, stacktraces, logging, conversions and coloring..',
       url='https://github.com/erikdejonge/consoleprinter',
       author='Erik de Jonge',
       author_email='erik@a8.nl',
       license='GPL',
       packages=['consoleprinter'],
-      zip_safe=True, requires=['ujson'])
+      zip_safe=True,
+      install_requires=['ujson'])
