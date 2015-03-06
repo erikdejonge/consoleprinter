@@ -6,14 +6,13 @@ license: GNU-GPL2
 """
 
 import time
-import cStringIO
+import io
 import traceback
 import os
 import sys
 import socket
 import logging
 import base64
-import cjson
 import json
 import ujson
 
@@ -145,7 +144,7 @@ def running_in_debugger(include_tests=False):
 
             if "simple_server.py" in i:
                 in_debugger = True
-                print "crypto_data_lib.py:473", "debugger, simple_server.py"
+                print("crypto_data_lib.py:473", "debugger, simple_server.py")
 
             if include_tests:
                 if "unittest.TextTestRunner" in i:
@@ -253,7 +252,7 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
     @type fullline: bool
     @type reverse_stack: bool
     """
-    stack = cStringIO.StringIO()
+    stack = io.StringIO()
     traceback.print_stack(file=stack)
     stack.seek(0)
     stack = stack.read()
@@ -382,9 +381,9 @@ def size_columns(columncounter, g_width_console_columns, subs, donotuseredis):
     except:
         return columncounter, subs
     try:
-        lsub = len(unicode(subs))
+        lsub = len(str(subs))
     except Exception as ex:
-        print "crypto_data_lib.py:546", "crypto_data.py:515", ex
+        print("crypto_data_lib.py:546", "crypto_data.py:515", ex)
         lsub = len(subs)
 
     if len(g_width_console_columns) <= columncounter:
@@ -428,7 +427,7 @@ def console(*args, **kwargs):
         for i in args:
             s += str(i) + " "
 
-        print "crypto_data_lib.py:590", "crypto_data.py:559", s
+        print("crypto_data_lib.py:590", "crypto_data.py:559", s)
         return
     global g_start_time
     runtime = "%0.2f" % float(time.time() - g_start_time)
@@ -490,7 +489,7 @@ def console(*args, **kwargs):
         color = "default"
 
     if plainprint is True:
-        print colors[color] + "".join(arguments) + "\033[0m"
+        print(colors[color] + "".join(arguments) + "\033[0m")
         return
 
     if "donotuseredis" in kwargs:
@@ -512,7 +511,7 @@ def console(*args, **kwargs):
 
     if not source_code_link_msg:
         if stackpointer == 0:
-            source_code_link_msg = str(stack_trace(line_num_only=line_num_only)).strip()
+            source_code_link_msg = stack_trace(line_num_only=line_num_only).strip()
         else:
             source_code_link_msg = ""
 
@@ -851,7 +850,7 @@ def slugify(value):
     else:
         safechars = set(get_safe_alphabet())
     try:
-        value = unicode(value)
+        value = str(value)
     except UnicodeError:
         value = str(value)
 
@@ -874,9 +873,9 @@ def func_info(func_object):
     if func_object is None:
         raise TypeError("func_info needs function")
 
-    fname = func_object.func_code.co_filename
-    linenr = func_object.func_code.co_firstlineno
-    funcname = func_object.func_code.co_name
+    fname = func_object.__code__.co_filename
+    linenr = func_object.__code__.co_firstlineno
+    funcname = func_object.__code__.co_name
     return fname, funcname, linenr
 
 
@@ -931,7 +930,7 @@ def fpath_in_stack(fpath):
     """
     @type fpath: str, unicode
     """
-    stack = cStringIO.StringIO()
+    stack = io.StringIO()
     traceback.print_stack(file=stack)
     stack.seek(0)
     stack = stack.read()
@@ -956,7 +955,7 @@ def pretty_print_json(jsondata, tofilename=None):
     @type jsondata: str, unicode
     @type tofilename: str, unicode, None
     """
-    jsonproxy = cjson.decode(jsondata)
+    jsonproxy = ujson.decode(jsondata)
 
     if tofilename is None:
         return json.dumps(jsonproxy, sort_keys=True, indent=4, separators=', ')
@@ -1007,19 +1006,19 @@ class FastList(object):
         """
         list
         """
-        return iter(self.dictlist.keys())
+        return iter(list(self.dictlist.keys()))
 
     def list(self):
         """
         list
         """
-        return self.dictlist.keys()
+        return list(self.dictlist.keys())
 
     def size(self):
         """
         size
         """
-        return len(self.dictlist.keys())
+        return len(list(self.dictlist.keys()))
 
 
 def get_hostname():
