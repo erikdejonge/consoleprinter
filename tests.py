@@ -4,12 +4,11 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 #from unittester import *
 from consoleprinter import *
-#
-#
+
 # class ConsoleTest(unittest.TestCase):
-#
 #     def test_slugify(self):
 #         """
 #         test_slugify
@@ -48,21 +47,18 @@ from consoleprinter import *
 #         self.assertEqual(slugify("o #9 0taChMxv8uh&TLDX4KbczB80M(wGrgPlsWYMkEsq 0Q3Id"), "oiaiw9ia0tachmxv8uhjgtldx4kbczb80mkawgrgplswymkesqia0q3id")
 #         self.assertEqual(slugify("GDRp6o#O(2RfG%hpB%6wL1u5+21DIJsg&6E%t6 is5Rgtpy^p1^h_s"), "gdrp6oiwoka2rfgjqhpbjq6wl1u5kw21dijsgjg6ejqt6iais5rgtpyxgp1xgh_s")
 #         self.assertEqual(slugify("Nl_#SQxRJ(G)NN328P8D!DuVVHn@f6OlQT9Lnup1ZkHo5ZyaJxK2&5R^R0Li74"), "nl_iwsqxrjkagkqnn328p8diqduvvhnqaf6olqt9lnup1zkho5zyajxk2jg5rxgr0li74")
-#
 #     def test_stack_trace(self):
 #         """
 #         test_stack_trace
 #         """
 #         stack = stack_trace(1)
 #         self.assertTrue("tests.py:" in stack)
-#
 #     def test_fpath_in_stack(self):
 #         """
 #         test_fpath_in_stack
 #         """
 #         self.assertTrue(fpath_in_stack("tests.py"))
 #         self.assertFalse(fpath_in_stack("website"))
-#
 #     def test_timestamp_to_string(self):
 #         """
 #         test_timestamp_to_string
@@ -73,7 +69,6 @@ from consoleprinter import *
 #         val = timestamp_to_string_gmt(1374732870.483823)
 #         checked = val in [option1, option2, option3]
 #         self.assertTrue(checked)
-#
 #     def test_exist(self):
 #         """
 #         test_exist
@@ -96,20 +91,16 @@ from consoleprinter import *
 #         self.assertFalse(exist([]))
 #         self.assertFalse(exist(set()))
 #         self.assertFalse(exist(tuple()))
-#
 #         o = None
 #         self.assertFalse(exist(o))
-#
 #         o = SystemGlobals()
 #         self.assertTrue(exist(o))
-#
 #     def test_strcmp(self):
 #         """
 #         test_strcmp
 #         """
 #         self.assertFalse(strcmp("hello", "world"))
 #         self.assertTrue(strcmp("hello", "hello "))
-#
 #     def test_console(self):
 #         """
 #         test_console
@@ -117,35 +108,33 @@ from consoleprinter import *
 #         console("hello world")
 #         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
 #         print("linenumbers")
-#
 #         for color in colors:
 #             console(color, color=color)
-#
 #         print()
 #         print("plain")
-#
 #         for color in colors:
 #             console(color, color=color, plainprint=True)
-#
 #     def test_warning(self):
 #         """
 #         test_warning
 #         """
 #         console_warning("Warning")
-#
 #     def test_reversed_keywordparam(self):
 #         """
+#         #     test_reversed_keywordparam
 #         """
-#
 #         console("next line should be foobar")
 #         console(color="red", msg="foobar")
-#
+
 
 def main():
     """
     main
     """
-    unit_test_main(globals())
+    colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
+
+    for color in colors:
+        console(color, color=color)
 
 
 if __name__ == "__main__":
