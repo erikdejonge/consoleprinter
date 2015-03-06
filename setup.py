@@ -12,7 +12,7 @@ from future import standard_library
 standard_library.install_aliases()
 from setuptools import setup
 setup(name='consoleprinter',
-      version='13',
+      version='15',
       description='Console printer with linenumbers, stacktraces, logging, conversions and coloring..',
       url='https://github.com/erikdejonge/consoleprinter',
       author='Erik de Jonge',
@@ -24,7 +24,7 @@ setup(name='consoleprinter',
       classifiers=[
           "Programming Language :: Python",
           "Programming Language :: Python :: 3",
-          "Development Status :: Beta",
+          "Development Status :: 4 - Beta ",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
           "Operating System :: POSIX",
