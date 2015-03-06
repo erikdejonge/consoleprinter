@@ -1,7 +1,7 @@
 # coding=utf-8
 """
 console
-erik@a8.nl (05-03-15)
+Active8 (05-03-15)
 license: GNU-GPL2
 """
 from unittester import *
@@ -125,7 +125,9 @@ class ConsoleTest(unittest.TestCase):
         test_warning
         """
         console_warning("Warning")
-
+    def test_reversed_keywordparam(self):
+        console("next line should be foobar")
+        console(color="red", msg="foobar")
 
 def main():
     """

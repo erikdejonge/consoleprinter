@@ -1,7 +1,7 @@
 # coding=utf-8
 """
 console
-erik@a8.nl (05-03-15)
+Active8 (05-03-15)
 license: GNU-GPL2
 """
 
@@ -440,6 +440,9 @@ def console(*args, **kwargs):
     newline = True
     once = False
     stackpointer = 0
+
+    if "msg" in kwargs:
+        arguments = [kwargs["msg"]]
 
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]

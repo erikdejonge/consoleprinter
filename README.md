@@ -3,7 +3,7 @@
 Console printer with linenumbers, stacktraces, logging, conversions and coloring.
 
 Active8 BV
-erik@a8.nl (05-03-15)
+Active8 (05-03-15)
 license: GNU-GPL2
 
 ##install
