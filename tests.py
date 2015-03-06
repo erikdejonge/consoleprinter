@@ -115,19 +115,31 @@ class ConsoleTest(unittest.TestCase):
         test_console
         """
         console("hello world")
-        colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow']
+        colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
+        print "linenumbers"
 
         for color in colors:
             console(color, color=color)
+
+        print
+        print "plain"
+
+        for color in colors:
+            console(color, color=color, plainprint=True)
 
     def test_warning(self):
         """
         test_warning
         """
         console_warning("Warning")
+
     def test_reversed_keywordparam(self):
+        """
+        """
+
         console("next line should be foobar")
         console(color="red", msg="foobar")
+
 
 def main():
     """

@@ -440,6 +440,7 @@ def console(*args, **kwargs):
     newline = True
     once = False
     stackpointer = 0
+    plainprint = False
 
     if "msg" in kwargs:
         arguments = [kwargs["msg"]]
@@ -458,6 +459,9 @@ def console(*args, **kwargs):
 
     if "warning" in kwargs:
         warningmsg = kwargs["warning"]
+
+    if "plainprint" in kwargs:
+        plainprint = True
 
     if "dolstrip" in kwargs:
         dolstrip = kwargs["dolstrip"]
@@ -484,6 +488,10 @@ def console(*args, **kwargs):
         color = kwargs["color"]
     else:
         color = "default"
+
+    if plainprint is True:
+        print colors[color] + "".join(arguments) + "\033[0m"
+        return
 
     if "donotuseredis" in kwargs:
         donotuseredis = kwargs["donotuseredis"]
