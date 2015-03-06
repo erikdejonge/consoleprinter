@@ -5,6 +5,12 @@ Active8 (05-03-15)
 license: GNU-GPL2
 """
 from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from builtins import super
+from builtins import int
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
@@ -251,6 +257,17 @@ def log_date_time_string():
     return ts
 
 
+def stack_as_string():
+    if sys.version_info.major==3:
+        stack = io.StringIO()
+    else:
+        stack = io.BytesIO()
+    traceback.print_stack(file=stack)
+    stack.seek(0)
+    stack = stack.read()
+    return stack
+
+
 def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=True):
     """
     @type line_num_only: int
@@ -258,10 +275,7 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
     @type fullline: bool
     @type reverse_stack: bool
     """
-    stack = io.StringIO()
-    traceback.print_stack(file=stack)
-    stack.seek(0)
-    stack = stack.read()
+    stack = stack_as_string()
 
     if ret_list and (line_num_only > 0):
         raise Exception("ret_list or line_num_only both true")
