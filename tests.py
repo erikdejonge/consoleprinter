@@ -116,13 +116,13 @@ class ConsoleTest(unittest.TestCase):
         """
         console("hello world")
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
-        print "linenumbers"
+        print("linenumbers")
 
         for color in colors:
             console(color, color=color)
 
-        print
-        print "plain"
+        print()
+        print("plain")
 
         for color in colors:
             console(color, color=color, plainprint=True)
