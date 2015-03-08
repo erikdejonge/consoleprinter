@@ -258,10 +258,14 @@ def log_date_time_string():
 
 
 def stack_as_string():
-    if sys.version_info.major==3:
+    """
+    stack_as_string
+    """
+    if sys.version_info.major == 3:
         stack = io.StringIO()
     else:
         stack = io.BytesIO()
+
     traceback.print_stack(file=stack)
     stack.seek(0)
     stack = stack.read()
@@ -827,28 +831,50 @@ def consoletasks(*args, **kwargs):
     console(*args, **kwargs)
 
 
-def consoledict(mydict, members=None):
+def consoledict(mydict, members=None, printval=True, indent=0):
     """
     @type mydict: dict
-    @type members: list, None
+    @type members: str, unicode, None
+    @type printval: bool
+    @type indent: int
     @return: None
     """
-    dbs = "\033[92m" + log_date_time_string() + " "
-    dbs += stack_trace(line_num_only=2)
-    dbs += "\033[93m\n"
+    if printval is True:
+        dbs = "\033[32m" + log_date_time_string() + " "
+        dbs += stack_trace(line_num_only=2)
+        dbs += "\033[0m\n"
+    else:
+        dbs = ""
 
     if isinstance(mydict, dict):
-        if members is not None:
-            for i in members:
-                dbs += " " + str(i) + " : " + str(mydict[i]) + "\n"
-        else:
-            for i in mydict:
-                dbs += " " + str(i) + " : " + str(mydict[i]) + "\n"
+        if members is None:
+            members = mydict.keys()
+
+        for i in members:
+            dbs += "    " * indent
+
+            if isinstance(mydict[i], dict):
+                newindent = indent + 1
+
+                if printval is True:
+                    dbs += "\033[31m" + str(i) + " :\n" + "\033[0m"
+                else:
+                    dbs += str(i) + " :\n"
+
+                dbs += consoledict(mydict[i], printval=False, indent=newindent)
+            else:
+                if printval is True:
+                    dbs += "\033[31m" + str(i) + " : " + "\033[0m"
+                    dbs += str(mydict[i]) + "\n"
+                else:
+                    dbs += str(i) + " : " + str(mydict[i]) + "\n"
     else:
         dbs += "not dict: " + str(mydict) + "\n"
 
-    sys.stderr.write(dbs)
-    return ""
+    if printval is True:
+        sys.stderr.write(dbs)
+
+    return dbs
 
 
 def slugify(value):
