@@ -457,7 +457,7 @@ def console(*args, **kwargs):
     runtime = "%0.2f" % float(time.time() - g_start_time)
     toggle = True
     arguments = list(args)
-    line_num_only = 2
+    line_num_only = 3
     print_stack = False
     warningmsg = False
     newline = True
