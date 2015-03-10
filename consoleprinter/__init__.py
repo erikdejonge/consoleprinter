@@ -857,7 +857,7 @@ def consoledict(mydict, members=None, printval=True, indent=0):
                 newindent = indent + 1
 
                 if printval is True:
-                    dbs += "\033[31m" + str(i) + " :\n" + "\033[0m"
+                    dbs += "\033[31m" + str(i) + " :\n" + "\033[0m" 
                 else:
                     dbs += str(i) + " :\n"
 
