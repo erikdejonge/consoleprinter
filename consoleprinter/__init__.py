@@ -841,8 +841,8 @@ def consoledict(mydict, members=None, printval=True, indent=0):
     """
     if printval is True:
         dbs = "\033[32m" + log_date_time_string() + " "
-        dbs += stack_trace(line_num_only=2)
-        dbs += "\033[0m\n"
+        dbs += stack_trace(line_num_only=3)
+        dbs += " - consoledict:\033[0m\n"
     else:
         dbs = ""
 
@@ -870,7 +870,7 @@ def consoledict(mydict, members=None, printval=True, indent=0):
                     dbs += str(i) + " : " + str(mydict[i]) + "\n"
     else:
         dbs += "not dict: " + str(mydict) + "\n"
-
+    dbs +="\n"
     if printval is True:
         sys.stderr.write(dbs)
 
