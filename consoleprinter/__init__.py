@@ -870,9 +870,12 @@ def consoledict(mydict, members=None, printval=True, indent=0):
                     dbs += str(i) + " : " + str(mydict[i]) + "\n"
     else:
         dbs += "not dict: " + str(mydict) + "\n"
-    dbs +="\n"
+
     if printval is True:
         sys.stderr.write(dbs)
+
+    if indent == 0:
+        dbs = dbs.strip()
 
     return dbs
 
