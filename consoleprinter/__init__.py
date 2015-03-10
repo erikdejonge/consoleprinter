@@ -513,7 +513,7 @@ def console(*args, **kwargs):
         color = "default"
 
     if plainprint is True:
-        print(colors[color] + "".join(arguments) + "\033[0m")
+        print(colors[color] + ": ".join(arguments) + "\033[0m")
         return
 
     if "donotuseredis" in kwargs:
