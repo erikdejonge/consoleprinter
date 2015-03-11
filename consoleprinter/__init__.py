@@ -522,7 +522,7 @@ def console(*args, **kwargs):
         donotuseredis = True
 
     if color not in colors:
-        console(color, "not available", source_code_link(1), color='red')
+        console(color, "color not available", source_code_link(1), color='red')
         color = "default"
 
     if "ret_str" not in kwargs:
