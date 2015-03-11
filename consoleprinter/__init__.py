@@ -831,55 +831,6 @@ def consoletasks(*args, **kwargs):
     console(*args, **kwargs)
 
 
-def consoledict(mydict, members=None, printval=True, indent=0):
-    """
-    @type mydict: dict
-    @type members: str, unicode, None
-    @type printval: bool
-    @type indent: int
-    @return: None
-    """
-    if printval is True:
-        dbs = "\033[32m" + log_date_time_string() + " "
-        dbs += stack_trace(line_num_only=3)
-        dbs += " - consoledict:\033[0m\n"
-    else:
-        dbs = ""
-
-    if isinstance(mydict, dict):
-        if members is None:
-            members = mydict.keys()
-
-        for i in members:
-            dbs += "    " * indent
-
-            if isinstance(mydict[i], dict):
-                newindent = indent + 1
-
-                if printval is True:
-                    dbs += "\033[31m" + str(i) + " :\n" + "\033[0m"
-                else:
-                    dbs += str(i) + " :\n"
-
-                dbs += consoledict(mydict[i], printval=False, indent=newindent)
-            else:
-                if printval is True:
-                    dbs += "\033[31m" + str(i) + " : " + "\033[0m"
-                    dbs += str(mydict[i]) + "\n"
-                else:
-                    dbs += str(i) + " : " + str(mydict[i]) + "\n"
-    else:
-        dbs += "not dict: " + str(mydict) + "\n"
-
-    if printval is True:
-        sys.stderr.write(dbs)
-
-    if indent == 0:
-        dbs = dbs.strip()
-
-    return dbs
-
-
 def slugify(value):
     """
     @type value: str, unicode
@@ -907,8 +858,11 @@ def slugify(value):
         if c in safechars:
             slug += c
         else:
-            c64 = base64.encodestring(c).strip().rstrip("=")
-            slug += c64
+            if isinstance(c, str):
+                c = c.encode("utf-8")
+
+            c64 = base64.encodebytes(c)
+            slug += c64.decode("utf-8").strip().rstrip("=")
 
     retval = slug.lower()
     sysglob.g_slugified_unicode_lut[hvalue] = retval
@@ -1116,6 +1070,130 @@ def main():
     main
     """
     console("test")
+
+
+def colorize_for_print(v):
+    """
+    @type v: str, unicode
+    @return: None
+    """
+    s = ""
+    v = v.strip()
+
+    if v == "false":
+        v = "False"
+    elif v == "true":
+        v = "True"
+
+    num = v.isdigit()
+
+    if not num:
+        v.replace("'", "").replace('"', "")
+        num = v.isdigit()
+
+    if not num:
+        try:
+            v2 = v.replace("'", "").replace('"', "")
+            num = float(v2)
+            num = True
+            v = v2
+        except ValueError:
+            pass
+
+    ispath = os.path.exists(v)
+
+    if num is True:
+        s += "\033[93m" + v + "\033[0m"
+    elif ispath is True:
+        s += "\033[35m" + v + "\033[0m"
+    elif v == "False":
+        s += "\033[31m" + v + "\033[0m"
+    elif v == "True":
+        s += "\033[32m" + v + "\033[0m"
+    else:
+        s += "\033[33m" + v + "\033[0m"
+
+    return s
+
+
+def get_print_yaml(yamlstring):
+    """
+    @type yamlstring: str, unicode
+    @return: None
+    """
+    s = ""
+
+    for i in yamlstring.split("\n"):
+        ls = [x for x in i.split(":") if x]
+        cnt = 0
+
+        if len(ls) > 1:
+            for ii in ls:
+                if cnt == 0:
+                    s += "\033[36m" + ii + ": " + "\033[0m"
+                else:
+                    s += colorize_for_print(ii)
+
+                cnt += 1
+        else:
+            if i.strip().startswith("---"):
+                s += "\033[95m" + i + "\033[0m"
+            else:
+                s += "\033[91m" + i + "\033[0m"
+
+        s += "\n"
+
+    return s.strip()
+
+
+def consoledict(mydict, members=None, printval=True, indent=0):
+    """
+    @type mydict: dict
+    @type members: str, unicode, None
+    @type printval: bool
+    @type indent: int
+    @return: None
+    """
+    if printval is True:
+        dbs = "\033[32m" + log_date_time_string() + " "
+        dbs += stack_trace(line_num_only=3)
+        dbs += " - consoledict:\033[0m\n"
+    else:
+        dbs = ""
+
+    if isinstance(mydict, dict):
+
+        if members is None:
+            members = list(mydict.keys())
+        members.sort()
+        for i in members:
+            dbs += "    " * indent
+
+            if isinstance(mydict[i], dict):
+                newindent = indent + 1
+
+                if printval is True:
+                    dbs += "\033[35m" + str(i) + ":\n" + "\033[0m"
+                else:
+                    dbs += str(i) + ":\n"
+
+                dbs += consoledict(mydict[i], printval=False, indent=newindent)
+            else:
+                if printval is True:
+                    dbs += "\033[35m" + str(i) + ": " + "\033[0m"
+                    dbs += str(mydict[i]) + "\n"
+                else:
+                    dbs += str(i) + ": " + colorize_for_print(str(mydict[i])) + "\n"
+    else:
+        dbs += "not dict: " + str(mydict) + "\n"
+
+    if printval is True:
+        sys.stderr.write(dbs)
+
+    if indent == 0:
+        dbs = dbs.strip()
+
+    return dbs
 
 
 if __name__ == "__main__":

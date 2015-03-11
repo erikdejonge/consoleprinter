@@ -148,6 +148,10 @@ class ConsoleTest(unittest.TestCase):
         console("next line should be foobar")
         console(color="red", msg="foobar")
 
+    def test_console_dict(self):
+        d = {"val1":10, "val2":100.32, "val3":"hello world", "val4":{"val4":88, "val5":10.32, "val6":"foo bar",  "val7":True, "val8":False}}
+        consoledict(d)
+
 
 def main():
     """
