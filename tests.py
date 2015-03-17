@@ -8,11 +8,55 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from builtins import str
 from future import standard_library
 standard_library.install_aliases()
 from unittester import *
 from consoleprinter import *
+from clint.textui import columns
+
+
+class Foobar(object):
+    """
+    Foobar, testclass for printing an object
+    """
+    def __str__(self):
+        return "Foobar class"
+    def __init__(self, myvar):
+        """
+        @type myvar: str
+        @return: None
+        """
+        self.myvar = myvar
+        self.__privatevar = 77
+        self.mystring = "hello world"
+        super().__init__()
+
+    def hello(self):
+        """
+        hello
+        """
+        print(self.mystring)
+
+    def world(self):
+        """
+        world
+        """
+        return self.__privatevar
+
+    @property
+    def var(self):
+        """
+        var
+        """
+        return self.__privatevar
+
+    @var.setter
+    def var(self, v):
+        """
+        @type v: str
+        @return: None
+        """
+        self.__privatevar = v
 
 
 class ConsoleTest(unittest.TestCase):
@@ -149,16 +193,85 @@ class ConsoleTest(unittest.TestCase):
         console(color="red", msg="foobar")
 
     def test_console_dict(self):
-        d = {"val1":10, "val2":100.32, "val3":"hello world", "val4":{"val4":88, "val5":10.32, "val6":"foo bar",  "val7":True, "val8":False}}
+        """
+        test_console_dict
+        """
+        d = {"val1": 10,
+             "val2": 100.32,
+             "val3": "hello world",
+             "val4": {"val4": 88,
+                      "val5": 10.32,
+                      "val6": "foo bar",
+                      "val7": True,
+                      "val8": False}}
+
         consoledict(d)
+
+    def test_camel_case(self):
+        """
+        test_camel_case
+        """
+        test = "hello world"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "hello_world"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "helloWorld"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "hello World"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "Hello World"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "HelloWorld"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+        test = "hello__world"
+        self.assertEqual(camel_case(test), "HelloWorld")
+
+    def test_snake_case(self):
+        """
+        test_snake_case
+        """
+        test = "hello_world"
+        self.assertEqual(snake_case(test), "hello_world")
+
+        test = "hello world"
+        self.assertEqual(snake_case(test), "hello_world")
+
+        test = "helloWorld"
+        self.assertEqual(snake_case(test), "hello_world")
+
+        test = "HelloWorld"
+        self.assertEqual(snake_case(test), "hello_world")
+
+        test = "Hello world"
+        self.assertEqual(snake_case(test), "hello_world")
+
+        test = "Hello_world"
+        self.assertEqual(snake_case(test), "hello_world")
+
+    def test_print_object_table(self):
+        """
+        test_print_object_table
+        """
+        foo = Foobar("test_print_object_table")
+        self.assertTrue("mvar                     property" in console(foo, retval=True))
+        console(foo)
+
 
 
 def main():
     """
     main
     """
-    unit_test_main(globals())
+    #unit_test_main(globals())
+    console(Foobar(3))
 
 
 if __name__ == "__main__":
     main()
+
