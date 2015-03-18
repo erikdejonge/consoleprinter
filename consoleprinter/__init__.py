@@ -24,7 +24,6 @@ import traceback
 import os
 import sys
 import socket
-import logging
 import base64
 import json
 import ujson
@@ -802,7 +801,7 @@ def class_with_address(cls):
     @type cls: str
     @return: None
     """
-    return (str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(cls))
+    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(cls)
 
 
 def remove_color(mystring):
@@ -823,6 +822,9 @@ def console(*args, **kwargs):
     @param kwargs
     @type kwargs:
     """
+    if len(args) == 0:
+        print()
+        return
     sysglob = SystemGlobals()
     debug = False
 
@@ -837,7 +839,7 @@ def console(*args, **kwargs):
     global g_start_time
     runtime = "%0.2f" % float(time.time() - g_start_time)
     toggle = True
-    arguments = list(args)
+    arglist = list(args)
     line_num_only = 3
     print_stack = False
     warningmsg = False
@@ -848,7 +850,7 @@ def console(*args, **kwargs):
     colors = get_colors()
 
     if "msg" in kwargs:
-        arguments = [kwargs["msg"]]
+        arglist = [kwargs["msg"]]
 
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]
@@ -904,7 +906,7 @@ def console(*args, **kwargs):
     if plainprint is True:
         txt = ""
 
-        for arg in arguments:
+        for arg in arglist:
             if isinstance(arg, dict):
                 txt += consoledict(arg, printval=False)
             elif isinstance(arg, list):
@@ -915,8 +917,14 @@ def console(*args, **kwargs):
             else:
                 txt += arg
 
+            txt += " "
+
         txt = remove_extra_indentation(txt)
-        print(indent + colors[color] + txt + "\033[0m")
+        sys.stdout.write((indent + colors[color] + txt + "\033[0m"))
+        if newline is True:
+            sys.stdout.write("\n")
+        else:
+            sys.stdout.write(" ")
         return
 
     if "donotuseredis" in kwargs:
@@ -967,7 +975,7 @@ def console(*args, **kwargs):
                 columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
                 dbs += subs
 
-    for s in arguments:
+    for s in arglist:
         if toggle:
             if warningmsg:
                 dbs += colors['red']
@@ -975,8 +983,6 @@ def console(*args, **kwargs):
                 dbs += colors[color]
         else:
             dbs += colors['default']
-
-        toggle = not toggle
 
         if s is None:
             s = "None"
@@ -986,6 +992,15 @@ def console(*args, **kwargs):
         else:
             dbs += colors["grey"] + " | " + colors['default']
 
+        if toggle:
+            if warningmsg:
+                dbs += colors['red']
+            else:
+                dbs += colors[color]
+        else:
+            dbs += colors['default']
+
+        toggle = not toggle
         indent = 22
 
         if isinstance(s, dict):
@@ -1008,88 +1023,94 @@ def console(*args, **kwargs):
             subs = str(s)
         elif isinstance(s, str) or isinstance(s, (int, float, complex)) or isinstance(s, (tuple, list, set)):
             subs = str(s).replace("\n", "")
+        elif isinstance(s, BaseException):
+            console_exception(s)
         else:
-            clsaddr = str(class_with_address(s))
-            if clsaddr == str(s):
-                dbs += colors["purple"] + str(s) + colors["default"] + "\n"
+            import arguments
+            if isinstance(s, arguments.Arguments):
+                subs = s.for_print()
             else:
-                dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(s) + colors["default"] + "\n"
+                clsaddr = str(class_with_address(s))
+                if clsaddr == str(s):
+                    dbs += colors["purple"] + str(s) + colors["default"] + "\n"
+                else:
+                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(s) + colors["default"] + "\n"
 
-            subs = " " * 25
-            sm = get_safe_string(s.__class__.__name__)
+                subs = " " * 25
+                sm = get_safe_string(s.__class__.__name__)
 
-            if len(sm) > indent:
-                sm = sm[:indent] + ".."
+                if len(sm) > indent:
+                    sm = sm[:indent] + ".."
 
-            subs += colors['orange'] + sm
-            subs += (49 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-            subs += "type"
-            subs += (73 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-            subs += "value\n" + colors['default']
-            members = set()
+                subs += colors['orange'] + sm
+                subs += (49 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                subs += "type"
+                subs += (73 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                subs += "value\n" + colors['default']
+                members = set()
 
-            for m in dir(s):
-                members.add(m)
+                for m in dir(s):
+                    members.add(m)
 
-            members = sorted(members)
+                members = sorted(members)
 
-            import collections
-            mycolors = collections.deque(["darkcyan", "yellow"])
-            subs += " " * indent
-            subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
+                import collections
+                mycolors = collections.deque(["darkcyan", "yellow"])
+                subs += " " * indent
+                subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
 
-            for m in members:
-                if not m.startswith("__"):
-                    if m.startswith("_"):
-                        if not m.lstrip("_").startswith(get_safe_string(s.__class__.__name__)):
-                            continue
+                for m in members:
+                    if not m.startswith("__"):
+                        if m.startswith("_"):
+                            if not m.lstrip("_").startswith(get_safe_string(s.__class__.__name__)):
+                                continue
 
-                    subs += " " * indent
-                    subs += colors["grey"] + " | " + colors['default']
-                    privatevar = False
+                        subs += " " * indent
+                        subs += colors["grey"] + " | " + colors['default']
+                        privatevar = False
 
-                    if ("_" + s.__class__.__name__) in m:
-                        privatevar = True
+                        if ("_" + s.__class__.__name__) in m:
+                            privatevar = True
 
-                    sm = str(m).replace("_" + s.__class__.__name__, "")
-                    mycolor = mycolors.pop()
+                        sm = str(m).replace("_" + s.__class__.__name__, "")
+                        mycolor = mycolors.pop()
 
-                    if len(sm) > 21:
-                        sm = sm[:21] + ".. "
+                        if len(sm) > 21:
+                            sm = sm[:21] + ".. "
 
-                    tempcolor = mycolor
+                        tempcolor = mycolor
 
-                    if privatevar is True:
-                        mycolor = "red"
+                        if privatevar is True:
+                            mycolor = "red"
 
-                    subs += colors[mycolor] + sm
-                    mycolor = tempcolor
-                    mycolors.appendleft(mycolor)
+                        subs += colors[mycolor] + sm
+                        mycolor = tempcolor
+                        mycolors.appendleft(mycolor)
 
-                    if privatevar is True:
-                        subs += colors['default']
-                        subs += colors[mycolor]
+                        if privatevar is True:
+                            subs += colors['default']
+                            subs += colors[mycolor]
 
-                    subs += " " * (24 - len(sm))
+                        subs += " " * (24 - len(sm))
 
-                    if hasattr(s.__class__, m):
-                        t = type(getattr(s.__class__, m))
-                    else:
-                        t = type(getattr(s, m))
+                        if hasattr(s.__class__, m):
+                            t = type(getattr(s.__class__, m))
+                        else:
+                            t = type(getattr(s, m))
 
-                    sm = repr(t).replace("<class '", "").replace("'>", "")
+                        sm = repr(t).replace("<class '", "").replace("'>", "")
 
-                    if len(sm) > 21:
-                        sm = sm[:21] + ".. "
+                        if len(sm) > 21:
+                            sm = sm[:21] + ".. "
 
-                    subs += sm
-                    memberval = getattr(s, m)
+                        subs += sm
+                        memberval = getattr(s, m)
 
-                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                        subs += (72 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-                        subs += colorize_for_print(str(memberval))
+                        if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
+                            subs += (72 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                            subs += colorize_for_print(str(memberval))
 
-                    subs += "\n" + colors['default']
+                        subs += "\n" + colors['default']
 
         columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
         dbs += subs
@@ -1160,12 +1181,6 @@ def console(*args, **kwargs):
 
     sys.stderr.write(dbs)
     sys.stderr.flush()
-    time.sleep(0.01)
-    logger = logging.getLogger("crypto_data")
-
-    if len(logger.handlers) > 0:
-        dbs = remove_color(dbs)
-        logger.info(dbs.strip().replace("\n", ""))
 
 
 def console_saved_exception(excstr, verbose=True):
@@ -2041,12 +2056,17 @@ def command_line_query(question, default=None, validate=None, style="compact"):
     return norm_answer
 
 
-def query_yes_no_quit(question, default="yes"):
+def query_yes_no(question, force=False, default="yes", command=None):
     """
     @type question: str
+    @type command: str, None
+    @type force: bool
     @type default: str
     @return: None
     """
+    if force is True:
+        return default
+
     valid = {"yes": "yes", "y": "yes", "ye": "yes",
              "no": "no", "n": "no",
              "quit": "quit", "qui": "quit", "qu": "quit", "q": "quit"}
@@ -2063,15 +2083,23 @@ def query_yes_no_quit(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
-        choice = input().lower()
+        if command is not None:
+            question = "-"+str(command)+": "
+
+        console(question, color="white", plaintext=True, newline=False)
+        console(prompt, color="yellow", plaintext=True, newline=False)
+        choice = input("$: ").lower()
 
         if default is not None and choice == '':
             return default
         elif choice in valid.keys():
-            return valid[choice]
+
+            choice = valid[choice]
+            if choice=="quit":
+                raise SystemExit()
+            return choice
         else:
-            sys.stdout.write("Please respond with 'yes', 'no' or 'quit'.\n")
+            console("please respond with 'yes', 'no' or 'quit'.\n", color="orange", plaintext=True)
 
 
 if __name__ == "__main__":
