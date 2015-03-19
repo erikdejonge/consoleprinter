@@ -12,7 +12,8 @@ from future import standard_library
 standard_library.install_aliases()
 from unittester import *
 from consoleprinter import *
-from clint.textui import columns
+
+import base64
 
 
 class Foobar(object):
@@ -20,7 +21,11 @@ class Foobar(object):
     Foobar, testclass for printing an object
     """
     def __str__(self):
+        """
+        __str__
+        """
         return "Foobar class"
+
     def __init__(self, myvar):
         """
         @type myvar: str
@@ -57,6 +62,53 @@ class Foobar(object):
         @return: None
         """
         self.__privatevar = v
+
+
+class AA(object):
+    m_float = 8.0
+    m_string = "hello"
+    m_int = 8
+
+    def foo(self):
+        """
+        """
+
+        pass
+
+    def __str__(self):
+        """
+        __str__
+        """
+        return "AA'tje"
+
+
+def gb64(s):
+    """
+    @type s: str
+    @return: None
+    """
+    s = s.encode("utf-8")
+    bs = base64.encodebytes(s)
+    return bs
+
+
+def printb64(s):
+    """
+    @type s: str
+    @return: None
+    """
+    bs = gb64(s)
+    print(bs)
+
+
+def db64(b):
+    """
+    @type b: bytes
+    @return: None
+    """
+    b = base64.decodebytes(b)
+    s = b.decode("utf-8")
+    return s
 
 
 class ConsoleTest(unittest.TestCase):
@@ -165,32 +217,69 @@ class ConsoleTest(unittest.TestCase):
         """
         test_console
         """
-        console("hello world")
+        s = console("hello world", retval=True)
+        self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjE5MxtbMG0bWzMwbSB8IBtbMG0bWzBtaGVsbG8gd29ybGQbWzBt\n')
+
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
-        print("linenumbers")
+        s = ""
+        checks = [
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTBtG1szMG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTVtG1szMG0gfCAbWzBtG1s5NW1ibHVlG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzZtG1szMG0gfCAbWzBtG1szNm1jeWFuG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMG0bWzMwbSB8IBtbMG0bWzBtZGVmYXVsdBtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzJtG1szMG0gfCAbWzBtG1szMm1ncmVlbhtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzBtG1szMG0gfCAbWzBtG1szMG1ncmV5G1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzVtG1szMG0gfCAbWzBtG1szNW1tYWdlbnRhG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTFtG1szMG0gfCAbWzBtG1s5MW1vcmFuZ2UbWzBt\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzFtG1szMG0gfCAbWzBtG1szMW1yZWQbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbOTdtG1szMG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbMzNtG1szMG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbOTNtG1szMG0gfCAbWzBtG1s5M21kYXJreWVsbG93G1swbQ==\n']
+        cnt = 0
 
         for color in colors:
-            console(color, color=color)
+            res = console(color, color=color, retval=True)
+            self.assert_equal_b64(res, checks[cnt])
 
-        print()
-        print("plain")
+            cnt += 1
+
+        s = ""
 
         for color in colors:
-            console(color, color=color, plainprint=True)
+            s += console(color, color=color, plainprint=True, retval=True)
+
+        self.assertEqual(s, "blackbluecyandefaultgreengreymagentaorangeredwhiteyellowdarkyellow")
+
+        return
 
     def test_warning(self):
         """
         test_warning
         """
-        console_warning("Warning")
+        import sys
+        import io
+        s = console_warning("Warning", retval=True)
+        self.assert_equal_b64(s, b'MC4wMCB8IGNhc2UucHk6NTc3G1szMW0bWzMwbSB8IBtbMG0bWzMxbT09G1swbRtbMzBtIHwgG1sw\nbRtbMG1XYXJuaW5nG1szMW0bWzMwbSB8IBtbMG0bWzMxbUZpbGUgIi91c3IvbG9jYWwvQ2VsbGFy\nL3B5dGhvbjMvMy40LjMvRnJhbWV3b3Jrcy9QeXRob24uZnJhbWV3b3JrL1ZlcnNpb25zLzMuNC9s\naWIvcHl0aG9uMy40L3VuaXR0ZXN0L2Nhc2UucHkiLCBsaW5lIDU3NyAocnVuKRtbMG0bWzMwbSB8\nIBtbMG0bWzBtPT0bWzBt\n')
+
+    def assert_equal_b64(self, s, b):
+        """
+        @type s: str
+        @type b: bytes
+        @return: None
+        """
+        s = s.split("|")[2:]
+        s2 = db64(b).split("|")[2:]
+        self.assertEqual(s, s2)
 
     def test_reversed_keywordparam(self):
         """
 
         #     test_reversed_keywordparam
         """
-        console("next line should be foobar")
-        console(color="red", msg="foobar")
+
+        # console("next line should be foobar")
+        s = console(color="red", msg="foobar", retval=True)
+        self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjIyOBtbMzFtG1szMG0gfCAbWzBtG1szMW1mb29iYXIbWzBt\n')
 
     def test_console_dict(self):
         """
@@ -199,13 +288,20 @@ class ConsoleTest(unittest.TestCase):
         d = {"val1": 10,
              "val2": 100.32,
              "val3": "hello world",
-             "val4": {"val4": 88,
-                      "val5": 10.32,
-                      "val6": "foo bar",
-                      "val7": True,
-                      "val8": False}}
+             "val4": {"val5": 88,
+                      "val6": 10.32,
+                      "val7": "foo bar",
+                      "val8": True,
+                      "val9": False}}
 
-        consoledict(d)
+        s = consoledict(d, retval=True)
+        self.assert_equal_b64(
+
+            s,
+            b'G1szMm1bTWFyIDE5IDIwMTUgMTA6MDE6MDJdIHwgdGVzdHMucHk6MjU4IC0gY29uc29sZWRpY3Q6\nG1swbQobWzM1bXZhbDE6IBtbMG0bWzM2bTEwG1swbQobWzM1bXZhbDI6IBtbMG0bWzkxbTEwMC4z\nMhtbMG0KG1szNW12YWwzOiAbWzBtG1szM21oZWxsbyB3b3JsZBtbMG0KG1szNW12YWw0OgobWzBt\nICAgIBtbMzVtdmFsNTogG1swbRtbMzZtODgbWzBtCiAgICAbWzM1bXZhbDY6IBtbMG0bWzkxbTEw\nLjMyG1swbQogICAgG1szNW12YWw3OiAbWzBtG1szM21mb28gYmFyG1swbQogICAgG1szNW12YWw4\nOiAbWzBtG1szMm1UcnVlG1swbQogICAgG1szNW12YWw5OiAbWzBtG1szMW1GYWxzZRtbMG0=\n')
+
+        s = consoledict(d, retval=True, plainprint=True)
+        self.assert_equal_b64(s, b'W01hciAxOSAyMDE1IDEwOjAyOjM5XSB8IHRlc3RzLnB5OjI2MiAtIGNvbnNvbGVkaWN0Ogp2YWwx\nOiAxMAp2YWwyOiAxMDAuMzIKdmFsMzogaGVsbG8gd29ybGQKdmFsNDoKICAgIHZhbDU6IDg4CiAg\nICB2YWw2OiAxMC4zMgogICAgdmFsNzogZm9vIGJhcgogICAgdmFsODogVHJ1ZQogICAgdmFsOTog\nRmFsc2U=\n')
 
     def test_camel_case(self):
         """
@@ -260,18 +356,30 @@ class ConsoleTest(unittest.TestCase):
         """
         foo = Foobar("test_print_object_table")
         self.assertTrue("mvar                     property" in console(foo, retval=True))
-        console(foo)
 
+        res = console(foo, retval=True)
+        self.assert_equal_b64(
+            res.replace("tests", "__main__"),
+            b'MC4wOSB8IHRlc3RzLnB5OjM0MhtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18uRm9v\nYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgICAgICAgICAgICAgICAgG1s5\nMW0gfCBGb29iYXIgICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgIHZh\nbHVlChtbMG0gICAgICAgICAgICAgICAgICAgG1szMG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tG1swbQogICAg\nICAgICAgICAgICAgICAgG1szMG0gfCAbWzBtG1szMW1fX3ByaXZhdGV2YXIbWzBtG1szM20gICAg\nICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAbWzM2bTc3G1swbQobWzBtICAgICAg\nICAgICAgICAgICAgIBtbMzBtIHwgG1swbRtbOTZtaGVsbG8gICAgICAgICAgICAgICAgICAgZnVu\nY3Rpb24KG1swbSAgICAgICAgICAgICAgICAgICAbWzMwbSB8IBtbMG0bWzMzbW15c3RyaW5nICAg\nICAgICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgIBtbMzNtaGVsbG8gd29ybGQb\nWzBtChtbMG0gICAgICAgICAgICAgICAgICAgG1szMG0gfCAbWzBtG1s5Nm1teXZhciAgICAgICAg\nICAgICAgICAgICBzdHIgICAgICAgICAgICAgICAgICAgICAgICAbWzMzbXRlc3RfcHJpbnRfb2Jq\nZWN0X3RhYmxlG1swbQobWzBtICAgICAgICAgICAgICAgICAgIBtbMzBtIHwgG1swbRtbMzNtdmFy\nICAgICAgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgICAgICAgICAgICAgICAgG1szNm03Nxtb\nMG0KG1swbSAgICAgICAgICAgICAgICAgICAbWzMwbSB8IBtbMG0bWzk2bXdvcmxkICAgICAgICAg\nICAgICAgICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
+
+        res = console(foo, plaintext=True, retval=True)
+        
+        self.assert_equal_b64(
+            res.replace("__main__", "tests"),
+            b'PF9fbWFpbl9fLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKfCBGb29iYXIgICAgICAgICAg\nICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgIHZhbHVlCnwgLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQp8\nIF9fcHJpdmF0ZXZhciAgICAgICAgICAgIGludCAgICAgICAgICAgICAgICAgICAgICAgIDc3Cnwg\naGVsbG8gICAgICAgICAgICAgICAgICAgZnVuY3Rpb24KfCBteXN0cmluZyAgICAgICAgICAgICAg\nICBzdHIgICAgICAgICAgICAgICAgICAgICAgICBoZWxsbyB3b3JsZAp8IG15dmFyICAgICAgICAg\nICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgIHRlc3RfcHJpbnRfb2JqZWN0X3Rh\nYmxlCnwgdmFyICAgICAgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgICAgICAgICAgICAgICAg\nNzcKfCB3b3JsZCAgICAgICAgICAgICAgICAgICBmdW5jdGlvbg==\n')
+        self.assert_equal_b64(
+            console(
+                AA(),
+                retval=True).replace("tests", "__main__"),
+            b'MC4wOSB8IHRlc3RzLnB5OjM0ORtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18uQUEg\nb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAgICAgICAgICAgICAgICAbWzkxbSB8IEFBICAg\nICAgICAgICAgICAgICAgICAgIHR5cGUgICAgICAgICAgICAgICAgICAgICAgdmFsdWUKG1swbSAg\nICAgICAgICAgICAgICAgICAbWzMwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0bWzBtCiAgICAgICAgICAgICAg\nICAgICAbWzMwbSB8IBtbMG0bWzMzbWZvbyAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9uChtb\nMG0gICAgICAgICAgICAgICAgICAgG1szMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAg\nICAgICBmbG9hdCAgICAgICAgICAgICAgICAgICAgICAbWzkxbTguMBtbMG0KG1swbSAgICAgICAg\nICAgICAgICAgICAbWzMwbSB8IBtbMG0bWzMzbW1faW50ICAgICAgICAgICAgICAgICAgIGludCAg\nICAgICAgICAgICAgICAgICAgICAgIBtbMzZtOBtbMG0KG1swbSAgICAgICAgICAgICAgICAgICAb\nWzMwbSB8IBtbMG0bWzk2bW1fc3RyaW5nICAgICAgICAgICAgICAgIHN0ciAgICAgICAgICAgICAg\nICAgICAgICAgIBtbMzNtaGVsbG8bWzBtChtbMG0bWzBt\n')
 
 
 def main():
     """
     main
     """
-    #unit_test_main(globals())
-    console(Foobar(3))
+    unit_test_main(globals())
 
 
 if __name__ == "__main__":
     main()
-

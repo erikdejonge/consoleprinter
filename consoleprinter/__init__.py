@@ -804,6 +804,14 @@ def class_with_address(cls):
     return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(cls)
 
 
+def class_without_address(cls):
+    """
+    @type cls: str
+    @return: None
+    """
+    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object>"
+
+
 def remove_color(mystring):
     """
     @type mystring: str
@@ -815,6 +823,175 @@ def remove_color(mystring):
     return mystring
 
 
+def check_for_positional_argument(kwargs, name, default=False):
+    """
+    @type kwargs: dict
+    @type name: str
+    @type default: bool, int, str
+    @return: bool, int
+    """
+    if name in kwargs:
+        if str(kwargs[name]) == "True":
+            return True
+        elif str(kwargs[name]) == "False":
+            return False
+        else:
+            return kwargs[name]
+
+    return default
+
+
+def check_for_positional_arguments(kwargs, namelist):
+    """
+    @type kwargs: dict
+    @type namelist: list
+    @return: None
+    """
+    for name in namelist:
+        if name in kwargs:
+            return check_for_positional_argument(kwargs, name)
+
+    return False
+
+
+def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False):
+    if plaintext is True:
+        colors2 = {}
+        for k in colors:
+            colors2[k] = ""
+        colors =colors2
+    if isinstance(value, dict):
+        value = value.copy()
+
+        # noinspection PyBroadException
+        try:
+            value = ujson.dumps(value, indent=1)
+        except Exception as ex:
+            print("Ex:", ex)
+            try:
+                for k in value:
+                    value[k] = str(value[k])
+                import json
+                value = json.dumps(value, indent=1)
+            except Exception as e:
+                value = str(value)
+                value += " | error dumping dict" + str(e) + " | "
+
+        subs = str(value)
+    elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
+        subs = str(value).replace("\n", "")
+    elif isinstance(value, BaseException):
+        if plaintext is True:
+            subs = str(value)
+        else:
+            subs = handle_ex(value, False, True)
+    else:
+        import arguments
+        if isinstance(value, arguments.Arguments):
+            if plaintext is True:
+                subs = value.as_yaml()
+            else:
+                subs = value.for_print()
+        else:
+            if return_string:
+                clsaddr = str(class_without_address(value))
+            else:
+                clsaddr = str(class_with_address(value))
+
+            if clsaddr == str(value):
+                dbs += colors["purple"] + str(value) + colors["default"] + "\n"
+            else:
+                dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+
+            subs = " " * 19
+            colwidthdelta = 0
+            if plaintext:
+                colwidthdelta = 19
+                subs = ""
+            sm = get_safe_string(value.__class__.__name__)
+
+            if len(sm) > indent:
+                sm = sm[:indent] + ".."
+
+            subs += colors['orange'] +  " | "+sm
+            subs += (45 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+            subs += "type"
+            subs += (71 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+            subs += "value\n" + colors['default']
+            members = set()
+
+            for m in dir(value):
+                members.add(m)
+
+            members = sorted(members)
+
+            import collections
+            mycolors = collections.deque(["darkcyan", "yellow"])
+            if plaintext is False:
+                subs += " " * indent
+            subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
+
+            for m in members:
+                if not m.startswith("__"):
+                    if m.startswith("_"):
+                        if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
+                            continue
+
+                    if plaintext is False:
+                        subs += " " * indent
+
+
+                    subs += colors["grey"] + " | " + colors['default']
+                    privatevar = False
+
+                    if ("_" + value.__class__.__name__) in m:
+                        privatevar = True
+
+                    sm = str(m).replace("_" + value.__class__.__name__, "")
+                    mycolor = mycolors.pop()
+
+                    if len(sm) > 21:
+                        sm = sm[:21] + ".. "
+
+                    tempcolor = mycolor
+
+                    if privatevar is True:
+                        mycolor = "red"
+
+                    subs += colors[mycolor] + sm
+                    mycolor = tempcolor
+                    mycolors.appendleft(mycolor)
+
+                    if privatevar is True:
+                        subs += colors['default']
+                        subs += colors[mycolor]
+
+                    subs += " " * (24 - len(sm))
+
+                    if hasattr(value.__class__, m):
+                        t = type(getattr(value.__class__, m))
+                    else:
+                        t = type(getattr(value, m))
+
+                    sm = repr(t).replace("<class '", "").replace("'>", "")
+
+                    if len(sm) > 21:
+                        sm = sm[:21] + ".. "
+
+                    subs += sm
+                    memberval = getattr(value, m)
+
+                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
+                        subs += (72 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                        if plaintext is True:
+                            subs += str(memberval)
+                        else:
+                            subs += colorize_for_print(str(memberval))
+
+                    subs += "\n" + colors['default']
+    return dbs, subs
+
+
 def console(*args, **kwargs):
     """
     @param args:
@@ -823,8 +1000,12 @@ def console(*args, **kwargs):
     @type kwargs:
     """
     if len(args) == 0:
-        print()
-        return
+        if "msg" in kwargs:
+            args = tuple([kwargs["msg"]])
+        else:
+            print()
+            return
+
     sysglob = SystemGlobals()
     debug = False
 
@@ -841,53 +1022,23 @@ def console(*args, **kwargs):
     toggle = True
     arglist = list(args)
     line_num_only = 3
-    print_stack = False
-    warningmsg = False
-    newline = True
     once = False
-    stackpointer = 0
-    plainprint = False
+    subs = ""
     colors = get_colors()
 
     if "msg" in kwargs:
         arglist = [kwargs["msg"]]
 
-    if "print_stack" in kwargs:
-        print_stack = kwargs["print_stack"]
-
     if "stack" in kwargs:
         line_num_only += kwargs["stack"]
 
-    if "line_num_only" in kwargs:
-        line_num_only = kwargs["line_num_only"]
-
-    if "stackpointer" in kwargs:
-        stackpointer = kwargs["stackpointer"]
-
-    if "warning" in kwargs:
-        warningmsg = kwargs["warning"]
-
-    if "plaintext" in kwargs:
-        plainprint = True
-
-    if "plain_text" in kwargs:
-        plainprint = True
-
-    if "plainprint" in kwargs:
-        plainprint = True
-
-    if "plain_print" in kwargs:
-        plainprint = True
-
-    if "retval" in kwargs:
-        kwargs["ret_str"] = True
-
-    if "ret_val" in kwargs:
-        kwargs["ret_str"] = True
-
-    if "newline" in kwargs:
-        newline = kwargs["newline"]
-
+    warningmsg = check_for_positional_argument(kwargs, "warning")
+    stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
+    line_num_only = check_for_positional_argument(kwargs, "line_num_only", default=3)
+    print_stack = check_for_positional_argument(kwargs, "print_stack")
+    plainprint = check_for_positional_arguments(kwargs, ["plaintext", "plain_text", "plainprint", "plain_print"])
+    return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
+    newline = check_for_positional_argument(kwargs, "newline", default=True)
     indent = ""
 
     if "indent" in kwargs:
@@ -907,24 +1058,22 @@ def console(*args, **kwargs):
         txt = ""
 
         for arg in arglist:
-            if isinstance(arg, dict):
-                txt += consoledict(arg, printval=False)
-            elif isinstance(arg, list):
-                arg = [str(x) for x in arg]
-                txt += "['"
-                txt += "', '".join(arg)
-                txt += "']"
-            else:
-                txt += arg
+            txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True)
 
-            txt += " "
+            txt += subs
 
         txt = remove_extra_indentation(txt)
-        sys.stdout.write((indent + colors[color] + txt + "\033[0m"))
+
+        if return_string is True:
+            return indent + txt
+        else:
+            sys.stdout.write((indent + colors[color] + txt + "\033[0m"))
+
         if newline is True:
             sys.stdout.write("\n")
         else:
             sys.stdout.write(" ")
+
         return
 
     if "donotuseredis" in kwargs:
@@ -936,10 +1085,10 @@ def console(*args, **kwargs):
         console(color, "color not available", source_code_link(1), color='red')
         color = "default"
 
-    if "ret_str" not in kwargs:
+    if return_string is False:
         dbs = colors['yellow'] + str(runtime) + colors['yellow']
     else:
-        dbs = ""
+        dbs = str(runtime)
 
     source_code_link_msg = None
     columncounter = 0
@@ -965,7 +1114,7 @@ def console(*args, **kwargs):
 
     if not print_stack:
         if line_num_only >= 0:
-            if "ret_str" not in kwargs:
+            if return_string is False:
                 if warningmsg:
                     fcolor = "red"
                 else:
@@ -973,6 +1122,9 @@ def console(*args, **kwargs):
 
                 subs = " | " + colors[fcolor] + source_code_link_msg + colors[fcolor]
                 columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
+                dbs += subs
+            else:
+                subs = " | " + source_code_link_msg
                 dbs += subs
 
     for s in arglist:
@@ -1001,125 +1153,17 @@ def console(*args, **kwargs):
             dbs += colors['default']
 
         toggle = not toggle
-        indent = 22
+        indent = 19
 
-        if isinstance(s, dict):
-            s = s.copy()
-
-            # noinspection PyBroadException
-            try:
-                s = ujson.dumps(s, indent=1)
-            except Exception as ex:
-                print("Ex:", ex)
-                try:
-                    for k in s:
-                        s[k] = str(s[k])
-                    import json
-                    s = json.dumps(s, indent=1)
-                except Exception as e:
-                    s = str(s)
-                    s += " | error dumping dict" + str(e) + " | "
-
-            subs = str(s)
-        elif isinstance(s, str) or isinstance(s, (int, float, complex)) or isinstance(s, (tuple, list, set)):
-            subs = str(s).replace("\n", "")
-        elif isinstance(s, BaseException):
-            console_exception(s)
-        else:
-            import arguments
-            if isinstance(s, arguments.Arguments):
-                subs = s.for_print()
-            else:
-                clsaddr = str(class_with_address(s))
-                if clsaddr == str(s):
-                    dbs += colors["purple"] + str(s) + colors["default"] + "\n"
-                else:
-                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(s) + colors["default"] + "\n"
-
-                subs = " " * 25
-                sm = get_safe_string(s.__class__.__name__)
-
-                if len(sm) > indent:
-                    sm = sm[:indent] + ".."
-
-                subs += colors['orange'] + sm
-                subs += (49 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-                subs += "type"
-                subs += (73 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-                subs += "value\n" + colors['default']
-                members = set()
-
-                for m in dir(s):
-                    members.add(m)
-
-                members = sorted(members)
-
-                import collections
-                mycolors = collections.deque(["darkcyan", "yellow"])
-                subs += " " * indent
-                subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
-
-                for m in members:
-                    if not m.startswith("__"):
-                        if m.startswith("_"):
-                            if not m.lstrip("_").startswith(get_safe_string(s.__class__.__name__)):
-                                continue
-
-                        subs += " " * indent
-                        subs += colors["grey"] + " | " + colors['default']
-                        privatevar = False
-
-                        if ("_" + s.__class__.__name__) in m:
-                            privatevar = True
-
-                        sm = str(m).replace("_" + s.__class__.__name__, "")
-                        mycolor = mycolors.pop()
-
-                        if len(sm) > 21:
-                            sm = sm[:21] + ".. "
-
-                        tempcolor = mycolor
-
-                        if privatevar is True:
-                            mycolor = "red"
-
-                        subs += colors[mycolor] + sm
-                        mycolor = tempcolor
-                        mycolors.appendleft(mycolor)
-
-                        if privatevar is True:
-                            subs += colors['default']
-                            subs += colors[mycolor]
-
-                        subs += " " * (24 - len(sm))
-
-                        if hasattr(s.__class__, m):
-                            t = type(getattr(s.__class__, m))
-                        else:
-                            t = type(getattr(s, m))
-
-                        sm = repr(t).replace("<class '", "").replace("'>", "")
-
-                        if len(sm) > 21:
-                            sm = sm[:21] + ".. "
-
-                        subs += sm
-                        memberval = getattr(s, m)
-
-                        if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                            subs += (72 - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-                            subs += colorize_for_print(str(memberval))
-
-                        subs += "\n" + colors['default']
+        dbs, subs = get_value_as_text(colors, indent, return_string, s, dbs)
 
         columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
         dbs += subs
 
     dbs += "\033[0m"
 
-    if "ret_str" in kwargs:
-        if kwargs["ret_str"] is True:
-            return dbs.strip()
+    if return_string is True:
+        return dbs.strip()
 
     if print_stack:
         newline = False
@@ -1357,6 +1401,10 @@ def slugify(value):
     except UnicodeError:
         value = str(value)
 
+    safechars = list(safechars)
+    safechars.remove(" ")
+    safechars = tuple(safechars)
+
     for c in value:
         if c in safechars:
             slug += c
@@ -1409,6 +1457,8 @@ def console_warning(*args, **kwargs):
     @param kwargs
     @type kwargs:
     """
+    retval = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
+
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]
     else:
@@ -1430,7 +1480,7 @@ def console_warning(*args, **kwargs):
         args.append(source_code_link(line_num_only - 2))
         args.append("==")
 
-    console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once)
+    return console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=retval)
 
 
 def fpath_in_stack(fpath):
@@ -1594,6 +1644,10 @@ def colorize_for_print(v):
         v = "True"
 
     num = v.isdigit()
+    isfloat = False
+
+    if num is True:
+        isfloat = num == int(float(int(num)))
 
     if not num:
         v.replace("'", "").replace('"', "")
@@ -1611,7 +1665,11 @@ def colorize_for_print(v):
     ispath = os.path.exists(v)
 
     if num is True:
-        s += "\033[93m" + v + "\033[0m"
+        if isfloat:
+            s += "\033[36m" + v + "\033[0m"
+        else:
+            s += "\033[91m" + v + "\033[0m"
+
     elif ispath is True:
         s += "\033[35m" + v + "\033[0m"
     elif v == "False":
@@ -1654,7 +1712,7 @@ def get_print_yaml(yamlmystring):
     return s.strip()
 
 
-def consoledict(mydict, members=None, printval=True, indent=0):
+def consoledict(mydict, members=None, printval=True, indent=0, retval=False, plainprint=False):
     """
     @type mydict: dict
     @type members: str, None
@@ -1662,11 +1720,19 @@ def consoledict(mydict, members=None, printval=True, indent=0):
     @type indent: int
     @return: None
     """
+    dbs = ""
+
     if printval is True:
-        dbs = "\033[32m" + log_date_time_string() + " "
-        dbs += stack_trace(line_num_only=3)
+        dbs = "\033[32m" + log_date_time_string() + " | "
+        dbs += stack_trace(line_num_only=3).strip()
         dbs += " - consoledict:\033[0m\n"
-    else:
+
+    if plainprint is True:
+        dbs = log_date_time_string() + " | "
+        dbs += stack_trace(line_num_only=3).strip()
+        dbs += " - consoledict:\n"
+
+    if indent > 0:
         dbs = ""
 
     if isinstance(mydict, dict):
@@ -1681,22 +1747,22 @@ def consoledict(mydict, members=None, printval=True, indent=0):
             if isinstance(mydict[i], dict):
                 newindent = indent + 1
 
-                if printval is True:
+                if plainprint is False:
                     dbs += "\033[35m" + str(i) + ":\n" + "\033[0m"
                 else:
                     dbs += str(i) + ":\n"
 
-                dbs += consoledict(mydict[i], printval=False, indent=newindent)
+                dbs += consoledict(mydict[i], printval=printval, indent=newindent, retval=True, plainprint=plainprint)
             else:
-                if printval is True:
+                if plainprint is False:
                     dbs += "\033[35m" + str(i) + ": " + "\033[0m"
-                    dbs += str(mydict[i]) + "\n"
+                    dbs += colorize_for_print(str(mydict[i])) + "\n"
                 else:
-                    dbs += str(i) + ": " + colorize_for_print(str(mydict[i])) + "\n"
+                    dbs += str(i) + ": " + str(mydict[i]) + "\n"
     else:
         dbs += "not dict: " + str(mydict) + "\n"
 
-    if printval is True:
+    if printval is True and retval is False:
         sys.stderr.write(dbs)
 
     if indent == 0:
@@ -2084,7 +2150,7 @@ def query_yes_no(question, force=False, default="yes", command=None):
 
     while True:
         if command is not None:
-            question = "-"+str(command)+": "
+            question = "-" + str(command) + ": "
 
         console(question, color="white", plaintext=True, newline=False)
         console(prompt, color="yellow", plaintext=True, newline=False)
@@ -2093,10 +2159,11 @@ def query_yes_no(question, force=False, default="yes", command=None):
         if default is not None and choice == '':
             return default
         elif choice in valid.keys():
-
             choice = valid[choice]
-            if choice=="quit":
+
+            if choice == "quit":
                 raise SystemExit()
+
             return choice
         else:
             console("please respond with 'yes', 'no' or 'quit'.\n", color="orange", plaintext=True)
