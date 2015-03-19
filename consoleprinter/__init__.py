@@ -739,7 +739,7 @@ def get_colors():
               'darkgreen': '\033[92m',
               'yellow': '\033[33m',
               'darkyellow': '\033[93m',
-              'blue': '\033[95m',
+              'blue': '\033[94m',
               'magenta': '\033[35m',
               'cyan': '\033[36m',
               'darkcyan': '\033[96m',
@@ -892,6 +892,8 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
     elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
         subs = str(value).replace("\n", "")
+        if not sys.stdout.isatty():
+            subs = get_safe_string(subs, [":", "-", "_", "?", "/"])
     elif isinstance(value, BaseException):
         if plaintext is True:
             subs = str(value)
@@ -1063,7 +1065,8 @@ def console(*args, **kwargs):
 
         indent = str(kwargs["indent"])
 
-    # if not sys.stdout.isatty():
+
+
 
     if "color" in kwargs:
         color = kwargs["color"]
@@ -1621,14 +1624,18 @@ def get_alphabet():
                   'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 
-def get_safe_string(s):
+def get_safe_string(s, extrachars=None):
     """
     @type s: str
     @return: None
     """
     s = remove_color(s)
     sa = get_alphabet()
-    ns = "".join([c for c in s if c in sa])
+    if extrachars is not None:
+        sa = list(sa)
+        sa.extend(extrachars)
+        sa = tuple(sa)
+    ns = "".join((c for c in s if c in sa))
     return ns
 
 
