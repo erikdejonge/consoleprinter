@@ -1475,12 +1475,12 @@ def console_warning(*args, **kwargs):
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]
     else:
-        print_stack = False
+        print_stack = True
 
     if "line_num_only" in kwargs:
         line_num_only = kwargs["line_num_only"]
     else:
-        line_num_only = 5
+        line_num_only = 4
 
     if "once" in kwargs:
         once = kwargs["once"]
@@ -1493,7 +1493,25 @@ def console_warning(*args, **kwargs):
         args.append(source_code_link(line_num_only - 2))
         args.append("==")
 
-    return console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=retval)
+    exit = check_for_positional_argument(kwargs, "exit", default=False)
+    retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=retval)
+
+    if exit is True:
+        retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
+        raise SystemExit(retval)
+
+    return retval
+
+
+def console_error_exit(*args, **kwargs):
+    """
+    @type args: tuple
+    @type kwargs: dict
+    @return: None
+    """
+    kwargs["exit"] = True
+    kwargs["print_stack"] = True
+    console_warning(*args, **kwargs)
 
 
 def fpath_in_stack(fpath):
