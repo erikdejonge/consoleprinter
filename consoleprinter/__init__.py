@@ -855,11 +855,23 @@ def check_for_positional_arguments(kwargs, namelist):
 
 
 def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False):
+    """
+    @type colors: dict
+    @type indent: int
+    @type return_string: str
+    @type value: str
+    @type dbs: str
+    @type plaintext: bool
+    @return: None
+    """
     if plaintext is True:
         colors2 = {}
+
         for k in colors:
             colors2[k] = ""
-        colors =colors2
+
+        colors = colors2
+
     if isinstance(value, dict):
         value = value.copy()
 
@@ -905,15 +917,17 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
             subs = " " * 19
             colwidthdelta = 0
+
             if plaintext:
                 colwidthdelta = 19
                 subs = ""
+
             sm = get_safe_string(value.__class__.__name__)
 
             if len(sm) > indent:
                 sm = sm[:indent] + ".."
 
-            subs += colors['orange'] +  " | "+sm
+            subs += colors['orange'] + " | " + sm
             subs += (45 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
             subs += "type"
             subs += (71 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
@@ -927,8 +941,10 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
             import collections
             mycolors = collections.deque(["darkcyan", "yellow"])
+
             if plaintext is False:
                 subs += " " * indent
+
             subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
 
             for m in members:
@@ -939,7 +955,6 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
                     if plaintext is False:
                         subs += " " * indent
-
 
                     subs += colors["grey"] + " | " + colors['default']
                     privatevar = False
@@ -983,12 +998,14 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
                     if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
                         subs += (72 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+
                         if plaintext is True:
                             subs += str(memberval)
                         else:
                             subs += colorize_for_print(str(memberval))
 
                     subs += "\n" + colors['default']
+
     return dbs, subs
 
 
@@ -1023,7 +1040,6 @@ def console(*args, **kwargs):
     arglist = list(args)
     line_num_only = 3
     once = False
-    subs = ""
     colors = get_colors()
 
     if "msg" in kwargs:
@@ -1059,7 +1075,6 @@ def console(*args, **kwargs):
 
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True)
-
             txt += subs
 
         txt = remove_extra_indentation(txt)
@@ -1154,9 +1169,7 @@ def console(*args, **kwargs):
 
         toggle = not toggle
         indent = 19
-
         dbs, subs = get_value_as_text(colors, indent, return_string, s, dbs)
-
         columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
         dbs += subs
 
@@ -1716,8 +1729,10 @@ def consoledict(mydict, members=None, printval=True, indent=0, retval=False, pla
     """
     @type mydict: dict
     @type members: str, None
-    @type printval: bool
+    @type retval: bool
     @type indent: int
+    @type printval: bool
+    @type plainprint: bool
     @return: None
     """
     dbs = ""
