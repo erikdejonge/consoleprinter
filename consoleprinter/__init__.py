@@ -909,14 +909,17 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                 clsaddr = str(class_without_address(value))
             else:
                 clsaddr = str(class_with_address(value))
-
-            if clsaddr == str(value):
-                dbs += colors["purple"] + str(value) + colors["default"] + "\n"
-            else:
-                dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+            try:
+                if str(clsaddr) == str(value):
+                    dbs += colors["purple"] + str(value) + colors["default"] + "\n"
+                else:
+                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+            except TypeError:
+                dbs += colors["grey"] + " |" + colors["default"] + "\n"
 
             leftoffset = remove_color(dbs).find("|") - 1
-            subs = " " * leftoffset
+
+            subs = " " * (leftoffset - 4)
             colwidthdelta = 0
 
             if plaintext:
@@ -928,11 +931,11 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             if len(sm) > indent:
                 sm = sm[:indent] + ".."
 
-            subs += colors['orange'] + " | " + sm
-            subs += (30 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-            subs += "type"
-            subs += (65 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-            subs += "value\n" + colors['default']
+            subheader = colors['orange'] + subs + " | " + sm
+            subheader += (37 - len(get_safe_string(subheader))) * " "
+            subheader += "type"
+            subheader += (68 - len(get_safe_string(subheader))) * " "
+            subheader += "value" + colors['default'] + "\n"
             members = set()
 
             for m in dir(value):
@@ -946,7 +949,15 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             if plaintext is False:
                 subs += " " * leftoffset
 
-            subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
+            numprintable = 0
+
+            for m in members:
+                if not m.startswith("__"):
+                    numprintable += 1
+
+            if numprintable > 0:
+                subs += subheader + (leftoffset * " ")
+                subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
 
             for m in members:
                 if not m.startswith("__"):
@@ -966,8 +977,8 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                     sm = str(m).replace("_" + value.__class__.__name__, "")
                     mycolor = mycolors.pop()
 
-                    if len(sm) > 21:
-                        sm = sm[:21] + ".. "
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".. "
 
                     tempcolor = mycolor
 
@@ -982,7 +993,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                         subs += colors['default']
                         subs += colors[mycolor]
 
-                    subs += " " * (24 - len(sm))
+                    subs += " " * (34 - len(sm))
 
                     if hasattr(value.__class__, m):
                         t = type(getattr(value.__class__, m))
@@ -1002,7 +1013,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                     memberval = getattr(value, m)
 
                     if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                        subs += (65 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                        subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
 
                         if plaintext is True:
                             subs += str(memberval)
@@ -1168,11 +1179,13 @@ def console(*args, **kwargs):
 
         if s is None:
             s = "None"
-
-        if s == "":
-            s = ""
-        else:
-            dbs += colors["grey"] + " | " + colors['default']
+        try:
+            if str(s) == "":
+                s = ""
+            else:
+                dbs += colors["grey"] + " | " + colors['default']
+        except:
+            pass
 
         if toggle:
             if warningmsg:
