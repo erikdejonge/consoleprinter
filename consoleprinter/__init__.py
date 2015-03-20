@@ -855,7 +855,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
     """
     @type colors: dict
     @type indent: int
-    @type return_string: str
+    @type return_string: bool
     @type value: str
     @type dbs: str
     @type plaintext: bool
@@ -890,7 +890,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value).replace("\n", "")
 
         if not sys.stdout.isatty():
-            subs = get_safe_string(subs,":-_?/")
+            subs = get_safe_string(subs, ":-_?/")
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -1053,6 +1053,7 @@ def console(*args, **kwargs):
     if "stack" in kwargs:
         line_num_only += kwargs["stack"]
 
+    prefix = check_for_positional_argument(kwargs, "prefix", default=None)
     warningmsg = check_for_positional_argument(kwargs, "warning")
     stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
     line_num_only = check_for_positional_argument(kwargs, "line_num_only", default=3)
@@ -1061,7 +1062,8 @@ def console(*args, **kwargs):
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
     indent = ""
-
+    if prefix is not None:
+        line_num_only = -1
     if "indent" in kwargs:
         if plainprint is False:
             raise AssertionError("console: indent only works for plainprint")
@@ -1107,11 +1109,12 @@ def console(*args, **kwargs):
     if color not in colors:
         console(color, "color not available", source_code_link(1), color='red')
         color = "default"
-
+    if prefix is None:
+        prefix = str(runtime)
     if return_string is False:
-        dbs = colors['yellow'] + str(runtime) + colors['yellow']
+        dbs = colors['yellow'] + str(prefix) + colors['yellow']
     else:
-        dbs = str(runtime)
+        dbs = str(prefix)
 
     source_code_link_msg = None
     columncounter = 0
@@ -1519,7 +1522,7 @@ def console_error_exit(*args, **kwargs):
     """
     kwargs["exit"] = True
     kwargs["print_stack"] = True
-    console_warning(*args, **kwargs)
+    return SystemError(console_warning(*args, **kwargs))
 
 
 def fpath_in_stack(fpath):
