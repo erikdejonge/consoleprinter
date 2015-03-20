@@ -817,10 +817,7 @@ def remove_color(mystring):
     @type mystring: str
     @return: None
     """
-    for v in get_colors().values():
-        mystring = mystring.replace(v, "")
-
-    return mystring
+    return remove_escapecodes(mystring)
 
 
 def check_for_positional_argument(kwargs, name, default=False):
@@ -877,9 +874,8 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
         # noinspection PyBroadException
         try:
-            value = ujson.dumps(value, indent=1)
-        except Exception as ex:
-            print("Ex:", ex)
+            value = ujson.dumps(value)
+        except Exception:
             try:
                 for k in value:
                     value[k] = str(value[k])
@@ -919,7 +915,8 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             else:
                 dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
 
-            subs = " " * 19
+            leftoffset = remove_color(dbs).find("|") - 1
+            subs = " " * leftoffset
             colwidthdelta = 0
 
             if plaintext:
@@ -932,9 +929,9 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                 sm = sm[:indent] + ".."
 
             subs += colors['orange'] + " | " + sm
-            subs += (45 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+            subs += (30 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
             subs += "type"
-            subs += (71 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+            subs += (65 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
             subs += "value\n" + colors['default']
             members = set()
 
@@ -947,9 +944,9 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             mycolors = collections.deque(["darkcyan", "yellow"])
 
             if plaintext is False:
-                subs += " " * indent
+                subs += " " * leftoffset
 
-            subs += colors["grey"] + " | " + 70 * "-" + colors['default'] + "\n"
+            subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
 
             for m in members:
                 if not m.startswith("__"):
@@ -958,7 +955,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                             continue
 
                     if plaintext is False:
-                        subs += " " * indent
+                        subs += " " * leftoffset
 
                     subs += colors["grey"] + " | " + colors['default']
                     privatevar = False
@@ -994,14 +991,18 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
                     sm = repr(t).replace("<class '", "").replace("'>", "")
 
-                    if len(sm) > 21:
-                        sm = sm[:21] + ".. "
+                    # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
+                    extraspacereduction = 0
+
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".."
+                        extraspacereduction = len("..")
 
                     subs += sm
                     memberval = getattr(value, m)
 
                     if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                        subs += (72 - colwidthdelta - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+                        subs += (65 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
 
                         if plaintext is True:
                             subs += str(memberval)
@@ -1045,6 +1046,7 @@ def console(*args, **kwargs):
     line_num_only = 3
     once = False
     colors = get_colors()
+
     if "msg" in kwargs:
         arglist = [kwargs["msg"]]
 
@@ -1071,7 +1073,6 @@ def console(*args, **kwargs):
     else:
         color = "default"
 
-
     if color not in colors:
         color = "default"
 
@@ -1085,6 +1086,7 @@ def console(*args, **kwargs):
 
         txt = remove_extra_indentation(txt)
         txt = txt.replace("  ", " ")
+
         if return_string is True:
             return indent + txt
         else:
@@ -1499,10 +1501,10 @@ def console_warning(*args, **kwargs):
         args.append(source_code_link(line_num_only - 2))
         args.append("==")
 
-    exit = check_for_positional_argument(kwargs, "exit", default=False)
+    bexit = check_for_positional_argument(kwargs, "exit", default=False)
     retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=retval)
 
-    if exit is True:
+    if bexit is True:
         retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
         raise SystemExit(retval)
 
@@ -1627,28 +1629,42 @@ def get_alphabet():
                   'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 
+SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+SAFECHARS = [ord(ch) for ch in SALPHA]
+
+
+def remove_escapecodes(escapedstring):
+    """
+    @type escapedstring: str
+    @return: None
+    """
+    ansi_escape = re.compile(r'\x1b[^a-z]*[a-z]')
+    return ansi_escape.sub('', escapedstring)
+
+
 def get_safe_string(s, extrachars=None):
     """
     @type s: str
+    @type extrachars: str, None`
     @return: None
     """
-    s = remove_color(s)
-    sa = get_alphabet()
-
     if extrachars is not None:
-        sa = list(sa)
-        sa.extend(extrachars)
-        sa = tuple(sa)
+        mysafechars = [ord(ch) for ch in SALPHA + extrachars]
+    else:
+        mysafechars = SAFECHARS
 
-    ns = "".join((c for c in s if c in sa))
-    return ns
+    s = remove_escapecodes(s)
+    targetdict = {ord(ch): ord(ch) for ch in SALPHA}
+    targetdict.update({ord(ch): None for ch in s if ord(ch) not in mysafechars})
+    s = s.translate(targetdict)
+    return s
 
 
 def get_safe_alphabet():
     """
     get_alphabet
     """
-    return tuple(['~', ' ', '_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+    return tuple(['~', ' ', '|', '_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
                   'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 
