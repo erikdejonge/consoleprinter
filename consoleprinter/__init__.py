@@ -890,7 +890,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value).replace("\n", "")
 
         if not sys.stdout.isatty():
-            subs = get_safe_string(subs, [":", "-", "_", "?", "/"])
+            subs = get_safe_string(subs,":-_?/")
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -2183,14 +2183,19 @@ def command_line_query(question, default=None, validate=None, style="compact"):
     return norm_answer
 
 
-def query_yes_no(question, force=False, default="yes", command=None):
+def query_yes_no(question, force=False, default=True, command=None):
     """
     @type question: str
     @type command: str, None
     @type force: bool
-    @type default: str
+    @type default: bool
     @return: None
     """
+    if default is True:
+        default = "yes"
+    else:
+        default = "no"
+
     if force is True:
         return default
 
@@ -2218,14 +2223,21 @@ def query_yes_no(question, force=False, default="yes", command=None):
         choice = input("$: ").lower()
 
         if default is not None and choice == '':
-            return default
+            if default == "yes":
+                return True
+            else:
+                return False
+
         elif choice in valid.keys():
             choice = valid[choice]
 
             if choice == "quit":
                 raise SystemExit()
 
-            return choice
+            if choice == "yes":
+                return True
+            else:
+                return False
         else:
             console("please respond with 'yes', 'no' or 'quit'.\n", color="orange", plaintext=True)
 
