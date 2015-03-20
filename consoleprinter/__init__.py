@@ -892,8 +892,10 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
     elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
         subs = str(value).replace("\n", "")
+
         if not sys.stdout.isatty():
             subs = get_safe_string(subs, [":", "-", "_", "?", "/"])
+
     elif isinstance(value, BaseException):
         if plaintext is True:
             subs = str(value)
@@ -1043,7 +1045,6 @@ def console(*args, **kwargs):
     line_num_only = 3
     once = False
     colors = get_colors()
-
     if "msg" in kwargs:
         arglist = [kwargs["msg"]]
 
@@ -1065,12 +1066,13 @@ def console(*args, **kwargs):
 
         indent = str(kwargs["indent"])
 
-
-
-
     if "color" in kwargs:
         color = kwargs["color"]
     else:
+        color = "default"
+
+
+    if color not in colors:
         color = "default"
 
     if plainprint is True:
@@ -1079,9 +1081,10 @@ def console(*args, **kwargs):
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True)
             txt += subs
+            txt += " "
 
         txt = remove_extra_indentation(txt)
-
+        txt = txt.replace("  ", " ")
         if return_string is True:
             return indent + txt
         else:
@@ -1631,10 +1634,12 @@ def get_safe_string(s, extrachars=None):
     """
     s = remove_color(s)
     sa = get_alphabet()
+
     if extrachars is not None:
         sa = list(sa)
         sa.extend(extrachars)
         sa = tuple(sa)
+
     ns = "".join((c for c in s if c in sa))
     return ns
 
