@@ -1062,8 +1062,10 @@ def console(*args, **kwargs):
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
     indent = ""
+
     if prefix is not None:
         line_num_only = -1
+
     if "indent" in kwargs:
         if plainprint is False:
             raise AssertionError("console: indent only works for plainprint")
@@ -1109,8 +1111,10 @@ def console(*args, **kwargs):
     if color not in colors:
         console(color, "color not available", source_code_link(1), color='red')
         color = "default"
+
     if prefix is None:
         prefix = str(runtime)
+
     if return_string is False:
         dbs = colors['yellow'] + str(prefix) + colors['yellow']
     else:
