@@ -1214,20 +1214,23 @@ def console(*args, **kwargs):
         lastitem = ""
 
         for item in trace:
-            if line_num_only + 3 < stackcnt:
+            if line_num_only + 3 <= stackcnt:
                 if not toggle:
                     if lastitem != "":
                         dbs += " " * len(runtime)
 
                 if toggle:
+
                     stackline = item.strip().split(", in")[0]
                 else:
                     if running_in_debugger(include_tests=True):
+
                         if lastitem != "":
                             dbs += " | " + stackline + " -> " + lastitem + "\n"
 
                         lastitem = item.strip()
                     else:
+
                         if lastitem != "":
                             dbs += " | " + format_source_code_line_console(stackline) + " -> " + lastitem + "\n"
 
@@ -1531,18 +1534,18 @@ def console_warning(*args, **kwargs):
     return retval
 
 
-def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None):
+def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_only=6):
     """
     @type stacktracemsg: str
     @type exceptiontoraise: BaseException
     @type errorplaintxt: str
     @return: None
     """
-
+    print(b'\xf0\x9f\x92\xa5'.decode())
     if errorplaintxt:
         console(errorplaintxt, color="red", plainprint=True)
-
-    console_warning(stacktracemsg, print_stack=True, color="orange")
+    print(b'\xf0\x9f\x92\xa5'.decode())
+    console_warning(stacktracemsg, print_stack=True, color="orange", line_num_only=line_num_only)
 
     raise exceptiontoraise
 
