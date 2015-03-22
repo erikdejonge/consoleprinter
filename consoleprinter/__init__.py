@@ -662,6 +662,10 @@ def format_source_code_line_console(path):
     if len(paths) == 2:
         # dpath = os.path.basename(os.path.dirname(paths[0]))
         fpath = os.path.basename(paths[0]).strip().replace('"', "")
+
+        if "__init__" in fpath:
+            fpath = os.path.basename(os.path.dirname(paths[0]).strip().replace('"', "")) + "/" + fpath
+
         location = paths[1].replace(' line ', ":").strip("/")
         return fpath + location.replace(" (", ":").replace(")", "").strip()
     else:
@@ -887,10 +891,13 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
         subs = str(value)
     elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
-        subs = str(value).replace("\n", "")
+        subs = str(value)
+
 
         if not sys.stdout.isatty():
-            subs = get_safe_string(subs, ":-_?/")
+
+            subs = get_safe_string(subs, "@:-_?/")
+
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -918,7 +925,6 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
                 dbs += colors["grey"] + " |" + colors["default"] + "\n"
 
             leftoffset = remove_color(dbs).find("|") - 1
-
             subs = " " * (leftoffset - 4)
             colwidthdelta = 0
 
@@ -1065,7 +1071,7 @@ def console(*args, **kwargs):
         line_num_only += kwargs["stack"]
 
     prefix = check_for_positional_argument(kwargs, "prefix", default=None)
-    warningmsg = check_for_positional_argument(kwargs, "warning")
+
     stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
     line_num_only = check_for_positional_argument(kwargs, "line_num_only", default=3)
     print_stack = check_for_positional_argument(kwargs, "print_stack")
@@ -1100,7 +1106,8 @@ def console(*args, **kwargs):
             txt += " "
 
         txt = remove_extra_indentation(txt)
-        txt = txt.replace("  ", " ")
+        if not "@@@" in txt:
+            txt = txt.replace("  ", " ")
 
         if return_string is True:
             return indent + txt
@@ -1156,24 +1163,17 @@ def console(*args, **kwargs):
     if not print_stack:
         if line_num_only >= 0:
             if return_string is False:
-                if warningmsg:
-                    fcolor = "red"
-                else:
-                    fcolor = "yellow"
-
-                subs = " | " + colors[fcolor] + source_code_link_msg + colors[fcolor]
+                subs = " | " + colors[color] + source_code_link_msg + colors[color]
                 columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
                 dbs += subs
             else:
+
                 subs = " | " + source_code_link_msg
                 dbs += subs
 
     for s in arglist:
         if toggle:
-            if warningmsg:
-                dbs += colors['red']
-            else:
-                dbs += colors[color]
+            dbs += colors[color]
         else:
             dbs += colors['default']
 
@@ -1188,10 +1188,7 @@ def console(*args, **kwargs):
             pass
 
         if toggle:
-            if warningmsg:
-                dbs += colors['red']
-            else:
-                dbs += colors[color]
+            dbs += colors[color]
         else:
             dbs += colors['default']
 
@@ -1217,7 +1214,7 @@ def console(*args, **kwargs):
         lastitem = ""
 
         for item in trace:
-            if 3 < stackcnt < 18:
+            if line_num_only + 3 < stackcnt:
                 if not toggle:
                     if lastitem != "":
                         dbs += " " * len(runtime)
@@ -1499,7 +1496,10 @@ def console_warning(*args, **kwargs):
     @type kwargs:
     """
     retval = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
-
+    if "color" in kwargs:
+        color = kwargs["color"]
+    else:
+        color = "red"
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]
     else:
@@ -1522,13 +1522,29 @@ def console_warning(*args, **kwargs):
         args.append("==")
 
     bexit = check_for_positional_argument(kwargs, "exit", default=False)
-    retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=retval)
+    retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=retval)
 
     if bexit is True:
-        retval = console(*args, print_stack=print_stack, warning=True, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
+        retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
         raise SystemExit(retval)
 
     return retval
+
+
+def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None):
+    """
+    @type stacktracemsg: str
+    @type exceptiontoraise: BaseException
+    @type errorplaintxt: str
+    @return: None
+    """
+
+    if errorplaintxt:
+        console(errorplaintxt, color="red", plainprint=True)
+
+    console_warning(stacktracemsg, print_stack=True, color="orange")
+
+    raise exceptiontoraise
 
 
 def console_error_exit(*args, **kwargs):
