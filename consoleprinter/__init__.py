@@ -1558,7 +1558,7 @@ def console_error_exit(*args, **kwargs):
     """
     kwargs["exit"] = True
     kwargs["print_stack"] = True
-    return SystemError(console_warning(*args, **kwargs))
+    return SystemExit(console_warning(*args, **kwargs))
 
 
 def fpath_in_stack(fpath):
@@ -2239,12 +2239,10 @@ def query_yes_no(question, force=False, default=True, command=None):
 
     if default is None:
         prompt = " [y/n/q] "
-    elif default == "yes":
+    elif default == True:
         prompt = " [Y/n/q] "
-    elif default == "no":
+    elif default == False:
         prompt = " [y/N/q] "
-    elif default == "quit":
-        prompt = " [y/n/Q] "
     else:
         raise ValueError("invalid default answer: '%s'" % default)
 
@@ -2257,7 +2255,7 @@ def query_yes_no(question, force=False, default=True, command=None):
         choice = input("$: ").lower()
 
         if default is not None and choice == '':
-            if default == "yes":
+            if default == True:
                 return True
             else:
                 return False
