@@ -2230,11 +2230,6 @@ def query_yes_no(question, force=False, default=True, command=None):
     @type default: bool
     @return: None
     """
-    if default is True:
-        default = "yes"
-    else:
-        default = "no"
-
     if force is True:
         return default
 
