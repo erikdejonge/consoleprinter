@@ -893,11 +893,8 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
     elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
         subs = str(value)
 
-
         if not sys.stdout.isatty():
-
             subs = get_safe_string(subs, "@:-_?/")
-
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -1071,7 +1068,6 @@ def console(*args, **kwargs):
         line_num_only += kwargs["stack"]
 
     prefix = check_for_positional_argument(kwargs, "prefix", default=None)
-
     stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
     line_num_only = check_for_positional_argument(kwargs, "line_num_only", default=3)
     print_stack = check_for_positional_argument(kwargs, "print_stack")
@@ -1106,6 +1102,7 @@ def console(*args, **kwargs):
             txt += " "
 
         txt = remove_extra_indentation(txt)
+
         if not "@@@" in txt:
             txt = txt.replace("  ", " ")
 
@@ -1167,7 +1164,6 @@ def console(*args, **kwargs):
                 columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
                 dbs += subs
             else:
-
                 subs = " | " + source_code_link_msg
                 dbs += subs
 
@@ -1220,17 +1216,14 @@ def console(*args, **kwargs):
                         dbs += " " * len(runtime)
 
                 if toggle:
-
                     stackline = item.strip().split(", in")[0]
                 else:
                     if running_in_debugger(include_tests=True):
-
                         if lastitem != "":
                             dbs += " | " + stackline + " -> " + lastitem + "\n"
 
                         lastitem = item.strip()
                     else:
-
                         if lastitem != "":
                             dbs += " | " + format_source_code_line_console(stackline) + " -> " + lastitem + "\n"
 
@@ -1499,10 +1492,12 @@ def console_warning(*args, **kwargs):
     @type kwargs:
     """
     retval = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
+
     if "color" in kwargs:
         color = kwargs["color"]
     else:
         color = "red"
+
     if "print_stack" in kwargs:
         print_stack = kwargs["print_stack"]
     else:
@@ -1541,12 +1536,10 @@ def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_
     @type errorplaintxt: str
     @return: None
     """
-    print(b'\xf0\x9f\x92\xa5'.decode())
     if errorplaintxt:
         console(errorplaintxt, color="red", plainprint=True)
-    print(b'\xf0\x9f\x92\xa5'.decode())
-    console_warning(stacktracemsg, print_stack=True, color="orange", line_num_only=line_num_only)
 
+    console_warning(stacktracemsg, print_stack=True, color="orange", line_num_only=line_num_only)
     raise exceptiontoraise
 
 
@@ -2222,12 +2215,13 @@ def command_line_query(question, default=None, validate=None, style="compact"):
     return norm_answer
 
 
-def query_yes_no(question, force=False, default=True, command=None):
+def query_yes_no(question, force=False, default=True, command=None, exit_on_quit=True):
     """
     @type question: str
-    @type command: str, None
     @type force: bool
     @type default: bool
+    @type command: str, None
+    @type exit_on_quit: bool
     @return: None
     """
     if force is True:
@@ -2264,7 +2258,7 @@ def query_yes_no(question, force=False, default=True, command=None):
             choice = valid[choice]
 
             if choice == "quit":
-                raise SystemExit()
+                raise SystemExit(0)
 
             if choice == "yes":
                 return True
