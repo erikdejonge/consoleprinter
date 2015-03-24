@@ -6,6 +6,18 @@ Active8 BV
 Active8 (05-03-15)
 license: GNU-GPL2
 
+###example
+
+Add a method call to console somewhere in your code, for example
+```python
+console(os, print_stack=True, color="red")
+```
+> ![code](res/code.png)
+ 
+It will give a stacktrace in the terminal
+
+> ![tterminal](res/terminal.png)
+
 ##install
 ```bash
 pip install consoleprinter
@@ -46,4 +58,4 @@ with zipfile.ZipFile(zippath) as zf:
     for member in zf.infolist():
         console(member)
 ```
-> ![kindle](res/Screen Shot 2015-03-17 at 17.45.50.png)
+> ![console](res/Screen Shot 2015-03-17 at 17.45.50.png)
