@@ -49,7 +49,17 @@ console(mo)
 
 > ![object](res/object.png)
 
+```bash
+0.17 | arguments/__init__.py", line 957 (print_commandline_help) | <arguments.Arguments.print_commandline_help.<locals.MyObject object at 0x1034026d8>: My Little Object
+     | MyObject                          type                           value
+     | ------------------------------------------------------------------------------------------
+     | foo                               function
+     | m_float                           float                          8.0
+     | m_int                             int                            8
+     | m_string                          str                            hello
 
+
+```
 ##install
 ```bash
 pip install consoleprinter
