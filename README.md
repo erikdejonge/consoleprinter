@@ -16,7 +16,7 @@ console(os, print_stack=True, color="red")
  
 It will give a stacktrace in the terminal
 
-> ![tterminal](res/terminal.png)
+> ![tterminal](res/terminal2.png)
 
 If the printer detects an object it will try to do a dir an give the layout with values
 
