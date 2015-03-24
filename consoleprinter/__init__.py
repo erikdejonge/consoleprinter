@@ -580,6 +580,7 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
 
     for i in stack:
         i = str(i)
+
         stackl.append(i)
 
         if line_num_only > 0:
@@ -605,6 +606,7 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
                                     i = i.replace("File ", "")
 
                                 fs = i.replace('"', "").split(",")[0].split(os.sep)
+
                                 return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
                             except ValueError:
                                 pass
@@ -1179,7 +1181,10 @@ def console(*args, **kwargs):
             if str(s) == "":
                 s = ""
             else:
-                dbs += colors["grey"] + " | " + colors['default']
+                stripecolor = "grey"
+                if color == "red":
+                    stripecolor = color
+                dbs += colors[stripecolor] + " | " + colors['default']
         except:
             pass
 
@@ -1198,7 +1203,7 @@ def console(*args, **kwargs):
 
     if return_string is True:
         return dbs.strip()
-
+    linecnt = 0
     if print_stack:
         newline = False
         trace = stack_trace(ret_list=True)
@@ -1210,28 +1215,32 @@ def console(*args, **kwargs):
         lastitem = ""
 
         for item in trace:
-            if line_num_only + 3 <= stackcnt:
-                if not toggle:
+            stacks = ""
+            if not toggle:
+                if lastitem != "":
+                    stacks += " " * len(runtime)
+
+            if toggle:
+                stackline = item.strip().split(", in")[0]
+            else:
+                if running_in_debugger(include_tests=True):
                     if lastitem != "":
-                        dbs += " " * len(runtime)
+                        stacks += " | " + stackline + colors["grey"] + " -> " + lastitem + colors["default"] + "\n"
 
-                if toggle:
-                    stackline = item.strip().split(", in")[0]
+                    lastitem = item.strip()
                 else:
-                    if running_in_debugger(include_tests=True):
-                        if lastitem != "":
-                            dbs += " | " + stackline + " -> " + lastitem + "\n"
+                    if lastitem != "":
+                        stacks += colors["grey"] + " | " + format_source_code_line_console(stackline) +  colors["black"] + " -> " + lastitem + colors["default"] + "\n"
 
-                        lastitem = item.strip()
-                    else:
-                        if lastitem != "":
-                            dbs += " | " + format_source_code_line_console(stackline) + " -> " + lastitem + "\n"
+                    lastitem = item.strip()
 
-                        lastitem = item.strip()
+            toggle = not toggle
 
-                toggle = not toggle
+            linecnt += 1
 
-            stackcnt += 1
+
+            if linecnt > line_num_only + 4:
+                dbs += stacks
 
     dbs += colors['default']
 
