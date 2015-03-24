@@ -18,6 +18,38 @@ It will give a stacktrace in the terminal
 
 > ![tterminal](res/terminal.png)
 
+If the printer detects an object it will try to do a dir an give the layout with values
+
+```python
+
+class MyObject(object):
+    """
+    MyObject
+    """
+    m_float = 8.0
+    m_string = "hello"
+    m_int = 8
+
+    @staticmethod
+    def foo():
+        """
+        foo
+        """
+        pass
+
+    def __str__(self):
+        """
+        __str__
+        """
+        return "My Little Object"
+
+mo = MyObject()
+console(mo)
+```
+
+> ![object](res/object.png)
+
+
 ##install
 ```bash
 pip install consoleprinter
