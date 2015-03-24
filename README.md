@@ -2,9 +2,13 @@
 # consoleprinter
 Console printer with linenumbers, stacktraces, logging, conversions and coloring.
 
+```
 Active8 BV
 Active8 (05-03-15)
 license: GNU-GPL2
+```
+
+> ![animation](res/consoleprinter.gif)
 
 ###example
 
