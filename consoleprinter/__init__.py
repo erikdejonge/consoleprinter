@@ -1549,7 +1549,7 @@ def console_warning(*args, **kwargs):
 def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_only=6):
     """
     @type stacktracemsg: str
-    @type exceptiontoraise: str
+    @type exceptiontoraise: BaseException
     @type errorplaintxt: str, None
     @type line_num_only: int
     @return: None
@@ -2109,133 +2109,9 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
         stream.flush()
 
 
-def command_line_query(question, default=None, validate=None, style="compact"):
-    """
-    Ask the user a question using raw_input() and looking something
-    like this ("compact" style, the default, `_` is the cursor):
-        QUESTION [DEFAULT]: _
-        ...validation...
-
-    or this ("verbose" style):
-        QUESTION
-        Hit <Enter> to use the default, DEFAULT.
-        > _
-        ...validation...
-    @param question {str} The question to ask.
-    @type question {str} The question to ask.:
-    @param default {str} Optional. The default value if non is given.
-    @type default {str} Optional. The default value if non is given.:
-    @param validate {str|function} is either a string naming a stock
-    @type validate {str|function} is either a string naming a stock:
-        validator
-            not-empty       Ensure the user's answer is not empty.
-            yes-or-no       Ensure the user's answer is 'yes' or 'no'.
-                            ('y', 'n' and any capitalization are
-                            also accepted)
-
-            int             Answer is an integer.
-        or a callback function with this signature:
-            validate(answer) -> normalized-answer
-
-        It should raise `ValueError` to indicate an invalid answer.
-        By default no validation is done.
-    @param style {str} is a name for the interaction style, either "compact"
-    @type style {str} is a name for the interaction style, either "compact":
-        (the default) or "verbose". See the examples above.
-    @returns {str} The normalized answer.
-    """
-    if isinstance(validate, str):
-        if validate == "not-empty":
-            def validate_not_empty(myanswer):
-                """
-                @type myanswer: str
-                @return: None
-                """
-                if not myanswer:
-                    raise ValueError("You must enter some non-empty value.")
-
-                return myanswer
-
-            validate = validate_not_empty
-        elif validate == "yes-or-no":
-            def validate_yes_or_no(myanswer2):
-                """
-                @type myanswer2: str
-                @return: None
-                """
-                normalized = {"yes": "yes", "y": "yes", "ye": "yes",
-                              "no": "no", "n": "no"}
-
-                try:
-                    return normalized[myanswer2.lower()]
-                except KeyError:
-                    raise ValueError("Please enter 'yes' or 'no'.")
-
-            validate = validate_yes_or_no
-        elif validate == "int":
-            def validate_int(myanswer3):
-                """
-                @type myanswer3: str
-                @return: None
-                """
-                try:
-                    int(myanswer3)
-                except ValueError:
-                    raise ValueError("Please enter an integer.")
-                else:
-                    return myanswer3
-
-            validate = validate_int
-        else:
-            raise ValueError("unknown stock validator: '%s'" % validate)
-
-    if style == "compact":
-        prompt = question
-
-        if default is not None:
-            prompt += " [%s]" % (default or "<empty>")
-        prompt += ": "
-    elif style == "verbose":
-        sys.stdout.write(question + '\n')
-
-        if default:
-            sys.stdout.write("Hit <Enter> to use the default, %r.\n" % default)
-        elif default is not None:
-            sys.stdout.write("Hit <Enter> to leave blank.\n")
-
-        prompt = "> "
-    else:
-        raise ValueError("unknown query style: %r" % style)
-
-    norm_answer = None
-
-    while True:
-        if True:
-            answer = input(prompt)
-        else:
-            sys.stdout.write(prompt)
-            sys.stdout.flush()
-            answer = sys.stdout.readline()
-
-        if not answer and default:
-            answer = default
-
-        if validate is not None:
-            try:
-                norm_answer = validate(answer)
-            except ValueError as ex:
-                sys.stdout.write(str(ex) + '\n')
-                continue
-        else:
-            norm_answer = answer
-        break
-
-    return norm_answer
-
-
 def query_yes_no(*args, force=False, default=True, command=None):
     """
-    @type question: str
+    @type args: list
     @type force: bool
     @type default: bool
     @type command: str, None
@@ -2321,7 +2197,6 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     @return: None
     """
     linenr = get_line_number(5)
-
     cmdstr = command + ":"
 
     if color == "red":
@@ -2344,6 +2219,7 @@ def abort(command, description, stack=False):
     """
     @type command: str, None
     @type description: str
+    @type stack: bool
     @return: None
     """
     if command is None:
@@ -2446,8 +2322,7 @@ class Info(object):
 
     def add(self, *args):
         """
-        @type command: str
-        @type description: str
+        @type args: list
         @return: None
         """
         self.items.append(args)
