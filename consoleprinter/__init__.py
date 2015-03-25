@@ -1772,6 +1772,9 @@ def colorize_for_print(v):
             pass
 
     ispath = os.path.exists(v)
+    if ispath is True:
+        if "/" not in v:
+            ispath = False
 
     if num is True:
         if isfloat:
@@ -1784,9 +1787,9 @@ def colorize_for_print(v):
     elif v == "False":
         s += "\033[31m" + v + "\033[0m"
     elif v == "True":
-        s += "\033[32m" + v + "\033[0m"
+        s += "\033[92m" + v + "\033[0m"
     else:
-        s += "\033[33m" + v + "\033[0m"
+        s += "\033[93m" + v + "\033[0m"
 
     return s
 
@@ -2109,71 +2112,6 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
         stream.flush()
 
 
-def query_yes_no(*args, force=False, default=True, command=None):
-    """
-    @type args: list
-    @type force: bool
-    @type default: bool
-    @type command: str, None
-    @return: None
-    """
-    question = "-"
-    t = True
-
-    for arg in args:
-        if t:
-            question += "\033[93m"
-            t = False
-        else:
-            question += "\033[94m"
-
-        question += str(arg)
-        question += " \033[0m"
-
-    if force is True:
-        return default
-
-    valid = {"yes": "yes", "y": "yes", "ye": "yes",
-             "no": "no", "n": "no",
-             "quit": "quit", "qui": "quit", "qu": "quit", "q": "quit"}
-
-    if default is None:
-        prompt = " [y/n/q] "
-    elif default:
-        prompt = " [Y/n/q] "
-    elif not default:
-        prompt = " [y/N/q] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        if command is not None:
-            question = "\n" + str(command) + ": "
-
-        console(question, plaintext=True, newline=False)
-        console(prompt, color="yellow", plaintext=True, newline=False)
-        choice = input("$: ").lower()
-
-        if default is not None and choice == '':
-            if default:
-                return True
-            else:
-                return False
-
-        elif choice in valid.keys():
-            choice = valid[choice]
-
-            if choice == "quit":
-                raise SystemExit(0)
-
-            if choice == "yes":
-                return True
-            else:
-                return False
-        else:
-            console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
-
-
 def get_line_number(line_num_only=4):
     """
     @type line_num_only: int
@@ -2241,7 +2179,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "red", enteraftercmd=False)
+    console_cmd_desc(command, description, "darkyellow", enteraftercmd=False)
 
 
 def info(command, description):
@@ -2296,22 +2234,23 @@ class Info(object):
 
         for line in self.items:
             for item in line:
-                if len(item) > longest:
-                    longest = len(item)
+                if len(str(item)) > longest:
+                    longest = len(str(item))
                     break
 
         for line in self.items:
             t = True
 
             for item in line:
-                item = str(item)
+
 
                 if t:
                     sys.stdout.write("\033[0m" + item + " \033[0m")
-                    spaces = " " * (longest - len(item))
+                    spaces = " " * (longest - len(remove_escapecodes(item)))
                     sys.stdout.write("\033[0m" + spaces + ": \033[0m")
                     t = False
                 else:
+                    item = colorize_for_print(str(item))
                     sys.stdout.write("\033[32m" + item + " \033[0m")
                     t = True
 
@@ -2326,6 +2265,78 @@ class Info(object):
         @return: None
         """
         self.items.append(args)
+
+
+def query_yes_no(*args, force=False, default=True, command=None):
+    """
+    @type args: list
+    @type force: bool
+    @type default: bool
+    @type command: str, None
+    @return: None
+    """
+    print()
+    question = ""
+    t = True
+
+    for arg in args:
+        if t:
+            question += "\033[96m"
+            t = False
+        else:
+            question += "\033[93m"
+
+        question += str(arg)
+        question += "? \033[0m"
+
+    if force is True:
+        return default
+
+    valid = {"yes": "yes", "y": "yes", "ye": "yes",
+             "no": "no", "n": "no",
+             "quit": "quit", "qui": "quit", "qu": "quit", "q": "quit"}
+
+    if default is None:
+        prompt = "[y/n/q]"
+    elif default:
+        prompt = "[Y/n/q]"
+    elif not default:
+        prompt = "[y/N/q]"
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        if command is not None:
+            question = str(command) + ": "
+
+        console(question, plaintext=True, newline=True)
+        console(prompt, color="white", plaintext=True, newline=False)
+        choice = input("$: ").lower()
+
+        if default is not None and choice == '':
+
+            if default is True:
+
+                print("        -> yes")
+                return True
+            else:
+                print("        -> no")
+                return False
+
+        elif choice in valid.keys():
+            choice = valid[choice]
+
+            if choice == "quit":
+                raise SystemExit(0)
+
+            console("-> " + choice, color="white", plaintext=True)
+
+            if choice == "yes":
+                return True
+            else:
+                return False
+        else:
+            console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
 
 
 def get_input_answer(default):
@@ -2373,11 +2384,12 @@ def doinput(description, default=None, answers=None, force=False):
 
         return default
 
+    print()
     answer = ""
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
     if default is not None:
-        description += "\033[96m (default: \033[32m" + str(default) + "\033[96m" + ", quit: q)?"
+        description += "\033[96m (default: \033[93m" + str(default) + "\033[96m" + ", quit: q)?"
 
     if answers is not None:
         display_answers = ["quit/q"]
@@ -2418,6 +2430,7 @@ def doinput(description, default=None, answers=None, force=False):
     if answer in quitanswers:
         raise SystemExit("doinput quit")
 
+    print("-> " + str(answer))
     return answer
 
 
