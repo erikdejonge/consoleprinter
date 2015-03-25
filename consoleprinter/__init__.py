@@ -324,6 +324,7 @@ class SystemGlobals(object):
     g_running_in_debugger_unit_tests = None
     g_running_in_debugger = None
     g_slugified_unicode_lut = {}
+    g_debug = False
     g_memory = {}
 
     def __new__(cls, *args, **kwargs):
@@ -382,6 +383,14 @@ class SystemGlobals(object):
 
 
 SystemGlobals()
+
+
+def get_debugmode():
+    """
+    get_debugmode
+    """
+    sg = SystemGlobals()
+    return sg.g_debug
 
 
 def exist(data):
@@ -580,7 +589,6 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
 
     for i in stack:
         i = str(i)
-
         stackl.append(i)
 
         if line_num_only > 0:
@@ -606,7 +614,6 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
                                     i = i.replace("File ", "")
 
                                 fs = i.replace('"', "").split(",")[0].split(os.sep)
-
                                 return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
                             except ValueError:
                                 pass
@@ -1105,7 +1112,7 @@ def console(*args, **kwargs):
 
         txt = remove_extra_indentation(txt)
 
-        if not "@@@" in txt:
+        if "@@@" not in txt:
             txt = txt.replace("  ", " ")
 
         if return_string is True:
@@ -1184,9 +1191,10 @@ def console(*args, **kwargs):
                 stripecolor = "grey"
                 if color == "red":
                     stripecolor = color
+
                 dbs += colors[stripecolor] + " | " + colors['default']
-        except:
-            pass
+        except BaseException as ex:
+            print(colors["red"], ex, colors["default"])
 
         if toggle:
             dbs += colors[color]
@@ -1203,19 +1211,21 @@ def console(*args, **kwargs):
 
     if return_string is True:
         return dbs.strip()
+
     linecnt = 0
+
     if print_stack:
         newline = False
         trace = stack_trace(ret_list=True)
         toggle = True
         stackline = ""
-        stackcnt = 0
         dbs += colors["yellow"]
         dbs += "\n"
         lastitem = ""
 
         for item in trace:
             stacks = ""
+
             if not toggle:
                 if lastitem != "":
                     stacks += " " * len(runtime)
@@ -1230,14 +1240,12 @@ def console(*args, **kwargs):
                     lastitem = item.strip()
                 else:
                     if lastitem != "":
-                        stacks += colors["grey"] + " | " + format_source_code_line_console(stackline) +  colors["black"] + " -> " + lastitem + colors["default"] + "\n"
+                        stacks += colors["grey"] + " | " + format_source_code_line_console(stackline) + colors["black"] + " -> " + lastitem + colors["default"] + "\n"
 
                     lastitem = item.strip()
 
             toggle = not toggle
-
             linecnt += 1
-
 
             if linecnt > line_num_only + 4:
                 dbs += stacks
@@ -1541,8 +1549,9 @@ def console_warning(*args, **kwargs):
 def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_only=6):
     """
     @type stacktracemsg: str
-    @type exceptiontoraise: BaseException
-    @type errorplaintxt: str
+    @type exceptiontoraise: str
+    @type errorplaintxt: str, None
+    @type line_num_only: int
     @return: None
     """
     if errorplaintxt:
@@ -2224,15 +2233,26 @@ def command_line_query(question, default=None, validate=None, style="compact"):
     return norm_answer
 
 
-def query_yes_no(question, force=False, default=True, command=None, exit_on_quit=True):
+def query_yes_no(*args, force=False, default=True, command=None):
     """
     @type question: str
     @type force: bool
     @type default: bool
     @type command: str, None
-    @type exit_on_quit: bool
     @return: None
     """
+    question = "✳️ "
+    t = True
+
+    for arg in args:
+        if t:
+            question += "\033[93m"
+            t = False
+        else:
+            question += "\033[94m"
+        question += str(arg)
+        question += " \033[0m"
+
     if force is True:
         return default
 
@@ -2242,9 +2262,9 @@ def query_yes_no(question, force=False, default=True, command=None, exit_on_quit
 
     if default is None:
         prompt = " [y/n/q] "
-    elif default == True:
+    elif default:
         prompt = " [Y/n/q] "
-    elif default == False:
+    elif not default:
         prompt = " [y/N/q] "
     else:
         raise ValueError("invalid default answer: '%s'" % default)
@@ -2253,12 +2273,12 @@ def query_yes_no(question, force=False, default=True, command=None, exit_on_quit
         if command is not None:
             question = "-" + str(command) + ": "
 
-        console(question, color="white", plaintext=True, newline=False)
+        console(question, plaintext=True, newline=False)
         console(prompt, color="yellow", plaintext=True, newline=False)
         choice = input("$: ").lower()
 
         if default is not None and choice == '':
-            if default == True:
+            if default:
                 return True
             else:
                 return False
@@ -2275,6 +2295,245 @@ def query_yes_no(question, force=False, default=True, command=None, exit_on_quit
                 return False
         else:
             console("please respond with 'yes', 'no' or 'quit'.\n", color="orange", plaintext=True)
+
+
+def get_line_number():
+    """
+    """
+
+    strce = stack_trace(line_num_only=4).strip()
+
+    if "__init__.py" in strce:
+        strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
+
+    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
+    return linenr
+
+
+def console_cmd_desc(command, description, color, enteraftercmd=False):
+    """
+    @type command: str
+    @type description: str
+    @type color: str
+    @type enteraftercmd: bool
+    @return: None
+    """
+    linenr = get_line_number()
+    cmdstr = command + ":"
+
+    if color == "red":
+        color = "red"
+        subcolor = "orange"
+    else:
+        subcolor = color
+        color = "blue"
+
+    # else:
+    #    color = "blue"
+
+    if color == "red":
+        console(linenr, plaintext=True, color="grey", newline=False)
+
+    console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
+    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+
+def abort(command, description):
+    """
+    @type command: str, None
+    @type description: str
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    console_cmd_desc("⚡ " + command, description, "red", enteraftercmd=False)
+    raise SystemExit(1)
+
+
+def warning(command, description):
+    """
+    @type command: str, None
+    @type description: str
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    console_cmd_desc(command, description, "orange", enteraftercmd=False)
+
+
+def info(command, description):
+    """
+    @type command: str, None
+    @type description: str, None
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    if description is None:
+        console(command, color="orange", plaintext=not get_debugmode(), line_num_only=4)
+    else:
+        console_cmd_desc(command, description, "default")
+
+
+class Info(object):
+    """
+    Bar
+    """
+    def __init__(self, *args):
+        """
+        """
+        command = ""
+        for i in args:
+            command += str(i) +  " "
+
+        self.command = command.strip()
+        self.items = []
+
+    def __enter__(self):
+        """
+        __enter__
+        """
+        return self
+
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        @type exc_type: str
+        @type exc_val: str
+        @type exc_tb: str
+        @return: None
+        """
+        linenr = get_line_number()
+        print("\033[30m==\n"+str(self.command), linenr, "\n==\033[0m")
+        longest = 0
+        for line in self.items:
+            for item in line:
+                if len(item) > longest:
+                    longest = len(item)
+                    break
+
+
+        for line in self.items:
+            t = True
+            for item in line:
+                item = str(item)
+                if t:
+                    sys.stdout.write("\033[0m"+ item+ " \033[0m")
+                    spaces = " " * (longest - len(item))
+                    sys.stdout.write("\033[0m" + spaces + ": \033[0m")
+                    t = False
+                else:
+                    sys.stdout.write("\033[32m"+ item+ " \033[0m")
+                    t = True
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
+
+        return False
+
+    def add(self, *args):
+        """
+        @type command: str
+        @type description: str
+        @return: None
+        """
+        self.items.append(args)
+
+
+def get_input_answer(default):
+    """
+    @type default: str
+    @return: None
+    """
+    try:
+        answer = input("$: ").lower()
+    except KeyboardInterrupt:
+        answer = "quit"
+
+    answer = get_safe_string(answer.strip())
+
+    if answer is "" and default is not None:
+        answer = default
+    try:
+        answeri = int(answer)
+
+        if str(answeri) == answer:
+            answer = answeri
+    except ValueError:
+        pass
+
+    if isinstance(answer, str):
+        try:
+            answer = float(answer)
+        except ValueError:
+            pass
+
+    return answer
+
+
+def doinput(description, default=None, answers=None, force=False):
+    """
+    @type description: str
+    @type default: str, None
+    @type answers: list, None
+    @type force: bool
+    @return: None
+    """
+    if force is True:
+        if default is None:
+            raise AssertionError("no default set")
+
+        return default
+
+    answer = ""
+    quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
+
+    if default is not None:
+        description += "\033[96m (default: \033[32m" +  str(default)  + "\033[96m" + ", quit: q)?"
+
+    if answers is not None:
+        display_answers = ["quit/q"]
+
+        for ans in answers:
+            ans = str(ans)
+
+            if ans is default:
+                ans = ans.upper()
+
+            display_answers.append(ans)
+
+        display_answers.sort(key=lambda x: str(x).lower().strip())
+        answers.extend(quitanswers)
+        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        console("options:", indent="  ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+        for pa in display_answers:
+            console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+        while True:
+            answer = get_input_answer(default)
+
+            if answer not in answers:
+                if answer != "":
+                    console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
+
+                console("unknown option", color="orange", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+                for pa in display_answers:
+                    console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+            else:
+                break
+    else:
+        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        answer = get_input_answer(default)
+
+    if answer in quitanswers:
+        raise SystemExit("doinput quit")
+
+    return answer
 
 
 if __name__ == "__main__":
