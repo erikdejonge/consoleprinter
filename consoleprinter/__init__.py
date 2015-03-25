@@ -2148,7 +2148,7 @@ def query_yes_no(*args, force=False, default=True, command=None):
 
     while True:
         if command is not None:
-            question = "-" + str(command) + ": "
+            question = "\n" + str(command) + ": "
 
         console(question, plaintext=True, newline=False)
         console(prompt, color="yellow", plaintext=True, newline=False)
