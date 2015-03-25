@@ -1557,7 +1557,7 @@ def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_
     if errorplaintxt:
         console(errorplaintxt, color="red", plainprint=True)
 
-    console_warning(stacktracemsg, print_stack=True, color="orange", line_num_only=line_num_only)
+    console_warning(stacktracemsg, print_stack=True, color="darkyellow", line_num_only=line_num_only)
     raise exceptiontoraise
 
 
@@ -2241,7 +2241,7 @@ def query_yes_no(*args, force=False, default=True, command=None):
     @type command: str, None
     @return: None
     """
-    question = "✳️ "
+    question = "-"
     t = True
 
     for arg in args:
@@ -2250,6 +2250,7 @@ def query_yes_no(*args, force=False, default=True, command=None):
             t = False
         else:
             question += "\033[94m"
+
         question += str(arg)
         question += " \033[0m"
 
@@ -2294,17 +2295,18 @@ def query_yes_no(*args, force=False, default=True, command=None):
             else:
                 return False
         else:
-            console("please respond with 'yes', 'no' or 'quit'.\n", color="orange", plaintext=True)
+            console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
 
 
-def get_line_number():
+def get_line_number(line_num_only=4):
     """
+    @type line_num_only: int
+    @return: None
     """
-
-    strce = stack_trace(line_num_only=4).strip()
+    strce = stack_trace(line_num_only=line_num_only).strip()
 
     if "__init__.py" in strce:
-        strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
+        strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
 
     linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
     return linenr
@@ -2318,27 +2320,27 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     @type enteraftercmd: bool
     @return: None
     """
-    linenr = get_line_number()
+    linenr = get_line_number(5)
+
     cmdstr = command + ":"
 
     if color == "red":
         color = "red"
-        subcolor = "orange"
+        subcolor = "darkyellow"
     else:
         subcolor = color
         color = "blue"
 
     # else:
     #    color = "blue"
+    console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
+    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
 
     if color == "red":
-        console(linenr, plaintext=True, color="grey", newline=False)
-
-    console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
-    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        console(linenr, plaintext=True, color="black", newline=True)
 
 
-def abort(command, description):
+def abort(command, description, stack=False):
     """
     @type command: str, None
     @type description: str
@@ -2347,7 +2349,10 @@ def abort(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc("⚡ " + command, description, "red", enteraftercmd=False)
+    console_cmd_desc(command, description + "!  ", "red", enteraftercmd=False)
+
+    if stack is True:
+        console("⚡", print_stack=True)
     raise SystemExit(1)
 
 
@@ -2360,7 +2365,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "orange", enteraftercmd=False)
+    console_cmd_desc(command, description, "red", enteraftercmd=False)
 
 
 def info(command, description):
@@ -2373,7 +2378,7 @@ def info(command, description):
         command = "?"
 
     if description is None:
-        console(command, color="orange", plaintext=not get_debugmode(), line_num_only=4)
+        console(command, color="red", plaintext=not get_debugmode(), line_num_only=4)
     else:
         console_cmd_desc(command, description, "default")
 
@@ -2384,10 +2389,13 @@ class Info(object):
     """
     def __init__(self, *args):
         """
+        @type args: tuple
+        @return: None
         """
         command = ""
+
         for i in args:
-            command += str(i) +  " "
+            command += str(i) + " "
 
         self.command = command.strip()
         self.items = []
@@ -2407,30 +2415,32 @@ class Info(object):
         @return: None
         """
         linenr = get_line_number()
-        print("\033[30m==\n"+str(self.command), linenr, "\n==\033[0m")
+        print("\033[30m==\n" + str(self.command), linenr, "\n==\033[0m")
         longest = 0
+
         for line in self.items:
             for item in line:
                 if len(item) > longest:
                     longest = len(item)
                     break
 
-
         for line in self.items:
             t = True
+
             for item in line:
                 item = str(item)
+
                 if t:
-                    sys.stdout.write("\033[0m"+ item+ " \033[0m")
+                    sys.stdout.write("\033[0m" + item + " \033[0m")
                     spaces = " " * (longest - len(item))
                     sys.stdout.write("\033[0m" + spaces + ": \033[0m")
                     t = False
                 else:
-                    sys.stdout.write("\033[32m"+ item+ " \033[0m")
+                    sys.stdout.write("\033[32m" + item + " \033[0m")
                     t = True
+
             sys.stdout.write("\n")
             sys.stdout.flush()
-
 
         return False
 
@@ -2492,7 +2502,7 @@ def doinput(description, default=None, answers=None, force=False):
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
     if default is not None:
-        description += "\033[96m (default: \033[32m" +  str(default)  + "\033[96m" + ", quit: q)?"
+        description += "\033[96m (default: \033[32m" + str(default) + "\033[96m" + ", quit: q)?"
 
     if answers is not None:
         display_answers = ["quit/q"]
@@ -2520,7 +2530,7 @@ def doinput(description, default=None, answers=None, force=False):
                 if answer != "":
                     console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
 
-                console("unknown option", color="orange", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+                console("unknown option", color="red", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
                 for pa in display_answers:
                     console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
