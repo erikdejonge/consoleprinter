@@ -290,26 +290,12 @@ def underscore(word):
     word = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', word)
     word = word.replace("-", "_")
     return word.lower()
-
-
 _irregular('person', 'people')
-
-
 _irregular('man', 'men')
-
-
 _irregular('child', 'children')
-
-
 _irregular('sex', 'sexes')
-
-
 _irregular('move', 'moves')
-
-
 _irregular('cow', 'kine')
-
-
 _irregular('zombie', 'zombies')
 
 
@@ -380,8 +366,6 @@ class SystemGlobals(object):
 
         console("SystemGlobals:set", k, once=True, color='grey', line_num_only=3)
         self.g_memory[k] = v
-
-
 SystemGlobals()
 
 
@@ -489,7 +473,6 @@ def dot_print(cnt=0, total=0, modint=10):
 
     if cnt > 0 and cnt % modint == 0:
         sys.stdout.write("\n" + str(cnt) + "/" + str(total) + "\n")
-
     sys.stdout.flush()
 
 
@@ -558,7 +541,6 @@ def stack_as_string():
         stack = io.StringIO()
     else:
         stack = io.BytesIO()
-
     traceback.print_stack(file=stack)
     stack.seek(0)
     stack = stack.read()
@@ -687,8 +669,6 @@ def source_code_link(stack_offset=0, fullline=True):
     @type fullline: bool
     """
     return stack_trace(line_num_only=2 + stack_offset, fullline=fullline)
-
-
 set_console_start_time()
 
 g_column_resize_threshold = None
@@ -1273,7 +1253,6 @@ def console(*args, **kwargs):
 
     if not sys.stdout.isatty():
         dbs = remove_color(dbs)
-
     sys.stderr.write(dbs)
     sys.stderr.flush()
 
@@ -1364,7 +1343,6 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
 
             if ls > linenumsize:
                 linenumsize = ls
-
         items.reverse()
 
         for line in items:
@@ -1556,7 +1534,6 @@ def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_
     """
     if errorplaintxt:
         console(errorplaintxt, color="red", plainprint=True)
-
     console_warning(stacktracemsg, print_stack=True, color="darkyellow", line_num_only=line_num_only)
     raise exceptiontoraise
 
@@ -1772,6 +1749,7 @@ def colorize_for_print(v):
             pass
 
     ispath = os.path.exists(v)
+
     if ispath is True:
         if "/" not in v:
             ispath = False
@@ -1852,7 +1830,6 @@ def consoledict(mydict, members=None, printval=True, indent=0, retval=False, pla
     if isinstance(mydict, dict):
         if members is None:
             members = list(mydict.keys())
-
         members.sort()
 
         for i in members:
@@ -2010,7 +1987,6 @@ class Bar(object):
                     self.label, self.filled_char * x,
                     self.empty_char * (self.width - x), sizeof_fmt(progress),
                     sizeof_fmt(self.expected_size), self.etadisp))
-
                 stream.flush()
 
     def done(self):
@@ -2030,7 +2006,6 @@ class Bar(object):
                 self.label, self.filled_char * self.width,
                 self.empty_char * 0, self.last_progress,
                 self.expected_size, elapsed_disp))
-
             stream.write('\n')
             stream.flush()
 
@@ -2096,7 +2071,6 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
                     (_i == count)):            # And when we're done
                 stream.write(mill_template % (
                     label, _mill_char(_i), _i, count))
-
                 stream.flush()
     count = len(it) if expected_size is None else expected_size
 
@@ -2162,7 +2136,6 @@ def abort(command, description, stack=False):
     """
     if command is None:
         command = "?"
-
     console_cmd_desc(command, description + "!  ", "red", enteraftercmd=False)
 
     if stack is True:
@@ -2178,7 +2151,6 @@ def warning(command, description):
     """
     if command is None:
         command = "?"
-
     console_cmd_desc(command, description, "darkyellow", enteraftercmd=False)
 
 
@@ -2236,14 +2208,12 @@ class Info(object):
             for item in line:
                 if len(str(item)) > longest:
                     longest = len(str(item))
-                    break
+                break
 
         for line in self.items:
             t = True
 
             for item in line:
-
-
                 if t:
                     sys.stdout.write("\033[0m" + item + " \033[0m")
                     spaces = " " * (longest - len(remove_escapecodes(item)))
@@ -2253,7 +2223,6 @@ class Info(object):
                     item = colorize_for_print(str(item))
                     sys.stdout.write("\033[32m" + item + " \033[0m")
                     t = True
-
             sys.stdout.write("\n")
             sys.stdout.flush()
 
@@ -2308,15 +2277,12 @@ def query_yes_no(*args, force=False, default=True, command=None):
     while True:
         if command is not None:
             question = str(command) + ": "
-
         console(question, plaintext=True, newline=True)
         console(prompt, color="white", plaintext=True, newline=False)
         choice = input("$: ").lower()
 
         if default is not None and choice == '':
-
             if default is True:
-
                 print("        -> yes")
                 return True
             else:
@@ -2399,7 +2365,6 @@ def doinput(description, default=None, answers=None, force=False):
 
             if ans is default:
                 ans = ans.upper()
-
             display_answers.append(ans)
 
         display_answers.sort(key=lambda x: str(x).lower().strip())
@@ -2416,7 +2381,6 @@ def doinput(description, default=None, answers=None, force=False):
             if answer not in answers:
                 if answer != "":
                     console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
-
                 console("unknown option", color="red", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
                 for pa in display_answers:
