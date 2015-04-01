@@ -422,6 +422,9 @@ def running_in_debugger(include_tests=False):
     @return:
     @raise:
     """
+    if not sys.stdout.isatty():
+        return True
+
     sysglob = SystemGlobals()
 
     if (include_tests is False and sysglob.g_running_in_debugger is None) or (include_tests is True and sysglob.g_running_in_debugger_unit_tests is None):
