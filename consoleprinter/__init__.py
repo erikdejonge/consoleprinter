@@ -1,59 +1,25 @@
+#!/usr/bin/env python3
 # coding=utf-8
 """
 console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-from builtins import open
-from builtins import super
-from builtins import int
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
-from builtins import input
 
-import time
-import io
-import traceback
-import os
-import sys
-import socket
 import base64
+import collections
+import io
 import json
-import ujson
+import os
 import re
+import socket
+import sys
+import time
+import traceback
+import ujson
 import unicodedata
-
-PLURALS = [
-    (r"(?i)(quiz)$", r'\1zes'),
-    (r"(?i)^(oxen)$", r'\1'),
-    (r"(?i)^(ox)$", r'\1en'),
-    (r"(?i)(m|l)ice$", r'\1ice'),
-    (r"(?i)(m|l)ouse$", r'\1ice'),
-    (r"(?i)(matr|vert|ind)(?:ix|ex)$", r'\1ices'),
-    (r"(?i)(x|ch|ss|sh)$", r'\1es'),
-    (r"(?i)([^aeiouy]|qu)y$", r'\1ies'),
-    (r"(?i)(hive)$", r'\1s'),
-    (r"(?i)([lr])f$", r'\1ves'),
-    (r"(?i)([^f])fe$", r'\1ves'),
-    (r"(?i)sis$", 'ses'),
-    (r"(?i)([ti])a$", r'\1a'),
-    (r"(?i)([ti])um$", r'\1a'),
-    (r"(?i)(buffal|tomat)o$", r'\1oes'),
-    (r"(?i)(bu)s$", r'\1ses'),
-    (r"(?i)(alias|status)$", r'\1es'),
-    (r"(?i)(octop|vir)i$", r'\1i'),
-    (r"(?i)(octop|vir)us$", r'\1i'),
-    (r"(?i)^(ax|test)is$", r'\1es'),
-    (r"(?i)s$", 's'),
-    (r"$", 's'),
-]
 
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
@@ -90,213 +56,286 @@ SINGULARS = [
     (r"(?i)s$", ''),
 ]
 
+PLURALS = [
+    (r"(?i)(quiz)$", r'\1zes'),
+    (r"(?i)^(oxen)$", r'\1'),
+    (r"(?i)^(ox)$", r'\1en'),
+    (r"(?i)(m|l)ice$", r'\1ice'),
+    (r"(?i)(m|l)ouse$", r'\1ice'),
+    (r"(?i)(matr|vert|ind)(?:ix|ex)$", r'\1ices'),
+    (r"(?i)(x|ch|ss|sh)$", r'\1es'),
+    (r"(?i)([^aeiouy]|qu)y$", r'\1ies'),
+    (r"(?i)(hive)$", r'\1s'),
+    (r"(?i)([lr])f$", r'\1ves'),
+    (r"(?i)([^f])fe$", r'\1ves'),
+    (r"(?i)sis$", 'ses'),
+    (r"(?i)([ti])a$", r'\1a'),
+    (r"(?i)([ti])um$", r'\1a'),
+    (r"(?i)(buffal|tomat)o$", r'\1oes'),
+    (r"(?i)(bu)s$", r'\1ses'),
+    (r"(?i)(alias|status)$", r'\1es'),
+    (r"(?i)(octop|vir)i$", r'\1i'),
+    (r"(?i)(octop|vir)us$", r'\1i'),
+    (r"(?i)^(ax|test)is$", r'\1es'),
+    (r"(?i)s$", 's'),
+    (r"$", 's'),
+]
+
 UNCOUNTABLES = {'equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'}
 
+SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+SAFECHARS = [ord(ch) for ch in SALPHA]
 
-def _irregular(singular, plural):
+g_column_resize_threshold = None
+g_start_time = time.time()
+
+
+class Bar(object):
     """
-    @type singular: str
-    @type plural: str
-    @return: None
+    Bar
     """
-    def caseinsensitive(mystring):
+    def __enter__(self):
         """
-        @type mystring: str
+        __enter__
+        """
+        return self
+
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        @type exc_type: str
+        @type exc_val: str
+        @type exc_tb: str
         @return: None
         """
-        return ''.join('[' + char + char.upper() + ']' for char in mystring)
+        self.done()
+        return False  # we're not suppressing exceptions
 
-    if singular[0].upper() == plural[0].upper():
-        PLURALS.insert(0, (r"(?i)(%s)%s$" % (singular[0], singular[1:]), r'\1' + plural[1:]))
-        PLURALS.insert(0, (r"(?i)(%s)%s$" % (plural[0], plural[1:]), r'\1' + plural[1:]))
-        SINGULARS.insert(0, (r"(?i)(%s)%s$" % (plural[0], plural[1:]), r'\1' + singular[1:]))
-    else:
-        PLURALS.insert(0, (r"%s%s$" % (singular[0].upper(), caseinsensitive(singular[1:])), plural[0].upper() + plural[1:]))
-        PLURALS.insert(0, (r"%s%s$" % (singular[0].lower(), caseinsensitive(singular[1:])), plural[0].lower() + plural[1:]))
-        PLURALS.insert(0, (r"%s%s$" % (plural[0].upper(), caseinsensitive(plural[1:])), plural[0].upper() + plural[1:]))
-        PLURALS.insert(0, (r"%s%s$" % (plural[0].lower(), caseinsensitive(plural[1:])), plural[0].lower() + plural[1:]))
-        SINGULARS.insert(0, (r"%s%s$" % (plural[0].upper(), caseinsensitive(plural[1:])), singular[0].upper() + singular[1:]))
-        SINGULARS.insert(0, (r"%s%s$" % (plural[0].lower(), caseinsensitive(plural[1:])), singular[0].lower() + singular[1:]))
+    def __init__(self, label='', width=32, hide=None, empty_char=' ', filled_char='#', expected_size=None, every=1):
+        """
+        @type label: str
+        @type width: int
+        @type hide: str, None
+        @type empty_char: float
+        @type filled_char: float
+        @type expected_size: int, None
+        @type every: int
+        @return: None
+        """
+        self.label = label
+        self.width = width
+        self.hide = hide
+
+        # Only show bar in terminals by default (better for piping, logging etc.)
+        stream = sys.stderr
+
+        if hide is None:
+            try:
+                self.hide = not stream.isatty()
+            except AttributeError:  # output does not support isatty()
+                self.hide = True
+
+        self.empty_char = empty_char
+        self.filled_char = filled_char
+        self.expected_size = expected_size
+        self.every = every
+        self.start = time.time()
+        self.ittimes = []
+        self.eta = 0
+        self.etadelta = time.time()
+        self.etadisp = self.format_time(self.eta)
+        self.last_progress = 0
+        self.elapsed = 0
+
+        if self.expected_size:
+            self.show(0)
+
+    def show(self, progress, count=None):
+        """
+        @type progress: int
+        @type count: str, None
+        @return: None
+        """
+        stream = sys.stderr
+        bar_template = '%s[%s%s] %s/%s - %s\r'
+
+        # How long to wait before recalculating the ETA
+        eta_interval = 1
+
+        # How many intervals (excluding the current one) to calculate the simple moving
+        # average
+        eta_sma_window = 9
+
+        if count is not None:
+            self.expected_size = count
+
+        if self.expected_size is None:
+            raise Exception("expected_size not initialized")
+
+        self.last_progress = "%.2f" % progress
+
+        if (time.time() - self.etadelta) > eta_interval:
+            self.etadelta = time.time()
+            self.ittimes = self.ittimes[-eta_sma_window:] + [-(self.start - time.time()) / (progress + 1)]
+            self.eta = sum(self.ittimes) / float(len(self.ittimes)) * (self.expected_size - progress)
+            self.etadisp = self.format_time(int(self.eta))
+
+        x = int(self.width * progress // self.expected_size)
+
+        if not self.hide:
+            if ((progress % self.every) == 0 or      # True every "every" updates
+                    (progress == self.expected_size)):   # And when we're done
+                stream.write(bar_template % (
+                    self.label, self.filled_char * x,
+                    self.empty_char * (self.width - x), sizeof_fmt(progress),
+                    sizeof_fmt(self.expected_size), self.etadisp))
+
+                stream.flush()
+
+    def done(self):
+        """
+        done
+        """
+        self.elapsed = time.time() - self.start
+        elapsed_disp = self.format_time(self.elapsed)
+        stream = sys.stderr
+        bar_template = '%s[%s%s] %s/%s - %s\r'
+        self.last_progress = "%.1f" % float(self.last_progress)
+        self.expected_size = "%.1f" % float(self.expected_size)
+
+        if not self.hide:
+            # Print completed bar with elapsed time
+            stream.write(bar_template % (
+                self.label, self.filled_char * self.width,
+                self.empty_char * 0, self.last_progress,
+                self.expected_size, elapsed_disp))
+
+            stream.write('\n')
+            stream.flush()
+
+    @staticmethod
+    def format_time(seconds):
+        """
+        @type seconds: int
+        @return: None
+        """
+        return time.strftime('%H:%M:%S', time.gmtime(seconds))
 
 
-def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
+class FastList(object):
     """
-    @type mystring: str
-    @type uppercase_first_letter: bool
-    @type remove_spaces: bool
-    @return: None
+    FastList
     """
-    if remove_spaces is True:
-        ns = ""
+    def __init__(self):
+        """
+        __init__
+        """
+        self.dictlist = {}
 
-        for s in mystring.split(" "):
-            ns += re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), s)
+    def add(self, o):
+        """
+        @type o: object
+        """
+        self.dictlist[o] = 1
 
-        mystring = ns
+    def delete(self, o):
+        """
+        @type o: str
+        """
+        if o in self.dictlist:
+            del self.dictlist[o]
 
-    if uppercase_first_letter:
-        return re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), mystring)
-    else:
-        return mystring[0].lower() + camelize(mystring)[1:]
+    def has(self, o):
+        """
+        @type o: object
+        """
+        return o in self.dictlist
+
+    def ilist(self):
+        """
+        list
+        """
+        return iter(list(self.dictlist.keys()))
+
+    def list(self):
+        """
+        list
+        """
+        return list(self.dictlist.keys())
+
+    def size(self):
+        """
+        size
+        """
+        return len(list(self.dictlist.keys()))
 
 
-def camelize(mystring, uppercase_first_letter=True):
+class Info(object):
     """
-    @type mystring: str
-    @type uppercase_first_letter: bool
-    @return: None
+    Bar
     """
-    if uppercase_first_letter:
-        return re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), mystring)
-    else:
-        return mystring[0].lower() + camelize(mystring)[1:]
+    def __init__(self, *args):
+        """
+        @type args: tuple
+        @return: None
+        """
+        command = ""
 
+        for i in args:
+            command += str(i) + " "
 
-def dasherize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    return word.replace('_', '-')
+        self.command = command.strip()
+        self.items = []
 
+    def __enter__(self):
+        """
+        __enter__
+        """
+        return self
 
-def humanize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    word = re.sub(r"_id$", "", word)
-    word = word.replace('_', ' ')
-    word = re.sub(r"(?i)([a-z\d]*)", lambda m: m.group(1).lower(), word)
-    word = re.sub(r"^\w", lambda m: m.group(0).upper(), word)
-    return word
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        @type exc_type: str
+        @type exc_val: str
+        @type exc_tb: str
+        @return: None
+        """
+        linenr = get_line_number()
+        print("\033[30m==\n" + str(self.command), linenr, "\n==\033[0m")
+        longest = 0
 
+        for line in self.items:
+            for item in line:
+                if len(str(item)) > longest:
+                    longest = len(str(item))
+                break
 
-def ordinal(number):
-    """
-    @type number: str
-    @return: None
-    """
-    number = abs(int(number))
+        for line in self.items:
+            t = True
 
-    if number % 100 in (11, 12, 13):
-        return "th"
-    else:
-        return {1: "st", 2: "nd", 3: "rd", }.get(number % 10, "th")
+            for item in line:
+                if t:
+                    sys.stdout.write("\033[0m" + item + " \033[0m")
+                    spaces = " " * (longest - len(remove_escapecodes(item)))
+                    sys.stdout.write("\033[0m" + spaces + ": \033[0m")
+                    t = False
+                else:
+                    item = colorize_for_print(str(item))
+                    sys.stdout.write("\033[32m" + item + " \033[0m")
+                    t = True
 
+            sys.stdout.write("\n")
+            sys.stdout.flush()
 
-def ordinalize(number):
-    """
-    @type number: str
-    @return: None
-    """
-    return "%s%s" % (number, ordinal(number))
+        return False
 
-
-def parameterize(mystring, separator='-'):
-    """
-    @type mystring: str
-    @type separator: str
-    @return: None
-    """
-    mystring = transliterate(mystring)
-    mystring = re.sub(r"(?i)[^a-z0-9\-_]+", separator, mystring)
-
-    if separator:
-        re_sep = re.escape(separator)
-        mystring = re.sub(r'%s{2,}' % re_sep, separator, mystring)
-        mystring = re.sub(r"(?i)^%(sep)s|%(sep)s$" % {'sep': re_sep}, '', mystring)
-
-    return mystring.lower()
-
-
-def pluralize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    if not word or word.lower() in UNCOUNTABLES:
-        return word
-    else:
-        for rule, replacement in PLURALS:
-            if re.search(rule, word):
-                return re.sub(rule, replacement, word)
-
-        return word
-
-
-def singularize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    for inflection in UNCOUNTABLES:
-        if re.search(r'(?i)\b(%s)\Z' % inflection, word):
-            return word
-
-    for rule, replacement in SINGULARS:
-        if re.search(rule, word):
-            return re.sub(rule, replacement, word)
-
-    return word
-
-
-def tableize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    return pluralize(underscore(word))
-
-
-def titleize(word):
-    """
-    @type word: str
-    @return: None
-    """
-    return re.sub(r"\b('?[a-z])", lambda match: match.group(1).capitalize(), humanize(underscore(word)))
-
-
-def transliterate(mystring):
-    """
-    @type mystring: str
-    @return: None
-    """
-    normalized = unicodedata.normalize('NFKD', mystring)
-    return normalized.encode('ascii', 'ignore').decode('ascii')
-
-
-def snake_case(word, remove_spaces=True):
-    """
-    @type word: str
-    @type remove_spaces: bool
-    @return: None
-    """
-    if remove_spaces is True:
-        word = word.replace(" ", "_")
-
-    word = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', word)
-    word = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', word)
-    word = word.replace("-", "_")
-    return word.lower()
-
-
-def underscore(word):
-    """
-    @type word: str
-    @return: None
-    """
-    word = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', word)
-    word = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', word)
-    word = word.replace("-", "_")
-    return word.lower()
-_irregular('person', 'people')
-_irregular('man', 'men')
-_irregular('child', 'children')
-_irregular('sex', 'sexes')
-_irregular('move', 'moves')
-_irregular('cow', 'kine')
-_irregular('zombie', 'zombies')
+    def add(self, *args):
+        """
+        @type args: list
+        @return: None
+        """
+        self.items.append(args)
 
 
 class SystemGlobals(object):
@@ -366,454 +405,102 @@ class SystemGlobals(object):
 
         console("SystemGlobals:set", k, once=True, color='grey', line_num_only=3)
         self.g_memory[k] = v
-SystemGlobals()
 
 
-def get_debugmode():
+def _irregular(singular, plural):
     """
-    get_debugmode
-    """
-    sg = SystemGlobals()
-    return sg.g_debug
-
-
-def exist(data):
-    """
-    @type data: str, int, float, None, dict, list
-    """
-    if data is None:
-        return False
-
-    if isinstance(data, bool) or isinstance(data, int) or isinstance(data, float):
-        return data
-    elif isinstance(data, list) or isinstance(data, set) or isinstance(data, tuple):
-        if data:
-            return True
-        else:
-            return False
-
-    data = str(data).strip()
-
-    if not data:
-        return False
-    elif str(data) == "":
-        return False
-    elif len(str(data)) == 0:
-        return False
-    elif str(data) == "False":
-        return False
-    elif str(data) == "false":
-        return False
-    elif str(data) == "undefined":
-        return False
-    elif str(data) == "null":
-        return False
-    elif str(data) == "none":
-        return False
-    elif str(data) == "None":
-        return False
-
-    return True
-
-
-def running_in_debugger(include_tests=False):
-    """
-    @type include_tests: bool
-    @return:
-    @raise:
-    """
-    if not sys.stdout.isatty():
-        return True
-
-    sysglob = SystemGlobals()
-
-    if (include_tests is False and sysglob.g_running_in_debugger is None) or (include_tests is True and sysglob.g_running_in_debugger_unit_tests is None):
-        in_debugger = False
-        stack = stack_trace(ret_list=True, reverse_stack=False)
-
-        for i in stack:
-            i = str(i)
-
-            if "simple_server.py" in i:
-                in_debugger = True
-                print("debugger, simple_server.py")
-
-            if include_tests:
-                if "unittest.TextTestRunner" in i:
-                    in_debugger = True
-                elif "TeamcityTestRunner().run" in i:
-                    in_debugger = True
-                elif "test.py" in i:
-                    in_debugger = True
-
-            if "debugger.run" in i:
-                in_debugger = True
-
-            if in_debugger:
-                break
-
-        if include_tests:
-            sysglob.g_running_in_debugger_unit_tests = in_debugger
-
-        sysglob.g_running_in_debugger = in_debugger
-    else:
-        if include_tests:
-            in_debugger = sysglob.g_running_in_debugger_unit_tests
-        else:
-            in_debugger = sysglob.g_running_in_debugger
-
-    return in_debugger
-
-
-def dot_print(cnt=0, total=0, modint=10):
-    """
-    @type cnt: int
-    @type total: int
-    @type modint: int
+    @type singular: str
+    @type plural: str
     @return: None
     """
-    sys.stdout.write(".")
+    def caseinsensitive(mystring):
+        """
+        @type mystring: str
+        @return: None
+        """
+        return ''.join('[' + char + char.upper() + ']' for char in mystring)
 
-    if cnt > 0 and cnt % modint == 0:
-        sys.stdout.write("\n" + str(cnt) + "/" + str(total) + "\n")
-    sys.stdout.flush()
+    if singular[0].upper() == plural[0].upper():
+        PLURALS.insert(0, (r"(?i)(%s)%s$" % (singular[0], singular[1:]), r'\1' + plural[1:]))
+        PLURALS.insert(0, (r"(?i)(%s)%s$" % (plural[0], plural[1:]), r'\1' + plural[1:]))
+        SINGULARS.insert(0, (r"(?i)(%s)%s$" % (plural[0], plural[1:]), r'\1' + singular[1:]))
+    else:
+        PLURALS.insert(0, (r"%s%s$" % (singular[0].upper(), caseinsensitive(singular[1:])), plural[0].upper() + plural[1:]))
+        PLURALS.insert(0, (r"%s%s$" % (singular[0].lower(), caseinsensitive(singular[1:])), plural[0].lower() + plural[1:]))
+        PLURALS.insert(0, (r"%s%s$" % (plural[0].upper(), caseinsensitive(plural[1:])), plural[0].upper() + plural[1:]))
+        PLURALS.insert(0, (r"%s%s$" % (plural[0].lower(), caseinsensitive(plural[1:])), plural[0].lower() + plural[1:]))
+        SINGULARS.insert(0, (r"%s%s$" % (plural[0].upper(), caseinsensitive(plural[1:])), singular[0].upper() + singular[1:]))
+        SINGULARS.insert(0, (r"%s%s$" % (plural[0].lower(), caseinsensitive(plural[1:])), singular[0].lower() + singular[1:]))
 
 
-def dot_print_end():
+def abort(command, description, stack=False):
     """
-    dot_print_end
-    """
-    sys.stdout.write("\n")
-    sys.stdout.flush()
-
-
-def stdoutwriteline(*args):
-    """
-    @type args: tuple
+    @type command: str, None
+    @type description: str
+    @type stack: bool
     @return: None
     """
-    s = ""
+    if command is None:
+        command = "?"
 
-    for i in args:
-        s += str(i) + " "
+    console_cmd_desc(command, description + "!  ", "red", enteraftercmd=False)
 
-    s = s.strip()
-    sys.stdout.write(str(s) + "\n")
-    sys.stdout.flush()
-    return s
+    if stack is True:
+        console("⚡", print_stack=True)
+    raise SystemExit(1)
 
 
-def timestamp_to_string_gmt(ts, short=False):
+def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char='#', expected_size=None, every=1):
     """
-    @type ts: float
-    @type short: bool
-    """
-    monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    year, month, day, hh, mm, ss, x, y, z = time.gmtime(ts)
-
-    if short:
-        year -= 2000
-        s = "%d-%d-%d %02d:%02d:%02d" % (day, month, year, hh, mm, ss)
-    else:
-        s = "%3s %02d %04d %02d:%02d:%02d" % (monthname[month], day, year, hh, mm, ss)
-
-    return s
-
-
-def human_now(timedelta_seconds=3600):
-    """
-    @type timedelta_seconds: str
-    """
-    return timestamp_to_string_gmt(time.time() + timedelta_seconds)
-
-
-def log_date_time_string():
-    """
-    log_date_time_string
-    @return: @rtype:
-    """
-    ts = "[" + timestamp_to_string_gmt(time.time()) + "]"
-    return ts
-
-
-def stack_as_string():
-    """
-    stack_as_string
-    """
-    if sys.version_info.major == 3:
-        stack = io.StringIO()
-    else:
-        stack = io.BytesIO()
-    traceback.print_stack(file=stack)
-    stack.seek(0)
-    stack = stack.read()
-    return stack
-
-
-def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=True, extralevel=False):
-    """
-    @type line_num_only: int
-    @type ret_list: bool
-    @type fullline: bool
-    @type reverse_stack: bool
-    @type extralevel: bool
+    Progress iterator. Wrap your iterables with it.
+    @type it: str
+    @type label: str
+    @type width: int
+    @type hide: str, None
+    @type empty_char: float
+    @type filled_char: float
+    @type expected_size: int, None
+    @type every: int
     @return: None
     """
-    stack = stack_as_string()
-
-    if ret_list and (line_num_only > 0):
-        raise Exception("ret_list or line_num_only both true")
-
-    stackl = []
-    stack = stack.split("\n")
-
-    if reverse_stack:
-        stack.reverse()
-
-    cnt = 0
-
-    for i in stack:
-        i = str(i)
-        stackl.append(i)
-
-        if line_num_only > 0:
-            if "line" in i and "File" in i:
-                if cnt > line_num_only - 1:
-                    for j in i.split("line"):
-                        for k in j.split(","):
-                            try:
-                                ln = int(k)
-
-                                if fullline or extralevel:
-                                    codeline = i.strip()
-                                    codeline = codeline.split(", in ")
-
-                                    if extralevel:
-                                        codepath = os.path.basename(os.path.dirname(codeline[0]))
-                                        codepath += "/"
-                                        codepath += os.path.basename(codeline[0])
-                                        return codepath + " (" + codeline[1] + ")"
-                                    else:
-                                        return codeline[0] + " (" + codeline[1] + ")"
-                                else:
-                                    i = i.replace("File ", "")
-
-                                fs = i.replace('"', "").split(",")[0].split(os.sep)
-                                return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
-                            except ValueError:
-                                pass
-
-                            except BaseException as be:
-                                print(be)
-
-                cnt += 1
-
-    if line_num_only > 0:
-        return str("?")
-
-    if ret_list:
-        return stackl
-
-    return "\n".join(stackl)
+    count = len(it) if expected_size is None else expected_size
+    with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
+        for i, item in enumerate(it):
+            yield item
+            mybar.show(i + 1)
 
 
-def strcmp(s1, s2):
-    """
-    @type s1: str or unicode
-    @type s2: str or unicode
-    @return: @rtype: bool
-    """
-    # noinspection PyArgumentEqualDefault
-    s1 = s1.encode("utf-8")
-
-    # noinspection PyArgumentEqualDefault
-    s2 = s2.encode("utf-8")
-
-    if not s1 or not s2:
-        return False
-
-    s1 = s1.strip()
-    s2 = s2.strip()
-    equal = s1 == s2
-    return equal
-
-
-def set_console_start_time():
-    """
-    set_console_start_time
-    """
-    global g_start_time
-    g_start_time = time.time()
-
-
-def format_source_code_line_console(path):
-    """
-    @type path: str, unicode
-    @return: @raise
-    """
-    paths = path.split(",")
-
-    if len(paths) == 2:
-        # dpath = os.path.basename(os.path.dirname(paths[0]))
-        fpath = os.path.basename(paths[0]).strip().replace('"', "")
-
-        if "__init__" in fpath:
-            fpath = os.path.basename(os.path.dirname(paths[0]).strip().replace('"', "")) + "/" + fpath
-
-        location = paths[1].replace(' line ', ":").strip("/")
-        return fpath + location.replace(" (", ":").replace(")", "").strip()
-    else:
-        return path
-
-
-def source_code_link(stack_offset=0, fullline=True):
-    """
-    @type stack_offset: int
-    @type fullline: bool
-    """
-    return stack_trace(line_num_only=2 + stack_offset, fullline=fullline)
-set_console_start_time()
-
-g_column_resize_threshold = None
-
-
-def size_columns(columncounter, g_width_console_columns, subs, donotuseredis):
-    """
-    @type columncounter: int
-    @type g_width_console_columns: list
-    @type subs: str
-    @type donotuseredis: bool
-    @return: (int, str)
-    """
-    if donotuseredis:
-        return columncounter, subs
-    global g_column_resize_threshold
-
-    # noinspection PyBroadException
-    try:
-        if g_column_resize_threshold is not None:
-            return g_column_resize_threshold
-    except:
-        return columncounter, subs
-    try:
-        lsub = len(str(subs))
-    except Exception as ex:
-        print(ex)
-        lsub = len(subs)
-
-    if len(g_width_console_columns) <= columncounter:
-        g_width_console_columns.append(lsub)
-    else:
-        if g_width_console_columns[columncounter] < lsub:
-            g_width_console_columns[columncounter] = lsub
-
-        column_resize_threshold = g_column_resize_threshold
-
-        if g_column_resize_threshold is None:
-            column_resize_threshold = 15
-
-        if (g_width_console_columns[columncounter] - lsub) > column_resize_threshold:
-            g_width_console_columns[columncounter] = lsub
-            g_column_resize_threshold = 15
-        else:
-            g_column_resize_threshold = column_resize_threshold - 1
-
-    if (g_width_console_columns[columncounter] - lsub) > 0:
-        if columncounter < 3:
-            subs += " " * (g_width_console_columns[columncounter] - lsub)
-
-    columncounter += 1
-    return columncounter, subs
-
-
-def get_colors():
-    """
-    get_colors
-    """
-    colors = {'red': '\033[31m',
-              'green': '\033[32m',
-              'darkgreen': '\033[92m',
-              'yellow': '\033[33m',
-              'darkyellow': '\033[93m',
-              'blue': '\033[94m',
-              'magenta': '\033[35m',
-              'cyan': '\033[36m',
-              'darkcyan': '\033[96m',
-              'white': '\033[97m',
-              'black': '\033[90m',
-              'purple': '\033[34m',
-              'grey': '\033[30m',
-              'orange': '\033[91m',
-              'default': '\033[0m'}
-
-    return colors
-
-
-def remove_extra_indentation(doc, stop_looking_when_encountered=None):
-    """
-    @type doc: str
-    @type stop_looking_when_encountered: str, None
-    @return: None
-    """
-    if doc is None:
-        console_warning("doc is None")
-        return doc
-
-    newdoc = ""
-    whitespacecount = 0
-    keeplookingforindention = True
-
-    for line in doc.strip().split("\n"):
-        line = line.rstrip()
-
-        if stop_looking_when_encountered is not None:
-            if line.lower().startswith(stop_looking_when_encountered):
-                keeplookingforindention = False
-
-        if keeplookingforindention is True:
-            if whitespacecount == 0:
-                whitespacecount = len(line) - len(line.lstrip())
-
-        line = line[whitespacecount:]
-        newdoc += line + "\n"
-
-    newdoc = newdoc.strip()
-    return newdoc
-
-
-def spaces_leftside(mystring):
+def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
     """
     @type mystring: str
-    @return: int
-    """
-    mystring = get_safe_string(mystring)
-    fl = len(mystring)
-    mystring = mystring.lstrip()
-    return fl - len(mystring)
-
-
-def class_with_address(cls):
-    """
-    @type cls: str
+    @type uppercase_first_letter: bool
+    @type remove_spaces: bool
     @return: None
     """
-    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(cls)
+    if remove_spaces is True:
+        ns = ""
+
+        for s in mystring.split(" "):
+            ns += re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), s)
+
+        mystring = ns
+
+    if uppercase_first_letter:
+        return re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), mystring)
+    else:
+        return mystring[0].lower() + camelize(mystring)[1:]
 
 
-def class_without_address(cls):
-    """
-    @type cls: str
-    @return: None
-    """
-    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object>"
-
-
-def remove_color(mystring):
+def camelize(mystring, uppercase_first_letter=True):
     """
     @type mystring: str
+    @type uppercase_first_letter: bool
     @return: None
     """
-    return remove_escapecodes(mystring)
+    if uppercase_first_letter:
+        return re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), mystring)
+    else:
+        return mystring[0].lower() + camelize(mystring)[1:]
 
 
 def check_for_positional_argument(kwargs, name, default=False):
@@ -847,177 +534,85 @@ def check_for_positional_arguments(kwargs, namelist):
     return False
 
 
-def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False):
+def class_with_address(cls):
     """
-    @type colors: dict
-    @type indent: int
-    @type return_string: bool
-    @type value: str
-    @type dbs: str
-    @type plaintext: bool
+    @type cls: str
     @return: None
     """
-    if plaintext is True:
-        colors2 = {}
+    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(cls)
 
-        for k in colors:
-            colors2[k] = ""
 
-        colors = colors2
+def class_without_address(cls):
+    """
+    @type cls: str
+    @return: None
+    """
+    return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object>"
 
-    if isinstance(value, dict):
-        value = value.copy()
 
-        # noinspection PyBroadException
+def clear_screen():
+    """
+    clear_screen
+    """
+    if sys.stderr.isatty():
+        sys.stderr.write('\x1Bc')
+        sys.stderr.flush()
+
+
+def colorize_for_print(v):
+    """
+    @type v: str
+    @return: None
+    """
+    s = ""
+    v = v.strip()
+
+    if v == "false":
+        v = "False"
+    elif v == "true":
+        v = "True"
+
+    num = v.isdigit()
+    isfloat = False
+
+    if num is True:
+        isfloat = num == int(float(int(num)))
+
+    if not num:
+        v.replace("'", "").replace('"', "")
+        num = v.isdigit()
+
+    if not num:
         try:
-            value = ujson.dumps(value)
-        except Exception:
-            try:
-                for k in value:
-                    value[k] = str(value[k])
-                import json
-                value = json.dumps(value, indent=1)
-            except Exception as e:
-                value = str(value)
-                value += " | error dumping dict" + str(e) + " | "
+            v2 = v.replace("'", "").replace('"', "")
+            num = float(v2)
+            num = True
+            v = v2
+        except ValueError:
+            pass
 
-        subs = str(value)
-    elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
-        subs = str(value)
+    ispath = os.path.exists(v)
 
-        if not sys.stdout.isatty():
-            subs = get_safe_string(subs, "@:-_?/")
+    if ispath is True:
+        if "/" not in v:
+            ispath = False
 
-    elif isinstance(value, BaseException):
-        if plaintext is True:
-            subs = str(value)
+    if num is True:
+        if isfloat:
+            s += "\033[36m" + v + "\033[0m"
         else:
-            subs = handle_ex(value, False, True)
+            s += "\033[91m" + v + "\033[0m"
+
+    elif ispath is True:
+        s += "\033[35m" + v + "\033[0m"
+    elif v == "False":
+        s += "\033[31m" + v + "\033[0m"
+    elif v == "True":
+        s += "\033[92m" + v + "\033[0m"
     else:
-        import arguments
-        if isinstance(value, arguments.Arguments):
-            if plaintext is True:
-                subs = value.as_yaml()
-            else:
-                subs = value.for_print()
-        else:
-            if return_string:
-                clsaddr = str(class_without_address(value))
-            else:
-                clsaddr = str(class_with_address(value))
-            try:
-                if str(clsaddr) == str(value):
-                    dbs += colors["purple"] + str(value) + colors["default"] + "\n"
-                else:
-                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
-            except TypeError:
-                dbs += colors["grey"] + " |" + colors["default"] + "\n"
+        s += "\033[93m" + v + "\033[0m"
 
-            leftoffset = remove_color(dbs).find("|") - 1
-            subs = " " * (leftoffset - 4)
-            colwidthdelta = 0
-
-            if plaintext:
-                colwidthdelta = 19
-                subs = ""
-
-            sm = get_safe_string(value.__class__.__name__)
-
-            if len(sm) > indent:
-                sm = sm[:indent] + ".."
-
-            subheader = colors['orange'] + subs + " | " + sm
-            subheader += (37 - len(get_safe_string(subheader))) * " "
-            subheader += "type"
-            subheader += (68 - len(get_safe_string(subheader))) * " "
-            subheader += "value" + colors['default'] + "\n"
-            members = set()
-
-            for m in dir(value):
-                members.add(m)
-
-            members = sorted(members)
-
-            import collections
-            mycolors = collections.deque(["darkcyan", "yellow"])
-
-            if plaintext is False:
-                subs += " " * leftoffset
-
-            numprintable = 0
-
-            for m in members:
-                if not m.startswith("__"):
-                    numprintable += 1
-
-            if numprintable > 0:
-                subs += subheader + (leftoffset * " ")
-                subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
-
-            for m in members:
-                if not m.startswith("__"):
-                    if m.startswith("_"):
-                        if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
-                            continue
-
-                    if plaintext is False:
-                        subs += " " * leftoffset
-
-                    subs += colors["grey"] + " | " + colors['default']
-                    privatevar = False
-
-                    if ("_" + value.__class__.__name__) in m:
-                        privatevar = True
-
-                    sm = str(m).replace("_" + value.__class__.__name__, "")
-                    mycolor = mycolors.pop()
-
-                    if len(sm) > 31:
-                        sm = sm[:31] + ".. "
-
-                    tempcolor = mycolor
-
-                    if privatevar is True:
-                        mycolor = "red"
-
-                    subs += colors[mycolor] + sm
-                    mycolor = tempcolor
-                    mycolors.appendleft(mycolor)
-
-                    if privatevar is True:
-                        subs += colors['default']
-                        subs += colors[mycolor]
-
-                    subs += " " * (34 - len(sm))
-
-                    if hasattr(value.__class__, m):
-                        t = type(getattr(value.__class__, m))
-                    else:
-                        t = type(getattr(value, m))
-
-                    sm = repr(t).replace("<class '", "").replace("'>", "")
-
-                    # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
-                    extraspacereduction = 0
-
-                    if len(sm) > 31:
-                        sm = sm[:31] + ".."
-                        extraspacereduction = len("..")
-
-                    subs += sm
-                    memberval = getattr(value, m)
-
-                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                        subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-
-                        if plaintext is True:
-                            subs += str(memberval)
-                        else:
-                            subs += colorize_for_print(str(memberval))
-
-                    subs += "\n" + colors['default']
-
-    return dbs, subs
+    return s
 
 
 def console(*args, **kwargs):
@@ -1256,8 +851,70 @@ def console(*args, **kwargs):
 
     if not sys.stdout.isatty():
         dbs = remove_color(dbs)
+
     sys.stderr.write(dbs)
     sys.stderr.flush()
+
+
+def console_cmd_desc(command, description, color, enteraftercmd=False):
+    """
+    @type command: str
+    @type description: str
+    @type color: str
+    @type enteraftercmd: bool
+    @return: None
+    """
+    linenr = get_line_number(5)
+    cmdstr = command + ":"
+
+    if color == "red":
+        color = "red"
+        subcolor = "darkyellow"
+    else:
+        subcolor = color
+        color = "blue"
+
+    # else:
+    #    color = "blue"
+    console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
+    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
+
+    if color == "red":
+        console(linenr, plaintext=True, color="black", newline=True)
+
+
+def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_only=6):
+    """
+    @type stacktracemsg: str
+    @type exceptiontoraise: BaseException
+    @type errorplaintxt: str, None
+    @type line_num_only: int
+    @return: None
+    """
+    if errorplaintxt:
+        console(errorplaintxt, color="red", plainprint=True)
+
+    console_warning(stacktracemsg, print_stack=True, color="darkyellow", line_num_only=line_num_only)
+    raise exceptiontoraise
+
+
+def console_error_exit(*args, **kwargs):
+    """
+    @type args: tuple
+    @type kwargs: dict
+    @return: None
+    """
+    kwargs["exit"] = True
+    kwargs["print_stack"] = True
+    return SystemExit(console_warning(*args, **kwargs))
+
+
+def console_exception(ex):
+    """
+    @type ex: object, Exception
+    """
+    exstr = handle_ex(ex, False, True)
+    console_saved_exception(exstr)
 
 
 def console_saved_exception(excstr, verbose=True):
@@ -1286,12 +943,653 @@ def console_saved_exception(excstr, verbose=True):
     return major_info
 
 
-def resetterminal():
+def console_warning(*args, **kwargs):
     """
-    resetterminal():
+    @param args
+    @type args:
+    @param kwargs
+    @type kwargs:
     """
-    sys.stderr.write('\033[0m')
-    return
+    retval = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
+
+    if "color" in kwargs:
+        color = kwargs["color"]
+    else:
+        color = "red"
+
+    if "print_stack" in kwargs:
+        print_stack = kwargs["print_stack"]
+    else:
+        print_stack = True
+
+    if "line_num_only" in kwargs:
+        line_num_only = kwargs["line_num_only"]
+    else:
+        line_num_only = 4
+
+    if "once" in kwargs:
+        once = kwargs["once"]
+    else:
+        once = False
+
+    if running_in_debugger(True):
+        args = list(args)
+        args.insert(0, "==")
+        args.append(source_code_link(line_num_only - 2))
+        args.append("==")
+
+    bexit = check_for_positional_argument(kwargs, "exit", default=False)
+    retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=retval)
+
+    if bexit is True:
+        retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
+        raise SystemExit(retval)
+
+    return retval
+
+
+def consoledict(mydict, members=None, printval=True, indent=0, retval=False, plainprint=False):
+    """
+    @type mydict: dict
+    @type members: str, None
+    @type retval: bool
+    @type indent: int
+    @type printval: bool
+    @type plainprint: bool
+    @return: None
+    """
+    dbs = ""
+
+    if printval is True:
+        dbs = "\033[32m" + log_date_time_string() + " | "
+        dbs += stack_trace(line_num_only=3).strip()
+        dbs += " - consoledict:\033[0m\n"
+
+    if plainprint is True:
+        dbs = log_date_time_string() + " | "
+        dbs += stack_trace(line_num_only=3).strip()
+        dbs += " - consoledict:\n"
+
+    if indent > 0:
+        dbs = ""
+
+    if isinstance(mydict, dict):
+        if members is None:
+            members = list(mydict.keys())
+
+        members.sort()
+
+        for i in members:
+            dbs += "    " * indent
+
+            if isinstance(mydict[i], dict):
+                newindent = indent + 1
+
+                if plainprint is False:
+                    dbs += "\033[35m" + str(i) + ":\n" + "\033[0m"
+                else:
+                    dbs += str(i) + ":\n"
+
+                dbs += consoledict(mydict[i], printval=printval, indent=newindent, retval=True, plainprint=plainprint)
+            else:
+                if plainprint is False:
+                    dbs += "\033[35m" + str(i) + ": " + "\033[0m"
+                    dbs += colorize_for_print(str(mydict[i])) + "\n"
+                else:
+                    dbs += str(i) + ": " + str(mydict[i]) + "\n"
+    else:
+        dbs += "not dict: " + str(mydict) + "\n"
+
+    if printval is True and retval is False:
+        sys.stderr.write(dbs)
+
+    if indent == 0:
+        dbs = dbs.strip()
+
+    return dbs
+
+
+def consoletasks(*args, **kwargs):
+    """
+    @type args: tuple
+    @type kwargs: dict
+    @return:
+    @raise:
+    """
+    line_num_only = 3
+    if "line_num_only" in kwargs:
+        line_num_only = kwargs["line_num_only"]
+
+    kwargs["line_num_only"] = line_num_only
+    kwargs["newline"] = False
+    console(*args, **kwargs)
+
+
+def dasherize(word):
+    """
+    @type word: str
+    @return: None
+    """
+    return word.replace('_', '-')
+
+
+def doinput(description, default=None, answers=None, force=False):
+    """
+    @type description: str
+    @type default: str, None
+    @type answers: list, None
+    @type force: bool
+    @return: None
+    """
+    if force is True:
+        if default is None:
+            raise AssertionError("no default set")
+
+        return default
+
+    print()
+    answer = ""
+    quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
+
+    if default is not None:
+        description += "\033[96m (default: \033[93m" + str(default) + "\033[96m" + ", quit: q)?"
+
+    if answers is not None:
+        display_answers = ["quit/q"]
+
+        for ans in answers:
+            ans = str(ans)
+
+            if ans is default:
+                ans = ans.upper()
+
+            display_answers.append(ans)
+
+        display_answers.sort(key=lambda x: str(x).lower().strip())
+        answers.extend(quitanswers)
+        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        console("options:", indent="  ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+        for pa in display_answers:
+            console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+        while True:
+            answer = get_input_answer(default)
+
+            if answer not in answers:
+                if answer != "":
+                    console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
+
+                console("unknown option", color="red", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+                for pa in display_answers:
+                    console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+            else:
+                break
+    else:
+        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        answer = get_input_answer(default)
+
+    if answer in quitanswers:
+        raise SystemExit("doinput quit")
+
+    print("-> " + str(answer))
+    return answer
+
+
+def dot_print(cnt=0, total=0, modint=10):
+    """
+    @type cnt: int
+    @type total: int
+    @type modint: int
+    @return: None
+    """
+    sys.stdout.write(".")
+
+    if cnt > 0 and cnt % modint == 0:
+        sys.stdout.write("\n" + str(cnt) + "/" + str(total) + "\n")
+
+    sys.stdout.flush()
+
+
+def dot_print_end():
+    """
+    dot_print_end
+    """
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+
+def exist(data):
+    """
+    @type data: str, int, float, None, dict, list
+    """
+    if data is None:
+        return False
+
+    if isinstance(data, bool) or isinstance(data, int) or isinstance(data, float):
+        return data
+    elif isinstance(data, list) or isinstance(data, set) or isinstance(data, tuple):
+        if data:
+            return True
+        else:
+            return False
+
+    data = str(data).strip()
+
+    if not data:
+        return False
+    elif str(data) == "":
+        return False
+    elif len(str(data)) == 0:
+        return False
+    elif str(data) == "False":
+        return False
+    elif str(data) == "false":
+        return False
+    elif str(data) == "undefined":
+        return False
+    elif str(data) == "null":
+        return False
+    elif str(data) == "none":
+        return False
+    elif str(data) == "None":
+        return False
+
+    return True
+
+
+def format_source_code_line_console(path):
+    """
+    @type path: str, unicode
+    @return: @raise
+    """
+    paths = path.split(",")
+
+    if len(paths) == 2:
+        # dpath = os.path.basename(os.path.dirname(paths[0]))
+        fpath = os.path.basename(paths[0]).strip().replace('"', "")
+
+        if "__init__" in fpath:
+            fpath = os.path.basename(os.path.dirname(paths[0]).strip().replace('"', "")) + "/" + fpath
+
+        location = paths[1].replace(' line ', ":").strip("/")
+        return fpath + location.replace(" (", ":").replace(")", "").strip()
+    else:
+        return path
+
+
+def fpath_in_stack(fpath):
+    """
+    @type fpath: str
+    """
+    stack = stack_as_string()
+    stack = stack.split("\n")
+    stack.reverse()
+
+    for i in stack:
+        if i.strip().startswith("File"):
+            if fpath.lower() in i.lower():
+                if "greenlet.py" in fpath:
+                    console("fpath_in_stack", fpath, source_code_link(2))
+
+                # else:
+                #    console("fpath_in_stack", fpath, source_code_link(1))
+                return True
+
+    return False
+
+
+def func_info(func_object):
+    """
+    @type func_object: function
+    """
+    if func_object is None:
+        raise TypeError("func_info needs function")
+
+    fname = func_object.__code__.co_filename
+    linenr = func_object.__code__.co_firstlineno
+    funcname = func_object.__code__.co_name
+    return fname, funcname, linenr
+
+
+def get_alphabet():
+    """
+    get_alphabetget_safe_alphabet
+    """
+    return tuple(['!', ' ', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                  'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+
+
+def get_alphabet_lower():
+    """
+    get_alphabet_lower
+    """
+    return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
+
+
+def get_alphabet_lower_numbers():
+    """
+    get_alphabet_lower_numbers
+    """
+    return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+
+
+def get_colors():
+    """
+    get_colors
+    """
+    colors = {'red': '\033[31m',
+              'green': '\033[32m',
+              'darkgreen': '\033[92m',
+              'yellow': '\033[33m',
+              'darkyellow': '\033[93m',
+              'blue': '\033[94m',
+              'magenta': '\033[35m',
+              'cyan': '\033[36m',
+              'darkcyan': '\033[96m',
+              'white': '\033[97m',
+              'black': '\033[90m',
+              'purple': '\033[34m',
+              'grey': '\033[30m',
+              'orange': '\033[91m',
+              'default': '\033[0m'}
+
+    return colors
+
+
+def get_debugmode():
+    """
+    get_debugmode
+    """
+    sg = SystemGlobals()
+    return sg.g_debug
+
+
+def get_hostname():
+    """
+    get_hostname
+    """
+    return str(socket.gethostname())
+
+
+def get_input_answer(default):
+    """
+    @type default: str
+    @return: None
+    """
+    try:
+        answer = input("$: ").lower()
+    except KeyboardInterrupt:
+        answer = "quit"
+
+    answer = get_safe_string(answer.strip())
+
+    if answer is "" and default is not None:
+        answer = default
+    try:
+        answeri = int(answer)
+
+        if str(answeri) == answer:
+            answer = answeri
+    except ValueError:
+        pass
+
+    if isinstance(answer, str):
+        try:
+            answer = float(answer)
+        except ValueError:
+            pass
+
+    return answer
+
+
+def get_line_number(line_num_only=4):
+    """
+    @type line_num_only: int
+    @return: None
+    """
+    strce = stack_trace(line_num_only=line_num_only).strip()
+
+    if "__init__.py" in strce:
+        strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
+
+    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
+    return linenr
+
+
+def get_print_yaml(yamlmystring):
+    """
+    @type yamlmystring: str
+    @return: None
+    """
+    s = ""
+
+    for i in yamlmystring.split("\n"):
+        ls = [x for x in i.split(":") if x]
+        cnt = 0
+
+        if len(ls) > 1:
+            for ii in ls:
+                if cnt == 0:
+                    s += "\033[95m" + ii + ": " + "\033[0m"
+                else:
+                    s += colorize_for_print(ii)
+
+                cnt += 1
+        else:
+            if i.strip().startswith("---"):
+                s += "\033[93m" + i + "\033[0m"
+            else:
+                s += "\033[91m" + i + "\033[0m"
+
+        s += "\n"
+
+    return s.strip()
+
+
+def get_safe_alphabet():
+    """
+    get_alphabet
+    """
+    return tuple(['~', ' ', '|', '_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+                  'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+
+
+def get_safe_string(s, extrachars=None):
+    """
+    @type s: str
+    @type extrachars: str, None`
+    @return: None
+    """
+    if extrachars is not None:
+        mysafechars = [ord(ch) for ch in SALPHA + extrachars]
+    else:
+        mysafechars = SAFECHARS
+
+    s = remove_escapecodes(s)
+    targetdict = {ord(ch): ord(ch) for ch in SALPHA}
+    targetdict.update({ord(ch): None for ch in s if ord(ch) not in mysafechars})
+    s = s.translate(targetdict)
+    return s
+
+
+def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False):
+    """
+    @type colors: dict
+    @type indent: int
+    @type return_string: bool
+    @type value: str
+    @type dbs: str
+    @type plaintext: bool
+    @return: None
+    """
+    if plaintext is True:
+        colors2 = {}
+
+        for k in colors:
+            colors2[k] = ""
+
+        colors = colors2
+
+    if isinstance(value, dict):
+        value = value.copy()
+
+        # noinspection PyBroadException
+        try:
+            value = ujson.dumps(value)
+        except Exception:
+            try:
+                for k in value:
+                    value[k] = str(value[k])
+                import json
+                value = json.dumps(value, indent=1)
+            except Exception as e:
+                value = str(value)
+                value += " | error dumping dict" + str(e) + " | "
+
+        subs = str(value)
+    elif isinstance(value, str) or isinstance(value, (int, float, complex)) or isinstance(value, (tuple, list, set)):
+        subs = str(value)
+
+        if not sys.stdout.isatty():
+            subs = get_safe_string(subs, "@:-_?/")
+
+    elif isinstance(value, BaseException):
+        if plaintext is True:
+            subs = str(value)
+        else:
+            subs = handle_ex(value, False, True)
+    else:
+        import arguments
+        if isinstance(value, arguments.Arguments):
+            if plaintext is True:
+                subs = value.as_yaml()
+            else:
+                subs = value.for_print()
+        else:
+            if return_string:
+                clsaddr = str(class_without_address(value))
+            else:
+                clsaddr = str(class_with_address(value))
+            try:
+                if str(clsaddr) == str(value):
+                    dbs += colors["purple"] + str(value) + colors["default"] + "\n"
+                else:
+                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+            except TypeError:
+                dbs += colors["grey"] + " |" + colors["default"] + "\n"
+
+            leftoffset = remove_color(dbs).find("|") - 1
+            subs = " " * (leftoffset - 4)
+            colwidthdelta = 0
+
+            if plaintext:
+                colwidthdelta = 19
+                subs = ""
+
+            sm = get_safe_string(value.__class__.__name__)
+
+            if len(sm) > indent:
+                sm = sm[:indent] + ".."
+
+            subheader = colors['orange'] + subs + " | " + sm
+            subheader += (37 - len(get_safe_string(subheader))) * " "
+            subheader += "type"
+            subheader += (68 - len(get_safe_string(subheader))) * " "
+            subheader += "value" + colors['default'] + "\n"
+            members = set()
+
+            for m in dir(value):
+                members.add(m)
+
+            members = sorted(members)
+            mycolors = collections.deque(["darkcyan", "yellow"])
+
+            if plaintext is False:
+                subs += " " * leftoffset
+
+            numprintable = 0
+
+            for m in members:
+                if not m.startswith("__"):
+                    numprintable += 1
+
+            if numprintable > 0:
+                subs += subheader + (leftoffset * " ")
+                subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
+
+            for m in members:
+                if not m.startswith("__"):
+                    if m.startswith("_"):
+                        if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
+                            continue
+
+                    if plaintext is False:
+                        subs += " " * leftoffset
+
+                    subs += colors["grey"] + " | " + colors['default']
+                    privatevar = False
+
+                    if ("_" + value.__class__.__name__) in m:
+                        privatevar = True
+
+                    sm = str(m).replace("_" + value.__class__.__name__, "")
+                    mycolor = mycolors.pop()
+
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".. "
+
+                    tempcolor = mycolor
+
+                    if privatevar is True:
+                        mycolor = "red"
+
+                    subs += colors[mycolor] + sm
+                    mycolor = tempcolor
+                    mycolors.appendleft(mycolor)
+
+                    if privatevar is True:
+                        subs += colors['default']
+                        subs += colors[mycolor]
+
+                    subs += " " * (34 - len(sm))
+
+                    if hasattr(value.__class__, m):
+                        t = type(getattr(value.__class__, m))
+                    else:
+                        t = type(getattr(value, m))
+
+                    sm = repr(t).replace("<class '", "").replace("'>", "")
+
+                    # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
+                    extraspacereduction = 0
+
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".."
+                        extraspacereduction = len("..")
+
+                    subs += sm
+                    memberval = getattr(value, m)
+
+                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
+                        subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+
+                        if plaintext is True:
+                            subs += str(memberval)
+                        else:
+                            subs += colorize_for_print(str(memberval))
+
+                    subs += "\n" + colors['default']
+
+    return dbs, subs
+
+
+def get_vowels_lower():
+    """
+    get_vowels_lower
+    """
+    return tuple([' ', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'])
 
 
 def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_code_links=True):
@@ -1346,6 +1644,7 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
 
             if ls > linenumsize:
                 linenumsize = ls
+
         items.reverse()
 
         for line in items:
@@ -1386,28 +1685,438 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
     return "\033[93m" + error_msg
 
 
-def console_exception(ex):
+def human_now(timedelta_seconds=3600):
     """
-    @type ex: object, Exception
+    @type timedelta_seconds: str
     """
-    exstr = handle_ex(ex, False, True)
-    console_saved_exception(exstr)
+    return timestamp_to_string_gmt(time.time() + timedelta_seconds)
 
 
-def consoletasks(*args, **kwargs):
+def humanize(word):
     """
-    @type args: tuple
-    @type kwargs: dict
+    @type word: str
+    @return: None
+    """
+    word = re.sub(r"_id$", "", word)
+    word = word.replace('_', ' ')
+    word = re.sub(r"(?i)([a-z\d]*)", lambda m: m.group(1).lower(), word)
+    word = re.sub(r"^\w", lambda m: m.group(0).upper(), word)
+    return word
+
+
+def info(command, description):
+    """
+    @type command: str, None
+    @type description: str, None
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    if description is None:
+        console(command, color="red", plaintext=not get_debugmode(), line_num_only=4)
+    else:
+        console_cmd_desc(command, description, "default")
+
+
+def log_date_time_string():
+    """
+    log_date_time_string
+    @return: @rtype:
+    """
+    ts = "[" + timestamp_to_string_gmt(time.time()) + "]"
+    return ts
+
+
+def main():
+    """
+    main
+    """
+    console("Consoleprinter is a library for use in commandline application")
+
+
+def mill(it, label='', hide=None, expected_size=None, every=1):
+    """
+    @type it: iterator
+    @type label: str
+    @type hide: str, None
+    @type expected_size: int, None
+    @type every: int
+    @return: None
+    """
+    stream = sys.stderr
+    mill_chars = ['|', '/', '-', '\\']
+    mill_template = '%s %s %i/%i\r'
+
+    def _mill_char(_i):
+        """
+        @type _i: int
+        @return: None
+        """
+        if _i >= count:
+            return ' '
+        else:
+            return mill_chars[(_i // every) % len(mill_chars)]
+
+    def _show(_i):
+        """
+        @type _i: int
+        @return: None
+        """
+        if not hide:
+            if ((_i % every) == 0 or         # True every "every" updates
+                    (_i == count)):            # And when we're done
+                stream.write(mill_template % (
+                    label, _mill_char(_i), _i, count))
+
+                stream.flush()
+    count = len(it) if expected_size is None else expected_size
+
+    if count:
+        _show(0)
+
+    for i, item in enumerate(it):
+        yield item
+        _show(i + 1)
+
+    if not hide:
+        stream.write('\n')
+        stream.flush()
+
+
+def ordinal(number):
+    """
+    @type number: str
+    @return: None
+    """
+    number = abs(int(number))
+
+    if number % 100 in (11, 12, 13):
+        return "th"
+    else:
+        return {1: "st", 2: "nd", 3: "rd", }.get(number % 10, "th")
+
+
+def ordinalize(number):
+    """
+    @type number: str
+    @return: None
+    """
+    return "%s%s" % (number, ordinal(number))
+
+
+def parameterize(mystring, separator='-'):
+    """
+    @type mystring: str
+    @type separator: str
+    @return: None
+    """
+    mystring = transliterate(mystring)
+    mystring = re.sub(r"(?i)[^a-z0-9\-_]+", separator, mystring)
+
+    if separator:
+        re_sep = re.escape(separator)
+        mystring = re.sub(r'%s{2,}' % re_sep, separator, mystring)
+        mystring = re.sub(r"(?i)^%(sep)s|%(sep)s$" % {'sep': re_sep}, '', mystring)
+
+    return mystring.lower()
+
+
+def pluralize(word):
+    """
+    @type word: str
+    @return: None
+    """
+    if not word or word.lower() in UNCOUNTABLES:
+        return word
+    else:
+        for rule, replacement in PLURALS:
+            if re.search(rule, word):
+                return re.sub(rule, replacement, word)
+
+        return word
+
+
+def pretty_print_json(jsondata, tofilename=None):
+    """
+    @type jsondata: str
+    @type tofilename: str, None
+    """
+    jsonproxy = ujson.decode(jsondata)
+
+    if tofilename is None:
+        return json.dumps(jsonproxy, sort_keys=True, indent=4, separators=', ')
+    else:
+        json.dump(jsonproxy, open(tofilename, "w"), sort_keys=True, indent=4, separators=(',', ': '))
+        return tofilename
+
+
+def query_yes_no(*args, force=False, default=True, command=None):
+    """
+    @type args: list
+    @type force: bool
+    @type default: bool
+    @type command: str, None
+    @return: None
+    """
+    print()
+    question = ""
+    t = True
+
+    for arg in args:
+        if t:
+            question += "\033[96m"
+            t = False
+        else:
+            question += "\033[93m"
+
+        question += str(arg)
+        question += "? \033[0m"
+
+    if force is True:
+        return default
+
+    valid = {"yes": "yes", "y": "yes", "ye": "yes",
+             "no": "no", "n": "no",
+             "quit": "quit", "qui": "quit", "qu": "quit", "q": "quit"}
+
+    if default is None:
+        prompt = "[y/n/q]"
+    elif default:
+        prompt = "[Y/n/q]"
+    elif not default:
+        prompt = "[y/N/q]"
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        if command is not None:
+            question = str(command) + ": "
+
+        console(question, plaintext=True, newline=True)
+        console(prompt, color="white", plaintext=True, newline=False)
+        choice = input("$: ").lower()
+
+        if default is not None and choice == '':
+            if default is True:
+                print("        -> yes")
+                return True
+            else:
+                print("        -> no")
+                return False
+
+        elif choice in valid.keys():
+            choice = valid[choice]
+
+            if choice == "quit":
+                raise SystemExit(0)
+
+            console("-> " + choice, color="white", plaintext=True)
+
+            if choice == "yes":
+                return True
+            else:
+                return False
+        else:
+            console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
+
+
+def remove_color(mystring):
+    """
+    @type mystring: str
+    @return: None
+    """
+    return remove_escapecodes(mystring)
+
+
+def remove_escapecodes(escapedstring):
+    """
+    @type escapedstring: str
+    @return: None
+    """
+    ansi_escape = re.compile(r'\x1b[^a-z]*[a-z]')
+    return ansi_escape.sub('', escapedstring)
+
+
+def remove_extra_indentation(doc, stop_looking_when_encountered=None):
+    """
+    @type doc: str
+    @type stop_looking_when_encountered: str, None
+    @return: None
+    """
+    if doc is None:
+        console_warning("doc is None")
+        return doc
+
+    newdoc = ""
+    whitespacecount = 0
+    keeplookingforindention = True
+
+    for line in doc.strip().split("\n"):
+        line = line.rstrip()
+
+        if stop_looking_when_encountered is not None:
+            if line.lower().startswith(stop_looking_when_encountered):
+                keeplookingforindention = False
+
+        if keeplookingforindention is True:
+            if whitespacecount == 0:
+                whitespacecount = len(line) - len(line.lstrip())
+
+        line = line[whitespacecount:]
+        newdoc += line + "\n"
+
+    newdoc = newdoc.strip()
+    return newdoc
+
+
+def resetterminal():
+    """
+    resetterminal():
+    """
+    sys.stderr.write('\033[0m')
+    return
+
+
+def running_in_debugger(include_tests=False):
+    """
+    @type include_tests: bool
     @return:
     @raise:
     """
-    line_num_only = 3
-    if "line_num_only" in kwargs:
-        line_num_only = kwargs["line_num_only"]
+    if not sys.stdout.isatty():
+        return True
 
-    kwargs["line_num_only"] = line_num_only
-    kwargs["newline"] = False
-    console(*args, **kwargs)
+    sysglob = SystemGlobals()
+
+    if (include_tests is False and sysglob.g_running_in_debugger is None) or (include_tests is True and sysglob.g_running_in_debugger_unit_tests is None):
+        in_debugger = False
+        stack = stack_trace(ret_list=True, reverse_stack=False)
+
+        for i in stack:
+            i = str(i)
+
+            if "simple_server.py" in i:
+                in_debugger = True
+                print("debugger, simple_server.py")
+
+            if include_tests:
+                if "unittest.TextTestRunner" in i:
+                    in_debugger = True
+                elif "TeamcityTestRunner().run" in i:
+                    in_debugger = True
+                elif "test.py" in i:
+                    in_debugger = True
+
+            if "debugger.run" in i:
+                in_debugger = True
+
+            if in_debugger:
+                break
+
+        if include_tests:
+            sysglob.g_running_in_debugger_unit_tests = in_debugger
+
+        sysglob.g_running_in_debugger = in_debugger
+    else:
+        if include_tests:
+            in_debugger = sysglob.g_running_in_debugger_unit_tests
+        else:
+            in_debugger = sysglob.g_running_in_debugger
+
+    return in_debugger
+
+
+def set_console_start_time():
+    """
+    set_console_start_time
+    """
+    global g_start_time
+    g_start_time = time.time()
+
+
+def singularize(word):
+    """
+    @type word: str
+    @return: None
+    """
+    for inflection in UNCOUNTABLES:
+        if re.search(r'(?i)\b(%s)\Z' % inflection, word):
+            return word
+
+    for rule, replacement in SINGULARS:
+        if re.search(rule, word):
+            return re.sub(rule, replacement, word)
+
+    return word
+
+
+def size_columns(columncounter, g_width_console_columns, subs, donotuseredis):
+    """
+    @type columncounter: int
+    @type g_width_console_columns: list
+    @type subs: str
+    @type donotuseredis: bool
+    @return: (int, str)
+    """
+    if donotuseredis:
+        return columncounter, subs
+    global g_column_resize_threshold
+
+    # noinspection PyBroadException
+    try:
+        if g_column_resize_threshold is not None:
+            return g_column_resize_threshold
+    except:
+        return columncounter, subs
+    try:
+        lsub = len(str(subs))
+    except Exception as ex:
+        print(ex)
+        lsub = len(subs)
+
+    if len(g_width_console_columns) <= columncounter:
+        g_width_console_columns.append(lsub)
+    else:
+        if g_width_console_columns[columncounter] < lsub:
+            g_width_console_columns[columncounter] = lsub
+
+        column_resize_threshold = g_column_resize_threshold
+
+        if g_column_resize_threshold is None:
+            column_resize_threshold = 15
+
+        if (g_width_console_columns[columncounter] - lsub) > column_resize_threshold:
+            g_width_console_columns[columncounter] = lsub
+            g_column_resize_threshold = 15
+        else:
+            g_column_resize_threshold = column_resize_threshold - 1
+
+    if (g_width_console_columns[columncounter] - lsub) > 0:
+        if columncounter < 3:
+            subs += " " * (g_width_console_columns[columncounter] - lsub)
+
+    columncounter += 1
+    return columncounter, subs
+
+
+def sizeof_fmt(num, suffix=''):
+    """
+    @type num: int, float
+    @type suffix: str
+    @return: None
+    """
+    if num is None:
+        return num
+
+    num = float(num) / 1024
+    for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+
+        num /= 1024.0
+
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
 def slugify(value):
@@ -1453,17 +2162,27 @@ def slugify(value):
     return retval
 
 
-def func_info(func_object):
+def snake_case(word, remove_spaces=True):
     """
-    @type func_object: function
+    @type word: str
+    @type remove_spaces: bool
+    @return: None
     """
-    if func_object is None:
-        raise TypeError("func_info needs function")
+    if remove_spaces is True:
+        word = word.replace(" ", "_")
 
-    fname = func_object.__code__.co_filename
-    linenr = func_object.__code__.co_firstlineno
-    funcname = func_object.__code__.co_name
-    return fname, funcname, linenr
+    word = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', word)
+    word = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', word)
+    word = word.replace("-", "_")
+    return word.lower()
+
+
+def source_code_link(stack_offset=0, fullline=True):
+    """
+    @type stack_offset: int
+    @type fullline: bool
+    """
+    return stack_trace(line_num_only=2 + stack_offset, fullline=fullline)
 
 
 def source_code_link_func(func_object):
@@ -1482,668 +2201,187 @@ def source_code_link_func(func_object):
         return format_source_code_line_console(link)
 
 
-def console_warning(*args, **kwargs):
+def spaces_leftside(mystring):
     """
-    @param args
-    @type args:
-    @param kwargs
-    @type kwargs:
+    @type mystring: str
+    @return: int
     """
-    retval = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
-
-    if "color" in kwargs:
-        color = kwargs["color"]
-    else:
-        color = "red"
-
-    if "print_stack" in kwargs:
-        print_stack = kwargs["print_stack"]
-    else:
-        print_stack = True
-
-    if "line_num_only" in kwargs:
-        line_num_only = kwargs["line_num_only"]
-    else:
-        line_num_only = 4
-
-    if "once" in kwargs:
-        once = kwargs["once"]
-    else:
-        once = False
-
-    if running_in_debugger(True):
-        args = list(args)
-        args.insert(0, "==")
-        args.append(source_code_link(line_num_only - 2))
-        args.append("==")
-
-    bexit = check_for_positional_argument(kwargs, "exit", default=False)
-    retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=retval)
-
-    if bexit is True:
-        retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
-        raise SystemExit(retval)
-
-    return retval
+    mystring = get_safe_string(mystring)
+    fl = len(mystring)
+    mystring = mystring.lstrip()
+    return fl - len(mystring)
 
 
-def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_only=6):
+def stack_as_string():
     """
-    @type stacktracemsg: str
-    @type exceptiontoraise: BaseException
-    @type errorplaintxt: str, None
+    stack_as_string
+    """
+    if sys.version_info.major == 3:
+        stack = io.StringIO()
+    else:
+        stack = io.BytesIO()
+
+    traceback.print_stack(file=stack)
+    stack.seek(0)
+    stack = stack.read()
+    return stack
+
+
+def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=True, extralevel=False):
+    """
     @type line_num_only: int
+    @type ret_list: bool
+    @type fullline: bool
+    @type reverse_stack: bool
+    @type extralevel: bool
     @return: None
-    """
-    if errorplaintxt:
-        console(errorplaintxt, color="red", plainprint=True)
-    console_warning(stacktracemsg, print_stack=True, color="darkyellow", line_num_only=line_num_only)
-    raise exceptiontoraise
-
-
-def console_error_exit(*args, **kwargs):
-    """
-    @type args: tuple
-    @type kwargs: dict
-    @return: None
-    """
-    kwargs["exit"] = True
-    kwargs["print_stack"] = True
-    return SystemExit(console_warning(*args, **kwargs))
-
-
-def fpath_in_stack(fpath):
-    """
-    @type fpath: str
     """
     stack = stack_as_string()
+
+    if ret_list and (line_num_only > 0):
+        raise Exception("ret_list or line_num_only both true")
+
+    stackl = []
     stack = stack.split("\n")
-    stack.reverse()
+
+    if reverse_stack:
+        stack.reverse()
+
+    cnt = 0
 
     for i in stack:
-        if i.strip().startswith("File"):
-            if fpath.lower() in i.lower():
-                if "greenlet.py" in fpath:
-                    console("fpath_in_stack", fpath, source_code_link(2))
+        i = str(i)
+        stackl.append(i)
 
-                # else:
-                #    console("fpath_in_stack", fpath, source_code_link(1))
-                return True
+        if line_num_only > 0:
+            if "line" in i and "File" in i:
+                if cnt > line_num_only - 1:
+                    for j in i.split("line"):
+                        for k in j.split(","):
+                            try:
+                                ln = int(k)
 
-    return False
+                                if fullline or extralevel:
+                                    codeline = i.strip()
+                                    codeline = codeline.split(", in ")
 
+                                    if extralevel:
+                                        codepath = os.path.basename(os.path.dirname(codeline[0]))
+                                        codepath += "/"
+                                        codepath += os.path.basename(codeline[0])
+                                        return codepath + " (" + codeline[1] + ")"
+                                    else:
+                                        return codeline[0] + " (" + codeline[1] + ")"
+                                else:
+                                    i = i.replace("File ", "")
 
-def pretty_print_json(jsondata, tofilename=None):
-    """
-    @type jsondata: str
-    @type tofilename: str, None
-    """
-    jsonproxy = ujson.decode(jsondata)
+                                fs = i.replace('"', "").split(",")[0].split(os.sep)
+                                return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
+                            except ValueError:
+                                pass
 
-    if tofilename is None:
-        return json.dumps(jsonproxy, sort_keys=True, indent=4, separators=', ')
-    else:
-        json.dump(jsonproxy, open(tofilename, "w"), sort_keys=True, indent=4, separators=(',', ': '))
-        return tofilename
-
-
-def clear_screen():
-    """
-    clear_screen
-    """
-    if sys.stderr.isatty():
-        sys.stderr.write('\x1Bc')
-        sys.stderr.flush()
-
-
-class FastList(object):
-    """
-    FastList
-    """
-    def __init__(self):
-        """
-        __init__
-        """
-        self.dictlist = {}
-
-    def add(self, o):
-        """
-        @type o: object
-        """
-        self.dictlist[o] = 1
-
-    def delete(self, o):
-        """
-        @type o: str
-        """
-        if o in self.dictlist:
-            del self.dictlist[o]
-
-    def has(self, o):
-        """
-        @type o: object
-        """
-        return o in self.dictlist
-
-    def ilist(self):
-        """
-        list
-        """
-        return iter(list(self.dictlist.keys()))
-
-    def list(self):
-        """
-        list
-        """
-        return list(self.dictlist.keys())
-
-    def size(self):
-        """
-        size
-        """
-        return len(list(self.dictlist.keys()))
-
-
-def get_hostname():
-    """
-    get_hostname
-    """
-    return str(socket.gethostname())
-
-
-def get_alphabet():
-    """
-    get_alphabetget_safe_alphabet
-    """
-    return tuple(['!', ' ', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-                  'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-
-
-SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-SAFECHARS = [ord(ch) for ch in SALPHA]
-
-
-def remove_escapecodes(escapedstring):
-    """
-    @type escapedstring: str
-    @return: None
-    """
-    ansi_escape = re.compile(r'\x1b[^a-z]*[a-z]')
-    return ansi_escape.sub('', escapedstring)
-
-
-def get_safe_string(s, extrachars=None):
-    """
-    @type s: str
-    @type extrachars: str, None`
-    @return: None
-    """
-    if extrachars is not None:
-        mysafechars = [ord(ch) for ch in SALPHA + extrachars]
-    else:
-        mysafechars = SAFECHARS
-
-    s = remove_escapecodes(s)
-    targetdict = {ord(ch): ord(ch) for ch in SALPHA}
-    targetdict.update({ord(ch): None for ch in s if ord(ch) not in mysafechars})
-    s = s.translate(targetdict)
-    return s
-
-
-def get_safe_alphabet():
-    """
-    get_alphabet
-    """
-    return tuple(['~', ' ', '|', '_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-                  'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-
-
-def get_alphabet_lower():
-    """
-    get_alphabet_lower
-    """
-    return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
-
-
-def get_alphabet_lower_numbers():
-    """
-    get_alphabet_lower_numbers
-    """
-    return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-
-
-def get_vowels_lower():
-    """
-    get_vowels_lower
-    """
-    return tuple([' ', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'])
-
-
-def colorize_for_print(v):
-    """
-    @type v: str
-    @return: None
-    """
-    s = ""
-    v = v.strip()
-
-    if v == "false":
-        v = "False"
-    elif v == "true":
-        v = "True"
-
-    num = v.isdigit()
-    isfloat = False
-
-    if num is True:
-        isfloat = num == int(float(int(num)))
-
-    if not num:
-        v.replace("'", "").replace('"', "")
-        num = v.isdigit()
-
-    if not num:
-        try:
-            v2 = v.replace("'", "").replace('"', "")
-            num = float(v2)
-            num = True
-            v = v2
-        except ValueError:
-            pass
-
-    ispath = os.path.exists(v)
-
-    if ispath is True:
-        if "/" not in v:
-            ispath = False
-
-    if num is True:
-        if isfloat:
-            s += "\033[36m" + v + "\033[0m"
-        else:
-            s += "\033[91m" + v + "\033[0m"
-
-    elif ispath is True:
-        s += "\033[35m" + v + "\033[0m"
-    elif v == "False":
-        s += "\033[31m" + v + "\033[0m"
-    elif v == "True":
-        s += "\033[92m" + v + "\033[0m"
-    else:
-        s += "\033[93m" + v + "\033[0m"
-
-    return s
-
-
-def get_print_yaml(yamlmystring):
-    """
-    @type yamlmystring: str
-    @return: None
-    """
-    s = ""
-
-    for i in yamlmystring.split("\n"):
-        ls = [x for x in i.split(":") if x]
-        cnt = 0
-
-        if len(ls) > 1:
-            for ii in ls:
-                if cnt == 0:
-                    s += "\033[95m" + ii + ": " + "\033[0m"
-                else:
-                    s += colorize_for_print(ii)
+                            except BaseException as be:
+                                print(be)
 
                 cnt += 1
-        else:
-            if i.strip().startswith("---"):
-                s += "\033[93m" + i + "\033[0m"
-            else:
-                s += "\033[91m" + i + "\033[0m"
 
-        s += "\n"
+    if line_num_only > 0:
+        return str("?")
 
-    return s.strip()
+    if ret_list:
+        return stackl
+
+    return "\n".join(stackl)
 
 
-def consoledict(mydict, members=None, printval=True, indent=0, retval=False, plainprint=False):
+def stdoutwriteline(*args):
     """
-    @type mydict: dict
-    @type members: str, None
-    @type retval: bool
-    @type indent: int
-    @type printval: bool
-    @type plainprint: bool
+    @type args: tuple
     @return: None
     """
-    dbs = ""
+    s = ""
 
-    if printval is True:
-        dbs = "\033[32m" + log_date_time_string() + " | "
-        dbs += stack_trace(line_num_only=3).strip()
-        dbs += " - consoledict:\033[0m\n"
+    for i in args:
+        s += str(i) + " "
 
-    if plainprint is True:
-        dbs = log_date_time_string() + " | "
-        dbs += stack_trace(line_num_only=3).strip()
-        dbs += " - consoledict:\n"
+    s = s.strip()
+    sys.stdout.write(str(s) + "\n")
+    sys.stdout.flush()
+    return s
 
-    if indent > 0:
-        dbs = ""
 
-    if isinstance(mydict, dict):
-        if members is None:
-            members = list(mydict.keys())
-        members.sort()
+def strcmp(s1, s2):
+    """
+    @type s1: str or unicode
+    @type s2: str or unicode
+    @return: @rtype: bool
+    """
+    # noinspection PyArgumentEqualDefault
+    s1 = s1.encode("utf-8")
 
-        for i in members:
-            dbs += "    " * indent
+    # noinspection PyArgumentEqualDefault
+    s2 = s2.encode("utf-8")
 
-            if isinstance(mydict[i], dict):
-                newindent = indent + 1
+    if not s1 or not s2:
+        return False
 
-                if plainprint is False:
-                    dbs += "\033[35m" + str(i) + ":\n" + "\033[0m"
-                else:
-                    dbs += str(i) + ":\n"
+    s1 = s1.strip()
+    s2 = s2.strip()
+    equal = s1 == s2
+    return equal
 
-                dbs += consoledict(mydict[i], printval=printval, indent=newindent, retval=True, plainprint=plainprint)
-            else:
-                if plainprint is False:
-                    dbs += "\033[35m" + str(i) + ": " + "\033[0m"
-                    dbs += colorize_for_print(str(mydict[i])) + "\n"
-                else:
-                    dbs += str(i) + ": " + str(mydict[i]) + "\n"
+
+def tableize(word):
+    """
+    @type word: str
+    @return: None
+    """
+    return pluralize(underscore(word))
+
+
+def timestamp_to_string_gmt(ts, short=False):
+    """
+    @type ts: float
+    @type short: bool
+    """
+    monthname = [None, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    year, month, day, hh, mm, ss, x, y, z = time.gmtime(ts)
+
+    if short:
+        year -= 2000
+        s = "%d-%d-%d %02d:%02d:%02d" % (day, month, year, hh, mm, ss)
     else:
-        dbs += "not dict: " + str(mydict) + "\n"
+        s = "%3s %02d %04d %02d:%02d:%02d" % (monthname[month], day, year, hh, mm, ss)
 
-    if printval is True and retval is False:
-        sys.stderr.write(dbs)
-
-    if indent == 0:
-        dbs = dbs.strip()
-
-    return dbs
+    return s
 
 
-def main():
+def titleize(word):
     """
-    main
-    """
-    console("Consoleprinter is a library for use in commandline application")
-
-
-def sizeof_fmt(num, suffix=''):
-    """
-    @type num: int, float
-    @type suffix: str
+    @type word: str
     @return: None
     """
-    if num is None:
-        return num
-
-    num = float(num) / 1024
-    for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-
-        num /= 1024.0
-
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return re.sub(r"\b('?[a-z])", lambda match: match.group(1).capitalize(), humanize(underscore(word)))
 
 
-class Bar(object):
+def transliterate(mystring):
     """
-    Bar
-    """
-    def __enter__(self):
-        """
-        __enter__
-        """
-        return self
-
-    # noinspection PyUnusedLocal
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        @type exc_type: str
-        @type exc_val: str
-        @type exc_tb: str
-        @return: None
-        """
-        self.done()
-        return False  # we're not suppressing exceptions
-
-    def __init__(self, label='', width=32, hide=None, empty_char=' ', filled_char='#', expected_size=None, every=1):
-        """
-        @type label: str
-        @type width: int
-        @type hide: str, None
-        @type empty_char: float
-        @type filled_char: float
-        @type expected_size: int, None
-        @type every: int
-        @return: None
-        """
-        self.label = label
-        self.width = width
-        self.hide = hide
-
-        # Only show bar in terminals by default (better for piping, logging etc.)
-        stream = sys.stderr
-
-        if hide is None:
-            try:
-                self.hide = not stream.isatty()
-            except AttributeError:  # output does not support isatty()
-                self.hide = True
-
-        self.empty_char = empty_char
-        self.filled_char = filled_char
-        self.expected_size = expected_size
-        self.every = every
-        self.start = time.time()
-        self.ittimes = []
-        self.eta = 0
-        self.etadelta = time.time()
-        self.etadisp = self.format_time(self.eta)
-        self.last_progress = 0
-        self.elapsed = 0
-
-        if self.expected_size:
-            self.show(0)
-
-    def show(self, progress, count=None):
-        """
-        @type progress: int
-        @type count: str, None
-        @return: None
-        """
-        stream = sys.stderr
-        bar_template = '%s[%s%s] %s/%s - %s\r'
-
-        # How long to wait before recalculating the ETA
-        eta_interval = 1
-
-        # How many intervals (excluding the current one) to calculate the simple moving
-        # average
-        eta_sma_window = 9
-
-        if count is not None:
-            self.expected_size = count
-
-        if self.expected_size is None:
-            raise Exception("expected_size not initialized")
-
-        self.last_progress = "%.2f" % progress
-
-        if (time.time() - self.etadelta) > eta_interval:
-            self.etadelta = time.time()
-            self.ittimes = self.ittimes[-eta_sma_window:] + [-(self.start - time.time()) / (progress + 1)]
-            self.eta = sum(self.ittimes) / float(len(self.ittimes)) * (self.expected_size - progress)
-            self.etadisp = self.format_time(int(self.eta))
-
-        x = int(self.width * progress // self.expected_size)
-
-        if not self.hide:
-            if ((progress % self.every) == 0 or      # True every "every" updates
-                    (progress == self.expected_size)):   # And when we're done
-                stream.write(bar_template % (
-                    self.label, self.filled_char * x,
-                    self.empty_char * (self.width - x), sizeof_fmt(progress),
-                    sizeof_fmt(self.expected_size), self.etadisp))
-                stream.flush()
-
-    def done(self):
-        """
-        done
-        """
-        self.elapsed = time.time() - self.start
-        elapsed_disp = self.format_time(self.elapsed)
-        stream = sys.stderr
-        bar_template = '%s[%s%s] %s/%s - %s\r'
-        self.last_progress = "%.1f" % float(self.last_progress)
-        self.expected_size = "%.1f" % float(self.expected_size)
-
-        if not self.hide:
-            # Print completed bar with elapsed time
-            stream.write(bar_template % (
-                self.label, self.filled_char * self.width,
-                self.empty_char * 0, self.last_progress,
-                self.expected_size, elapsed_disp))
-            stream.write('\n')
-            stream.flush()
-
-    @staticmethod
-    def format_time(seconds):
-        """
-        @type seconds: int
-        @return: None
-        """
-        return time.strftime('%H:%M:%S', time.gmtime(seconds))
-
-
-def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char='#', expected_size=None, every=1):
-    """
-    Progress iterator. Wrap your iterables with it.
-    @type it: str
-    @type label: str
-    @type width: int
-    @type hide: str, None
-    @type empty_char: float
-    @type filled_char: float
-    @type expected_size: int, None
-    @type every: int
+    @type mystring: str
     @return: None
     """
-    count = len(it) if expected_size is None else expected_size
-    with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
-        for i, item in enumerate(it):
-            yield item
-            mybar.show(i + 1)
+    normalized = unicodedata.normalize('NFKD', mystring)
+    return normalized.encode('ascii', 'ignore').decode('ascii')
 
 
-def mill(it, label='', hide=None, expected_size=None, every=1):
+def underscore(word):
     """
-    @type it: iterator
-    @type label: str
-    @type hide: str, None
-    @type expected_size: int, None
-    @type every: int
+    @type word: str
     @return: None
     """
-    stream = sys.stderr
-    mill_chars = ['|', '/', '-', '\\']
-    mill_template = '%s %s %i/%i\r'
-
-    def _mill_char(_i):
-        """
-        @type _i: int
-        @return: None
-        """
-        if _i >= count:
-            return ' '
-        else:
-            return mill_chars[(_i // every) % len(mill_chars)]
-
-    def _show(_i):
-        """
-        @type _i: int
-        @return: None
-        """
-        if not hide:
-            if ((_i % every) == 0 or         # True every "every" updates
-                    (_i == count)):            # And when we're done
-                stream.write(mill_template % (
-                    label, _mill_char(_i), _i, count))
-                stream.flush()
-    count = len(it) if expected_size is None else expected_size
-
-    if count:
-        _show(0)
-
-    for i, item in enumerate(it):
-        yield item
-        _show(i + 1)
-
-    if not hide:
-        stream.write('\n')
-        stream.flush()
-
-
-def get_line_number(line_num_only=4):
-    """
-    @type line_num_only: int
-    @return: None
-    """
-    strce = stack_trace(line_num_only=line_num_only).strip()
-
-    if "__init__.py" in strce:
-        strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
-
-    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
-    return linenr
-
-
-def console_cmd_desc(command, description, color, enteraftercmd=False):
-    """
-    @type command: str
-    @type description: str
-    @type color: str
-    @type enteraftercmd: bool
-    @return: None
-    """
-    linenr = get_line_number(5)
-    cmdstr = command + ":"
-
-    if color == "red":
-        color = "red"
-        subcolor = "darkyellow"
-    else:
-        subcolor = color
-        color = "blue"
-
-    # else:
-    #    color = "blue"
-    console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
-    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
-
-    if color == "red":
-        console(linenr, plaintext=True, color="black", newline=True)
-
-
-def abort(command, description, stack=False):
-    """
-    @type command: str, None
-    @type description: str
-    @type stack: bool
-    @return: None
-    """
-    if command is None:
-        command = "?"
-    console_cmd_desc(command, description + "!  ", "red", enteraftercmd=False)
-
-    if stack is True:
-        console("⚡", print_stack=True)
-    raise SystemExit(1)
+    word = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', word)
+    word = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', word)
+    word = word.replace("-", "_")
+    return word.lower()
 
 
 def warning(command, description):
@@ -2154,251 +2392,38 @@ def warning(command, description):
     """
     if command is None:
         command = "?"
+
     console_cmd_desc(command, description, "darkyellow", enteraftercmd=False)
 
 
-def info(command, description):
-    """
-    @type command: str, None
-    @type description: str, None
-    @return: None
-    """
-    if command is None:
-        command = "?"
-
-    if description is None:
-        console(command, color="red", plaintext=not get_debugmode(), line_num_only=4)
-    else:
-        console_cmd_desc(command, description, "default")
+SystemGlobals()
 
 
-class Info(object):
-    """
-    Bar
-    """
-    def __init__(self, *args):
-        """
-        @type args: tuple
-        @return: None
-        """
-        command = ""
-
-        for i in args:
-            command += str(i) + " "
-
-        self.command = command.strip()
-        self.items = []
-
-    def __enter__(self):
-        """
-        __enter__
-        """
-        return self
-
-    # noinspection PyUnusedLocal
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        @type exc_type: str
-        @type exc_val: str
-        @type exc_tb: str
-        @return: None
-        """
-        linenr = get_line_number()
-        print("\033[30m==\n" + str(self.command), linenr, "\n==\033[0m")
-        longest = 0
-
-        for line in self.items:
-            for item in line:
-                if len(str(item)) > longest:
-                    longest = len(str(item))
-                break
-
-        for line in self.items:
-            t = True
-
-            for item in line:
-                if t:
-                    sys.stdout.write("\033[0m" + item + " \033[0m")
-                    spaces = " " * (longest - len(remove_escapecodes(item)))
-                    sys.stdout.write("\033[0m" + spaces + ": \033[0m")
-                    t = False
-                else:
-                    item = colorize_for_print(str(item))
-                    sys.stdout.write("\033[32m" + item + " \033[0m")
-                    t = True
-            sys.stdout.write("\n")
-            sys.stdout.flush()
-
-        return False
-
-    def add(self, *args):
-        """
-        @type args: list
-        @return: None
-        """
-        self.items.append(args)
+_irregular('man', 'men')
 
 
-def query_yes_no(*args, force=False, default=True, command=None):
-    """
-    @type args: list
-    @type force: bool
-    @type default: bool
-    @type command: str, None
-    @return: None
-    """
-    print()
-    question = ""
-    t = True
-
-    for arg in args:
-        if t:
-            question += "\033[96m"
-            t = False
-        else:
-            question += "\033[93m"
-
-        question += str(arg)
-        question += "? \033[0m"
-
-    if force is True:
-        return default
-
-    valid = {"yes": "yes", "y": "yes", "ye": "yes",
-             "no": "no", "n": "no",
-             "quit": "quit", "qui": "quit", "qu": "quit", "q": "quit"}
-
-    if default is None:
-        prompt = "[y/n/q]"
-    elif default:
-        prompt = "[Y/n/q]"
-    elif not default:
-        prompt = "[y/N/q]"
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        if command is not None:
-            question = str(command) + ": "
-        console(question, plaintext=True, newline=True)
-        console(prompt, color="white", plaintext=True, newline=False)
-        choice = input("$: ").lower()
-
-        if default is not None and choice == '':
-            if default is True:
-                print("        -> yes")
-                return True
-            else:
-                print("        -> no")
-                return False
-
-        elif choice in valid.keys():
-            choice = valid[choice]
-
-            if choice == "quit":
-                raise SystemExit(0)
-
-            console("-> " + choice, color="white", plaintext=True)
-
-            if choice == "yes":
-                return True
-            else:
-                return False
-        else:
-            console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
+_irregular('cow', 'kine')
 
 
-def get_input_answer(default):
-    """
-    @type default: str
-    @return: None
-    """
-    try:
-        answer = input("$: ").lower()
-    except KeyboardInterrupt:
-        answer = "quit"
-
-    answer = get_safe_string(answer.strip())
-
-    if answer is "" and default is not None:
-        answer = default
-    try:
-        answeri = int(answer)
-
-        if str(answeri) == answer:
-            answer = answeri
-    except ValueError:
-        pass
-
-    if isinstance(answer, str):
-        try:
-            answer = float(answer)
-        except ValueError:
-            pass
-
-    return answer
+set_console_start_time()
 
 
-def doinput(description, default=None, answers=None, force=False):
-    """
-    @type description: str
-    @type default: str, None
-    @type answers: list, None
-    @type force: bool
-    @return: None
-    """
-    if force is True:
-        if default is None:
-            raise AssertionError("no default set")
+_irregular('sex', 'sexes')
 
-        return default
 
-    print()
-    answer = ""
-    quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
+_irregular('move', 'moves')
 
-    if default is not None:
-        description += "\033[96m (default: \033[93m" + str(default) + "\033[96m" + ", quit: q)?"
 
-    if answers is not None:
-        display_answers = ["quit/q"]
+_irregular('person', 'people')
 
-        for ans in answers:
-            ans = str(ans)
 
-            if ans is default:
-                ans = ans.upper()
-            display_answers.append(ans)
+_irregular('child', 'children')
 
-        display_answers.sort(key=lambda x: str(x).lower().strip())
-        answers.extend(quitanswers)
-        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-        console("options:", indent="  ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
-        for pa in display_answers:
-            console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+_irregular('zombie', 'zombies')
 
-        while True:
-            answer = get_input_answer(default)
 
-            if answer not in answers:
-                if answer != "":
-                    console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
-                console("unknown option", color="red", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-
-                for pa in display_answers:
-                    console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-            else:
-                break
-    else:
-        console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-        answer = get_input_answer(default)
-
-    if answer in quitanswers:
-        raise SystemExit("doinput quit")
-
-    print("-> " + str(answer))
-    return answer
+standard_library.install_aliases()
 
 
 if __name__ == "__main__":
