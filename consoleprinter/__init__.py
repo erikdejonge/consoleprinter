@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 #       #      #      ^  0comment ->  0 comment after someth1ng d1fferent pref1x
 # coding=utf-8
 """
 console
+
 Active8 (05-03-15)
 license: GNU-GPL2
 """
@@ -440,6 +441,7 @@ def abort(command, description, stack=False):
     @type stack: bool
     @return: None
     """
+
     if command is None:
         command = "?"
 
@@ -1062,6 +1064,7 @@ def consoletasks(*args, **kwargs):
 
     kwargs["line_num_only"] = line_num_only
     kwargs["newline"] = False
+
     console(*args, **kwargs)
 
 
@@ -1164,6 +1167,7 @@ def exist(data):
     """
     @type data: str, int, float, None, dict, list
     """
+
     if data is None:
         return False
 
@@ -1411,6 +1415,7 @@ def get_safe_string(s, extrachars=None):
     targetdict = {ord(ch): ord(ch) for ch in SALPHA}
     targetdict.update({ord(ch): None for ch in s if ord(ch) not in mysafechars})
     s = s.translate(targetdict)
+
     return s
 
 
@@ -1701,6 +1706,7 @@ def humanize(word):
     word = word.replace('_', ' ')
     word = re.sub(r"(?i)([a-z\d]*)", lambda m: m.group(1).lower(), word)
     word = re.sub(r"^\w", lambda m: m.group(0).upper(), word)
+
     return word
 
 
@@ -2151,8 +2157,8 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault
-                c = c.encode("utf-8")
+                # noinspection PyArgumentEqualDefault #        after keyword 0
+                c = c.encode()
 
             c64 = base64.encodebytes(c)
             slug += c64.decode("utf-8").strip().rstrip("=")
@@ -2307,6 +2313,7 @@ def stdoutwriteline(*args):
     s = s.strip()
     sys.stdout.write(str(s) + "\n")
     sys.stdout.flush()
+
     return s
 
 
@@ -2316,11 +2323,11 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault
-    s1 = s1.encode("utf-8")
+    # noinspection PyArgumentEqualDefault #        after keyword 0
+    s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
-    s2 = s2.encode("utf-8")
+    s2 = s2.encode()
 
     if not s1 or not s2:
         return False
@@ -2398,30 +2405,15 @@ def warning(command, description):
 
 SystemGlobals()
 
-
-_irregular('man', 'men')
-
-
-_irregular('cow', 'kine')
-
-
-set_console_start_time()
-
-
-_irregular('sex', 'sexes')
-
-
-_irregular('move', 'moves')
-
-
-_irregular('person', 'people')
-
-
 _irregular('child', 'children')
-
-
+_irregular('cow', 'kine')
+_irregular('man', 'men')
+_irregular('move', 'moves')
+_irregular('person', 'people')
+_irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
 
+set_console_start_time()
 
 standard_library.install_aliases()
 
