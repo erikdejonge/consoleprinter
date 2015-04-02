@@ -1,68 +1,16 @@
+#!/usr/bin/env python3
 # coding=utf-8
 """
 console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future import standard_library
-standard_library.install_aliases()
-from unittester import *
-from consoleprinter import *
 
 import base64
-
-
-class Foobar(object):
-    """
-    Foobar, testclass for printing an object
-    """
-
-    def __str__(self):
-        """
-        __str__
-        """
-        return "Foobar class"
-
-    def __init__(self, myvar):
-        """
-        @type myvar: str
-        @return: None
-        """
-        self.myvar = myvar
-        self.__privatevar = 77
-        self.mystring = "hello world"
-        super().__init__()
-
-    def hello(self):
-        """
-        hello
-        """
-        print(self.mystring)
-
-    def world(self):
-        """
-        world
-        """
-        return self.__privatevar
-
-    @property
-    def var(self):
-        """
-        var
-        """
-        return self.__privatevar
-
-    @var.setter
-    def var(self, v):
-        """
-        @type v: str
-        @return: None
-        """
-        self.__privatevar = v
+from unittester import *
+from consoleprinter import *
 
 
 class AA(object):
@@ -87,36 +35,8 @@ class AA(object):
         return "AA'tje"
 
 
-def gb64(s):
-    """
-    @type s: str
-    @return: None
-    """
-    s = s.encode()
-    bs = base64.encodebytes(s)
-    return bs
-
-
-def printb64(s):
-    """
-    @type s: str
-    @return: None
-    """
-    bs = gb64(s)
-    print(bs)
-
-
-def db64(b):
-    """
-    @type b: bytes
-    @return: None
-    """
-    b = base64.decodebytes(b)
-    s = b.decode("utf-8")
-    return s
-
-
 class ConsoleTest(unittest.TestCase):
+
     def test_slugify(self):
         """
         test_slugify
@@ -225,7 +145,6 @@ class ConsoleTest(unittest.TestCase):
         self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjE5MxtbMG0bWzMwbSB8IBtbMG0bWzBtaGVsbG8gd29ybGQbWzBt\n')
 
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
-
         checks = [
             b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTBtG1szMG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
             b'MC4wMSB8IHRlc3RzLnB5OjI0NxtbOTRtG1szMG0gfCAbWzBtG1s5NG1ibHVlG1swbQ==\n',
@@ -243,7 +162,6 @@ class ConsoleTest(unittest.TestCase):
         cnt = 0
 
         for color in colors:
-
             res = console(color, color=color, retval=True)
             self.assert_equal_b64(res, checks[cnt])
 
@@ -275,7 +193,7 @@ class ConsoleTest(unittest.TestCase):
         s = s.split("|")[2:]
         s2 = db64(b).split("|")[2:]
 
-        if s!=s2:
+        if s != s2:
             print("-- not equal --")
             printb64(ts)
             print("---------------")
@@ -307,6 +225,7 @@ class ConsoleTest(unittest.TestCase):
 
         s = consoledict(d, retval=True)
         self.assert_equal_b64(
+
             s,
             b'G1szMm1bTWFyIDE5IDIwMTUgMTA6MDE6MDJdIHwgdGVzdHMucHk6MjU4IC0gY29uc29sZWRpY3Q6\nG1swbQobWzM1bXZhbDE6IBtbMG0bWzM2bTEwG1swbQobWzM1bXZhbDI6IBtbMG0bWzkxbTEwMC4z\nMhtbMG0KG1szNW12YWwzOiAbWzBtG1szM21oZWxsbyB3b3JsZBtbMG0KG1szNW12YWw0OgobWzBt\nICAgIBtbMzVtdmFsNTogG1swbRtbMzZtODgbWzBtCiAgICAbWzM1bXZhbDY6IBtbMG0bWzkxbTEw\nLjMyG1swbQogICAgG1szNW12YWw3OiAbWzBtG1szM21mb28gYmFyG1swbQogICAgG1szNW12YWw4\nOiAbWzBtG1szMm1UcnVlG1swbQogICAgG1szNW12YWw5OiAbWzBtG1szMW1GYWxzZRtbMG0=\n')
 
@@ -365,23 +284,93 @@ class ConsoleTest(unittest.TestCase):
         test_print_object_table
         """
         foo = Foobar("test_print_object_table")
-
         self.assertTrue("mvar                               property" in console(foo, retval=True))
 
         res = console(foo, retval=True)
         self.assert_equal_b64(
+
             res.replace("tests", "__main__"),
             b'MC4wMiB8IF9fbWFpbl9fLnB5OjM3MRtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nRm9vYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgG1s5MW0gfCBGb29iYXIg\nICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAg\nIHZhbHVlG1swbQogICAgG1szMG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0b\nWzBtCiAgICAbWzMwbSB8IBtbMG0bWzMxbV9fcHJpdmF0ZXZhchtbMG0bWzMzbSAgICAgICAgICAg\nICAgICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgG1szNm03NxtbMG0KG1sw\nbSAgICAbWzMwbSB8IBtbMG0bWzk2bWhlbGxvICAgICAgICAgICAgICAgICAgICAgICAgICAgICBm\ndW5jdGlvbgobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAg\nICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbWhlbGxvIHdvcmxk\nG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAgICAgICAgICAg\nICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbXRlc3RfcHJpbnRfb2Jq\nZWN0X3RhYmxlG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtdmFyICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgIHByb3BlcnR5ICAgICAgICAgICAgICAgICAgICAgICAbWzM2bTc3G1sw\nbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtd29ybGQgICAgICAgICAgICAgICAgICAgICAgICAg\nICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
 
         res = console(foo, plaintext=True, retval=True)
         self.assert_equal_b64(
+
             res.replace("__main__", "tests"),
             b'PHRlc3RzLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKfCBGb29iYXIgICAgICAgICAgICAg\nIHR5cGUgICAgICAgICAgICAgIHZhbHVlCnwgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tCnwgX19wcml2YXRldmFyICAgICAgICAgICBpbnQgICAgICAgNzcKfCBoZWxsbyAgICAgICAg\nICAgICAgIGZ1bmN0aW9uCnwgbXlzdHJpbmcgICAgICAgICAgICAgc3RyICAgICAgIGhlbGxvIHdv\ncmxkCnwgbXl2YXIgICAgICAgICAgICAgICBzdHIgICAgICAgdGVzdF9wcmludF9vYmplY3RfdGFi\nbGUKfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKfCB3b3JsZCAgICAgICAgICAg\nICAgIGZ1bmN0aW9u\n')
         self.assert_equal_b64(
+
             console(
                 AA(),
                 retval=True).replace("tests", "__main__"),
             b'MC4wMyB8IF9fbWFpbl9fLnB5OjM4MxtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nQUEgb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAbWzkxbSB8IEFBICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBt\nCiAgICAbWzMwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLRtbMG0KICAgIBtb\nMzBtIHwgG1swbRtbMzNtZm9vICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9u\nChtbMG0gICAgG1szMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAg\nICAgZmxvYXQgICAgICAgICAgICAgICAgICAgICAgICAgIBtbOTFtOC4wG1swbQobWzBtICAgIBtb\nMzBtIHwgG1swbRtbMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAbWzM2bTgbWzBtChtbMG0gICAgG1szMG0gfCAbWzBtG1s5\nNm1tX3N0cmluZyAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgIBtbOTNtaGVsbG8bWzBtChtbMG0bWzBt\n')
+
+
+class Foobar(object):
+    """
+    Foobar, testclass for printing an object
+    """
+    def __str__(self):
+        """
+        __str__
+        """
+        return "Foobar class"
+
+    def __init__(self, myvar):
+        """
+        @type myvar: str
+        @return: None
+        """
+        self.myvar = myvar
+        self.__privatevar = 77
+        self.mystring = "hello world"
+        super().__init__()
+
+    def hello(self):
+        """
+        hello
+        """
+        print(self.mystring)
+
+    def world(self):
+        """
+        world
+        """
+        return self.__privatevar
+
+    @property
+    def var(self):
+        """
+        var
+        """
+        return self.__privatevar
+
+    @var.setter
+    def var(self, v):
+        """
+        @type v: str
+        @return: None
+        """
+        self.__privatevar = v
+
+
+def db64(b):
+    """
+    @type b: bytes
+    @return: None
+    """
+    b = base64.decodebytes(b)
+    s = b.decode("utf-8")
+    return s
+
+
+def gb64(s):
+    """
+    @type s: str
+    @return: None
+    """
+    s = s.encode()
+    bs = base64.encodebytes(s)
+    return bs
 
 
 def main():
@@ -389,6 +378,18 @@ def main():
     main
     """
     unit_test_main(globals())
+
+
+def printb64(s):
+    """
+    @type s: str
+    @return: None
+    """
+    bs = gb64(s)
+    print(bs)
+
+
+standard_library.install_aliases()
 
 
 if __name__ == "__main__":
