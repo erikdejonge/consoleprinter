@@ -657,7 +657,7 @@ def colorize_for_print(v):
     retval = " ".join(sl)
 
     if header is not None:
-        retval = header + retval
+        retval = header + "\n" + retval
 
     return retval
 
@@ -1341,6 +1341,7 @@ def get_colors():
     get_colors
     """
     colors = {'red': '\033[31m',
+              'darkmagenta': '\033[95m',
               'green': '\033[32m',
               'darkgreen': '\033[92m',
               'yellow': '\033[33m',
@@ -2457,7 +2458,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "magento", enteraftercmd=False)
+    console_cmd_desc(command, description, "darkmagenta", enteraftercmd=False)
 
 
 SystemGlobals()
