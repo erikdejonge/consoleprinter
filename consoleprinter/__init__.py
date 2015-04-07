@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 #                  #                 #                 ^  0comment ->  0 comment after someth1ng d1fferent pref1x
+#!/usr/bin/env python3 #                     #                    #                    ^  0comment ->  0 comment after someth1ng d1fferent pref1x
 # coding=utf-8
 """
 console
@@ -600,6 +600,7 @@ def colorize_for_print(v):
 
     for v in v.split(" "):
         v = v.strip()
+
         if v == "false":
             v = "False"
         elif v == "true":
@@ -689,7 +690,6 @@ def console(*args, **kwargs):
         return
     global g_start_time
     runtime = "%0.2f" % float(time.time() - g_start_time)
-    toggle = True
     arglist = list(args)
     line_num_only = 3
     once = False
@@ -719,12 +719,16 @@ def console(*args, **kwargs):
 
         indent = str(kwargs["indent"])
 
+    toggle = True
+
     if "color" in kwargs:
         color = kwargs["color"]
     else:
-        color = "default"
+        toggle = False
+        color = "grey"
 
     if color not in colors:
+        toggle = False
         color = "default"
 
     if plainprint is True:
@@ -2215,7 +2219,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                   after keyword 0
+                # noinspection PyArgumentEqualDefault #                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2381,7 +2385,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                   after keyword 0
+    # noinspection PyArgumentEqualDefault #                      after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
