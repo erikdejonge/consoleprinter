@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 #                     #                    #                    ^  0comment ->  0 comment after someth1ng d1fferent pref1x
+#!/usr/bin/env python3
 # coding=utf-8
 """
 console
@@ -6,20 +6,21 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
 
-import base64
-import collections
 import io
-import json
 import os
 import re
-import socket
 import sys
+import json
 import time
-import traceback
 import ujson
+import base64
+import socket
+import arguments
+import traceback
+import collections
 import unicodedata
 
 SINGULARS = [
@@ -450,7 +451,9 @@ def abort(command, description, stack=False):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description + "!  ", "red", enteraftercmd=False)
+    command = "\033[31m" + "abort "+ command.strip() + "\033[0m"
+
+    console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
         console("⚡", print_stack=True)
@@ -924,9 +927,7 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     else:
         subcolor = color
         color = "blue"
-
-    # else:
-    #    color = "blue"
+    description = description.replace(os.getcwd(), "..")
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
     if "\n" not in description:
@@ -936,9 +937,11 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
 
         for s in description.split("\n"):
             if first is True:
-                console(s, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
+                console(s, color=subcolor, plaintext=not get_debugmode(), line_num_only=4)
             else:
-                print(" " * len(remove_escapecodes(cmdstr)), s.strip())
+                spaces = len(remove_escapecodes(cmdstr))
+                sys.stdout.write(" " * (spaces + 1))
+                console(s.strip(), color=subcolor, plaintext=not get_debugmode(), line_num_only=4)
 
             first = False
 
@@ -2219,7 +2222,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                        after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2385,7 +2388,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                      after keyword 0
+    # noinspection PyArgumentEqualDefault #                        after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2462,6 +2465,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
+    command = "\033[91m" + "warning " + "\033[0m" + command
     console_cmd_desc(command, description, "darkmagenta", enteraftercmd=False)
 
 
