@@ -592,13 +592,14 @@ def colorize_for_print(v):
         if header_trigger(line):
             header = "\033[30m" + line + "\033[0m"
         else:
-            v2 += line
+            v2 += line.strip()
 
         v2 += "\n"
 
     v = v2
 
     for v in v.split(" "):
+        v = v.strip()
         if v == "false":
             v = "False"
         elif v == "true":
@@ -2456,7 +2457,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "darkyellow", enteraftercmd=False)
+    console_cmd_desc(command, description, "magento", enteraftercmd=False)
 
 
 SystemGlobals()
