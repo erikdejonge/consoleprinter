@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 #       #      #      ^  0comment ->  0 comment after someth1ng d1fferent pref1x
+#!/usr/bin/env python3 #                  #                 #                 ^  0comment ->  0 comment after someth1ng d1fferent pref1x
 # coding=utf-8
 """
 console
@@ -26,6 +26,7 @@ SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
     (r"(?i)(matr)ices$", r'\1ix'),
+
     (r"(?i)(vert|ind)ices$", r'\1ex'),
     (r"(?i)^(ox)en", r'\1'),
     (r"(?i)(alias|status)(es)?$", r'\1'),
@@ -34,16 +35,19 @@ SINGULARS = [
     (r"(?i)(cris|test)(is|es)$", r'\1is'),
     (r"(?i)(shoe)s$", r'\1'),
     (r"(?i)(o)es$", r'\1'),
+
     (r"(?i)(bus)(es)?$", r'\1'),
     (r"(?i)(m|l)ice$", r'\1ouse'),
     (r"(?i)(x|ch|ss|sh)es$", r'\1'),
     (r"(?i)(m)ovies$", r'\1ovie'),
     (r"(?i)(s)eries$", r'\1eries'),
+
     (r"(?i)([^aeiouy]|qu)ies$", r'\1y'),
     (r"(?i)([lr])ves$", r'\1f'),
     (r"(?i)(tive)s$", r'\1'),
     (r"(?i)(hive)s$", r'\1'),
     (r"(?i)([^f])ves$", r'\1fe'),
+
     (r"(?i)(t)he(sis|ses)$", r"\1hesis"),
     (r"(?i)(s)ynop(sis|ses)$", r"\1ynopsis"),
     (r"(?i)(p)rogno(sis|ses)$", r"\1rognosis"),
@@ -51,6 +55,7 @@ SINGULARS = [
     (r"(?i)(d)iagno(sis|ses)$", r"\1iagnosis"),
     (r"(?i)(b)a(sis|ses)$", r"\1asis"),
     (r"(?i)(a)naly(sis|ses)$", r"\1nalysis"),
+
     (r"(?i)([ti])a$", r'\1um'),
     (r"(?i)(n)ews$", r'\1ews'),
     (r"(?i)(ss)$", r'\1'),
@@ -566,55 +571,94 @@ def colorize_for_print(v):
     @type v: str
     @return: None
     """
-    s = ""
+    sl = []
     v = v.strip()
+    v2 = ""
+    header = None
 
-    if v == "false":
-        v = "False"
-    elif v == "true":
-        v = "True"
+    def header_trigger(s):
+        """
+        @type s: str
+        @return: None
+        """
 
-    num = v.isdigit()
-    isfloat = False
+        for t in ["CONTROLLER", "POD"]:
+            if s.strip().startswith(t):
+                return True
 
-    if num is True:
-        isfloat = num == int(float(int(num)))
+        return False
 
-    if not num:
-        v.replace("'", "").replace('"', "")
-        num = v.isdigit()
-
-    if not num:
-        try:
-            v2 = v.replace("'", "").replace('"', "")
-            num = float(v2)
-            num = True
-            v = v2
-        except ValueError:
-            pass
-
-    ispath = os.path.exists(v)
-
-    if ispath is True:
-        if "/" not in v:
-            ispath = False
-
-    if num is True:
-        if isfloat:
-            s += "\033[36m" + v + "\033[0m"
+    for line in v.split("\n"):
+        if header_trigger(line):
+            header = "\033[30m" + line + "\033[0m"
         else:
-            s += "\033[91m" + v + "\033[0m"
+            v2 += line
 
-    elif ispath is True:
-        s += "\033[35m" + v + "\033[0m"
-    elif v == "False":
-        s += "\033[31m" + v + "\033[0m"
-    elif v == "True":
-        s += "\033[92m" + v + "\033[0m"
-    else:
-        s += "\033[93m" + v + "\033[0m"
+        v2 += "\n"
 
-    return s
+    v = v2
+
+    for v in v.split(" "):
+        if v == "false":
+            v = "False"
+        elif v == "true":
+            v = "True"
+
+        num = v.isdigit()
+        isfloat = False
+
+        if num is True:
+            isfloat = num == int(float(int(num)))
+
+        if not num:
+            v.replace("'", "").replace('"', "")
+            num = v.isdigit()
+
+        if not num:
+            try:
+                v2 = v.replace("'", "").replace('"', "")
+                num = float(v2)
+                num = True
+                v = v2
+            except ValueError:
+                pass
+
+        ispath = os.path.exists(v)
+
+        if ispath is True:
+            if "/" not in v:
+                ispath = False
+
+        if num is True:
+            if isfloat:
+                sl.append("\033[36m" + v + "\033[0m")
+            else:
+                sl.append("\033[32m" + v + "\033[0m")
+
+        elif ispath is True:
+            sl.append("\033[35m" + v + "\033[0m")
+        elif v == "False":
+            sl.append("\033[31m" + v + "\033[0m")
+        elif v == "True":
+            sl.append("\033[92m" + v + "\033[0m")
+        else:
+            if "=" in v:
+                for v in v.split(","):
+                    vs = v.split("=")
+                    v2 = "\033[31m" + vs[0] + "\033[0m\033[36m=\033[93m"
+                    for i in vs[1:]:
+                        v2 += str(i) + ","
+
+                    sl.append(v2.strip(","))
+            else:
+                sl.append("\033[93m" + v + "\033[0m")
+
+    retval = " ".join(sl)
+
+    if header is not None:
+        retval = header + retval
+
+    return retval
 
 
 def console(*args, **kwargs):
@@ -879,7 +923,19 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     # else:
     #    color = "blue"
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
-    console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
+
+    if "\n" not in description:
+        console(description, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
+    else:
+        first = True
+
+        for s in description.split("\n"):
+            if first is True:
+                console(s, color=subcolor, plaintext=not get_debugmode(), line_num_only=4, newline=color != "red")
+            else:
+                print(" " * len(remove_escapecodes(cmdstr)), s.strip())
+
+            first = False
 
     if color == "red":
         console(linenr, plaintext=True, color="black", newline=True)
@@ -2157,7 +2213,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #        after keyword 0
+                # noinspection PyArgumentEqualDefault #                   after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2323,7 +2379,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #        after keyword 0
+    # noinspection PyArgumentEqualDefault #                   after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
