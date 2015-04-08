@@ -13,11 +13,14 @@ import io
 import os
 import re
 import sys
+import code
 import json
 import time
 import ujson
+import atexit
 import base64
 import socket
+import readline
 import traceback
 import collections
 import unicodedata
@@ -271,6 +274,44 @@ class FastList(object):
         return len(list(self.dictlist.keys()))
 
 
+class HistoryConsole(code.InteractiveConsole):
+    """
+    HistoryConsole
+    """
+    def __init__(self, locals2=None, filename="<console>", histfile=os.path.expanduser("~/.console-history")):
+        """
+        @type locals2: list, None
+        @type filename: str
+        @type histfile: str
+        @return: None
+        """
+        code.InteractiveConsole.__init__(self, locals2, filename)
+        self.init_history(histfile)
+
+    def init_history(self, histfile):
+        """
+        @type histfile: str
+        @return: None
+        """
+        readline.parse_and_bind("tab: complete")
+
+        if hasattr(readline, "read_history_file"):
+            try:
+                readline.read_history_file(histfile)
+            except IOError:
+                pass
+
+            atexit.register(self.save_history, histfile)
+
+    @staticmethod
+    def save_history(histfile):
+        """
+        @type histfile: str
+        @return: None
+        """
+        readline.write_history_file(histfile)
+
+
 class Info(object):
     """
     Bar
@@ -444,8 +485,9 @@ def abort(command, description, stack=False):
 
     if command is None:
         command = "?"
+
     linno = get_line_number()
-    command = "\033[31m" + "abort:"+str(linno) + command.strip() + " \033[0m"
+    command = "\033[31m" + "abort:" + str(linno) + command.strip() + " \033[0m"
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
@@ -732,7 +774,18 @@ def console(*args, **kwargs):
 
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True)
-            txt += subs
+
+            if toggle:
+                txt += colors[color] + subs + "\033[0m"
+            else:
+                subcolor = "default"
+
+                if color == "red":
+                    subcolor = "darkyellow"
+
+                txt += colors[subcolor] + subs + "\033[0m"
+
+            toggle = not toggle
             txt += " "
 
         txt = remove_extra_indentation(txt)
@@ -915,13 +968,14 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     cmdstr = command + ":"
 
     if color == "red":
-        color = "red"
-        subcolor = "darkyellow"
+        color = "darkyellow"
+        subcolor = "red"
     else:
         subcolor = color
         color = "blue"
-    cmdstr = cmdstr.replace(str(os.getcwd()), "...")
-    description = description.replace(os.getcwd(), "...")
+
+    cmdstr = str(cmdstr).replace(str(os.getcwd()), "...")
+    description = str(description).replace(os.getcwd(), "...")
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
     if "\n" not in description:
@@ -1117,12 +1171,12 @@ def consoletasks(*args, **kwargs):
     @raise:
     """
     line_num_only = 3
-
     if "line_num_only" in kwargs:
         line_num_only = kwargs["line_num_only"]
 
     kwargs["line_num_only"] = line_num_only
     kwargs["newline"] = False
+
     console(*args, **kwargs)
 
 
@@ -1134,7 +1188,7 @@ def dasherize(word):
     return word.replace('_', '-')
 
 
-def doinput(description, default=None, answers=None, force=False):
+def doinput(description="", default=None, answers=None, force=False):
     """
     @type description: str
     @type default: str, None
@@ -1148,7 +1202,6 @@ def doinput(description, default=None, answers=None, force=False):
 
         return default
 
-    print()
     answer = ""
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
@@ -1169,22 +1222,26 @@ def doinput(description, default=None, answers=None, force=False):
         display_answers.sort(key=lambda x: str(x).lower().strip())
         answers.extend(quitanswers)
         console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-        console("options:", indent="  ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        if len(description) == 0:
+            console("options:", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
-        for pa in display_answers:
-            console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+        for cnt, pa in enumerate(display_answers):
+            console(pa, indent=" " + str(cnt + 1) + ". ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
         while True:
             answer = get_input_answer(default)
 
             if answer not in answers:
-                if answer != "":
-                    console(answer, color="red", plaintext=not get_debugmode(), line_num_only=4, newline=False)
+                try:
+                    answer = int(answer)
+                    answer = answers[answer]
+                except ValueError:
+                    pass
 
-                console("unknown option", color="red", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-
-                for pa in display_answers:
-                    console(pa, indent="    ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+            if answer not in answers:
+                console("$: invalid -> ", answer.strip(), color="red", plaintext=not get_debugmode(), line_num_only=4)
+                for cnt, pa in enumerate(display_answers):
+                    console(pa, indent=" " + str(cnt + 1) + ". ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
             else:
                 break
     else:
@@ -1194,7 +1251,7 @@ def doinput(description, default=None, answers=None, force=False):
     if answer in quitanswers:
         raise SystemExit("doinput quit")
 
-    print("-> " + str(answer))
+    console("ok: " + str(answer), color="green", plaintext=not get_debugmode(), line_num_only=4, newline=True)
     return answer
 
 
@@ -1417,7 +1474,7 @@ def get_line_number(line_num_only=4):
     if "__init__.py" in strce:
         strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
 
-    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
+    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("/__init__.py", "")
     return linenr
 
 
@@ -1525,126 +1582,119 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         else:
             subs = handle_ex(value, False, True)
     else:
-        import arguments
-        if isinstance(value, arguments.Arguments):
-            if plaintext is True:
-                subs = value.as_yaml()
-            else:
-                subs = value.for_print()
+        if return_string:
+            clsaddr = str(class_without_address(value))
         else:
-            if return_string:
-                clsaddr = str(class_without_address(value))
+            clsaddr = str(class_with_address(value))
+        try:
+            if str(clsaddr) == str(value):
+                dbs += colors["purple"] + str(value) + colors["default"] + "\n"
             else:
-                clsaddr = str(class_with_address(value))
-            try:
-                if str(clsaddr) == str(value):
-                    dbs += colors["purple"] + str(value) + colors["default"] + "\n"
+                dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+        except TypeError:
+            dbs += colors["grey"] + " |" + colors["default"] + "\n"
+
+        leftoffset = remove_color(dbs).find("|") - 1
+        subs = " " * (leftoffset - 4)
+        colwidthdelta = 0
+
+        if plaintext:
+            colwidthdelta = 19
+            subs = ""
+
+        sm = get_safe_string(value.__class__.__name__)
+
+        if len(sm) > indent:
+            sm = sm[:indent] + ".."
+
+        subheader = colors['orange'] + subs + " | " + sm
+        subheader += (37 - len(get_safe_string(subheader))) * " "
+        subheader += "type"
+        subheader += (68 - len(get_safe_string(subheader))) * " "
+        subheader += "value" + colors['default'] + "\n"
+        members = set()
+
+        for m in dir(value):
+            members.add(m)
+
+        members = sorted(members)
+        mycolors = collections.deque(["darkcyan", "yellow"])
+
+        if plaintext is False:
+            subs += " " * leftoffset
+
+        numprintable = 0
+
+        for m in members:
+            if not m.startswith("__"):
+                numprintable += 1
+
+        if numprintable > 0:
+            subs += subheader + (leftoffset * " ")
+            subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
+
+        for m in members:
+            if not m.startswith("__"):
+                if m.startswith("_"):
+                    if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
+                        continue
+
+                if plaintext is False:
+                    subs += " " * leftoffset
+
+                subs += colors["grey"] + " | " + colors['default']
+                privatevar = False
+
+                if ("_" + value.__class__.__name__) in m:
+                    privatevar = True
+
+                sm = str(m).replace("_" + value.__class__.__name__, "")
+                mycolor = mycolors.pop()
+
+                if len(sm) > 31:
+                    sm = sm[:31] + ".. "
+
+                tempcolor = mycolor
+
+                if privatevar is True:
+                    mycolor = "red"
+
+                subs += colors[mycolor] + sm
+                mycolor = tempcolor
+                mycolors.appendleft(mycolor)
+
+                if privatevar is True:
+                    subs += colors['default']
+                    subs += colors[mycolor]
+
+                subs += " " * (34 - len(sm))
+
+                if hasattr(value.__class__, m):
+                    t = type(getattr(value.__class__, m))
                 else:
-                    dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
-            except TypeError:
-                dbs += colors["grey"] + " |" + colors["default"] + "\n"
+                    t = type(getattr(value, m))
 
-            leftoffset = remove_color(dbs).find("|") - 1
-            subs = " " * (leftoffset - 4)
-            colwidthdelta = 0
+                sm = repr(t).replace("<class '", "").replace("'>", "")
 
-            if plaintext:
-                colwidthdelta = 19
-                subs = ""
+                # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
+                extraspacereduction = 0
 
-            sm = get_safe_string(value.__class__.__name__)
+                if len(sm) > 31:
+                    sm = sm[:31] + ".."
+                    extraspacereduction = len("..")
 
-            if len(sm) > indent:
-                sm = sm[:indent] + ".."
+                subs += sm
+                memberval = getattr(value, m)
 
-            subheader = colors['orange'] + subs + " | " + sm
-            subheader += (37 - len(get_safe_string(subheader))) * " "
-            subheader += "type"
-            subheader += (68 - len(get_safe_string(subheader))) * " "
-            subheader += "value" + colors['default'] + "\n"
-            members = set()
+                if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
+                    subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
 
-            for m in dir(value):
-                members.add(m)
-
-            members = sorted(members)
-            mycolors = collections.deque(["darkcyan", "yellow"])
-
-            if plaintext is False:
-                subs += " " * leftoffset
-
-            numprintable = 0
-
-            for m in members:
-                if not m.startswith("__"):
-                    numprintable += 1
-
-            if numprintable > 0:
-                subs += subheader + (leftoffset * " ")
-                subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
-
-            for m in members:
-                if not m.startswith("__"):
-                    if m.startswith("_"):
-                        if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
-                            continue
-
-                    if plaintext is False:
-                        subs += " " * leftoffset
-
-                    subs += colors["grey"] + " | " + colors['default']
-                    privatevar = False
-
-                    if ("_" + value.__class__.__name__) in m:
-                        privatevar = True
-
-                    sm = str(m).replace("_" + value.__class__.__name__, "")
-                    mycolor = mycolors.pop()
-
-                    if len(sm) > 31:
-                        sm = sm[:31] + ".. "
-
-                    tempcolor = mycolor
-
-                    if privatevar is True:
-                        mycolor = "red"
-
-                    subs += colors[mycolor] + sm
-                    mycolor = tempcolor
-                    mycolors.appendleft(mycolor)
-
-                    if privatevar is True:
-                        subs += colors['default']
-                        subs += colors[mycolor]
-
-                    subs += " " * (34 - len(sm))
-
-                    if hasattr(value.__class__, m):
-                        t = type(getattr(value.__class__, m))
+                    if plaintext is True:
+                        subs += str(memberval)
                     else:
-                        t = type(getattr(value, m))
+                        subs += colorize_for_print(str(memberval))
 
-                    sm = repr(t).replace("<class '", "").replace("'>", "")
-
-                    # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
-                    extraspacereduction = 0
-
-                    if len(sm) > 31:
-                        sm = sm[:31] + ".."
-                        extraspacereduction = len("..")
-
-                    subs += sm
-                    memberval = getattr(value, m)
-
-                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                        subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-
-                        if plaintext is True:
-                            subs += str(memberval)
-                        else:
-                            subs += colorize_for_print(str(memberval))
-
-                    subs += "\n" + colors['default']
+                subs += "\n" + colors['default']
 
     return dbs, subs
 
@@ -2216,7 +2266,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                            after keyword 0
+                # noinspection PyArgumentEqualDefault #                                         after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2344,6 +2394,7 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
                                 return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
                             except ValueError:
                                 pass
+
                             except BaseException as be:
                                 print(be)
 
@@ -2356,6 +2407,13 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
         return stackl
 
     return "\n".join(stackl)
+
+
+def start_interactive_console():
+    """
+    start_interactive_console
+    """
+    HistoryConsole()
 
 
 def stdoutwriteline(*args):
@@ -2381,7 +2439,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                            after keyword 0
+    # noinspection PyArgumentEqualDefault #                                         after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2457,9 +2515,11 @@ def warning(command, description):
     """
     if command is None:
         command = "?"
+
     linno = get_line_number()
-    command = "\033[91m" + "warning:"+ str(linno) + " \033[0m" + command
-    console_cmd_desc(command, description, "darkmagenta", enteraftercmd=False)
+    command = "warning " + command
+    description += " \033[90m(" + str(linno) + ") \033[0m"
+    console_cmd_desc(command, description, "red", enteraftercmd=False)
 
 
 SystemGlobals()
