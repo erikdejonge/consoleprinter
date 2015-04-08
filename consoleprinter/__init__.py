@@ -444,8 +444,8 @@ def abort(command, description, stack=False):
 
     if command is None:
         command = "?"
-
-    command = "\033[31m" + "abort " + command.strip() + "\033[0m"
+    linno = get_line_number()
+    command = "\033[31m" + "abort:"+str(linno) + command.strip() + " \033[0m"
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
@@ -920,8 +920,8 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     else:
         subcolor = color
         color = "blue"
-
-    description = description.replace(os.getcwd(), "..")
+    cmdstr = cmdstr.replace(str(os.getcwd()), "...")
+    description = description.replace(os.getcwd(), "...")
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
     if "\n" not in description:
@@ -2457,8 +2457,8 @@ def warning(command, description):
     """
     if command is None:
         command = "?"
-
-    command = "\033[91m" + "warning " + "\033[0m" + command
+    linno = get_line_number()
+    command = "\033[91m" + "warning:"+ str(linno) + " \033[0m" + command
     console_cmd_desc(command, description, "darkmagenta", enteraftercmd=False)
 
 
