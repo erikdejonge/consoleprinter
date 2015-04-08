@@ -18,7 +18,6 @@ import time
 import ujson
 import base64
 import socket
-import arguments
 import traceback
 import collections
 import unicodedata
@@ -27,7 +26,6 @@ SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
     (r"(?i)(matr)ices$", r'\1ix'),
-
     (r"(?i)(vert|ind)ices$", r'\1ex'),
     (r"(?i)^(ox)en", r'\1'),
     (r"(?i)(alias|status)(es)?$", r'\1'),
@@ -36,19 +34,16 @@ SINGULARS = [
     (r"(?i)(cris|test)(is|es)$", r'\1is'),
     (r"(?i)(shoe)s$", r'\1'),
     (r"(?i)(o)es$", r'\1'),
-
     (r"(?i)(bus)(es)?$", r'\1'),
     (r"(?i)(m|l)ice$", r'\1ouse'),
     (r"(?i)(x|ch|ss|sh)es$", r'\1'),
     (r"(?i)(m)ovies$", r'\1ovie'),
     (r"(?i)(s)eries$", r'\1eries'),
-
     (r"(?i)([^aeiouy]|qu)ies$", r'\1y'),
     (r"(?i)([lr])ves$", r'\1f'),
     (r"(?i)(tive)s$", r'\1'),
     (r"(?i)(hive)s$", r'\1'),
     (r"(?i)([^f])ves$", r'\1fe'),
-
     (r"(?i)(t)he(sis|ses)$", r"\1hesis"),
     (r"(?i)(s)ynop(sis|ses)$", r"\1ynopsis"),
     (r"(?i)(p)rogno(sis|ses)$", r"\1rognosis"),
@@ -56,7 +51,6 @@ SINGULARS = [
     (r"(?i)(d)iagno(sis|ses)$", r"\1iagnosis"),
     (r"(?i)(b)a(sis|ses)$", r"\1asis"),
     (r"(?i)(a)naly(sis|ses)$", r"\1nalysis"),
-
     (r"(?i)([ti])a$", r'\1um'),
     (r"(?i)(n)ews$", r'\1ews'),
     (r"(?i)(ss)$", r'\1'),
@@ -451,8 +445,7 @@ def abort(command, description, stack=False):
     if command is None:
         command = "?"
 
-    command = "\033[31m" + "abort "+ command.strip() + "\033[0m"
-
+    command = "\033[31m" + "abort " + command.strip() + "\033[0m"
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
@@ -927,6 +920,7 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     else:
         subcolor = color
         color = "blue"
+
     description = description.replace(os.getcwd(), "..")
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
@@ -1123,12 +1117,12 @@ def consoletasks(*args, **kwargs):
     @raise:
     """
     line_num_only = 3
+
     if "line_num_only" in kwargs:
         line_num_only = kwargs["line_num_only"]
 
     kwargs["line_num_only"] = line_num_only
     kwargs["newline"] = False
-
     console(*args, **kwargs)
 
 
@@ -2222,7 +2216,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                        after keyword 0
+                # noinspection PyArgumentEqualDefault #                            after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2350,7 +2344,6 @@ def stack_trace(line_num_only=0, ret_list=False, fullline=False, reverse_stack=T
                                 return str("/".join(fs[len(fs) - 1:])) + ":" + str(ln)
                             except ValueError:
                                 pass
-
                             except BaseException as be:
                                 print(be)
 
@@ -2388,7 +2381,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                        after keyword 0
+    # noinspection PyArgumentEqualDefault #                            after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
