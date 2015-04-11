@@ -487,7 +487,7 @@ def abort(command, description, stack=False):
         command = "?"
 
     linno = get_line_number()
-    command = "\033[31m" + "abort:" + str(linno) + command.strip() + " \033[0m"
+    command = "\033[31m" + "abort" + str(linno) + command.strip() + " \033[0m"
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
