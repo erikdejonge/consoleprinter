@@ -827,7 +827,7 @@ def console(*args, **kwargs):
         if return_string is True:
             return indent + txt
         else:
-            sys.stdout.write((indent + colors[color] + txt + "\033[0m"))
+            sys.stdout.write(indent + colors[color] + txt + "\033[0m")
 
         if newline is True:
             sys.stdout.write("\n")
