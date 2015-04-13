@@ -344,7 +344,7 @@ class Info(object):
         @return: None
         """
         linenr = get_line_number()
-        print("\033[30m==\n" + str(self.command), linenr, "\n==\033[0m")
+        #print("\033[30m== " + str(self.command), linenr, "==\033[0m")
         longest = 0
 
         for line in self.items:
@@ -487,7 +487,7 @@ def abort(command, description, stack=False):
         command = "?"
 
     linno = get_line_number()
-    command = "\033[31m" + "abort:" + str(linno) + ":" + command.strip() + "\033[0m"
+    command = "\033[31m" + "abort:" + str(linno) + ":" + str(command).strip() + "\033[0m"
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
@@ -525,7 +525,7 @@ def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
     if remove_spaces is True:
         ns = ""
 
-        for s in mystring.split(" "):
+        for s in mystring.split():
             ns += re.sub(r"(?:^|_)(.)", lambda m: m.group(1).upper(), s)
 
         mystring = ns
@@ -610,7 +610,7 @@ def header_trigger(s):
     @return: None
     """
 
-    for t in ["CONTROLLER", "POD", "NAME"]:
+    for t in ["CONTROLLER", "POD", "NAME", "FIRSTSEEN"]:
         if s.strip().startswith(t):
             return True
 
@@ -624,30 +624,54 @@ def colorize_for_print(v):
     """
     sl = []
     v = v.strip()
-    header = None
+    spacecnt = 0
 
     if header_trigger(v):
         retval = "\033[97m" + v + "\033[0m"
     else:
         first = True
+        scanning = False
+        scanbuff = ""
 
         for v in v.split(" "):
-            v = v.strip()
+            v = remove_color(v.strip())
 
             if len(v) > 0:
-                if v == "false":
+                if scanning is True:
+                    scanbuff += " " + v
+
+                    if v.endswith("}"):
+                        scanning = False
+                        sl.append(scanbuff)
+
+                elif v == "false":
                     v = "False"
                     sl.append("\033[31m" + v + "\033[0m")
                 elif v == "true":
                     v = "True"
                     sl.append("\033[92m" + v + "\033[0m")
+                elif v.startswith("{"):
+                    scanning = True
+                    scanbuff = v
+                elif v.strip() == "Pod":
+                    sl.append("\033[93m" + v + "\033[0m")
+                elif v.strip() == "up":
+                    sl.append("\033[32m" + v + "\033[0m")
+                elif v.strip() == "down":
+                    sl.append("\033[31m" + v + "\033[0m")
+                elif "core" in v or "node" in v:
+                    sl.append("\033[91m" + v + "\033[0m")
+                elif v.strip() == "killing":
+                    sl.append("\033[31m" + v + "\033[0m")
                 elif v == "<none>":
                     sl.append("\033[37m" + v + "\033[0m")
                 elif v.count(".") == 3:
                     vip = v.replace(".", "")
 
                     if vip.isdigit():
-                        sl.append("\033[92m" + v + "\033[0m")
+                        sl.append("\033[32m" + v + "\033[0m")
+                    else:
+                        sl.append(v)
 
                 elif v.isdigit():
                     num = v.isdigit()
@@ -671,6 +695,8 @@ def colorize_for_print(v):
 
                 elif os.path.exists(v):
                     sl.append("\033[35m" + v + "\033[0m")
+                elif len(v) == 64:
+                    sl.append("\033[90m" + v[:8] + "\033[0m")
                 else:
                     if "=" in v:
                         for v in v.split(","):
@@ -688,12 +714,16 @@ def colorize_for_print(v):
             else:
                 sl.append(v)
 
-            first = False
+            if v == "":
+                spacecnt += 1
+
+            if spacecnt == 2:
+                first = False
+                spacecnt = 0
 
         retval = " ".join(sl)
 
-
-    return retval
+    return retval.lstrip()
 
 
 def console(*args, **kwargs):
@@ -973,8 +1003,8 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
         subcolor = color
         color = "blue"
 
-    cmdstr = str(cmdstr).replace(str(os.getcwd()), "...")
-    description = str(description).replace(os.getcwd(), "...")
+    cmdstr = str(cmdstr).replace(str(os.getcwd()), ".")
+    description = str(description).replace(os.getcwd(), ".")
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
     if "\n" not in description:
@@ -2264,7 +2294,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                           after keyword 0
+                # noinspection PyArgumentEqualDefault #                                             after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2437,7 +2467,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                           after keyword 0
+    # noinspection PyArgumentEqualDefault #                                             after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
