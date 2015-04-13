@@ -2313,7 +2313,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                   after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                    after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2486,7 +2486,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                   after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                    after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
