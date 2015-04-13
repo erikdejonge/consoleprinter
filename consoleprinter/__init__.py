@@ -621,6 +621,7 @@ def header_trigger(s):
 def colorize_for_print(v):
     """
     @type v: str
+    @type yaml: bool
     @return: None
     """
     sl = []
@@ -1539,16 +1540,16 @@ def get_print_yaml(yamlmystring):
         if len(ls) > 1:
             for ii in ls:
                 if cnt == 0:
-                    s += "\033[95m" + ii + ": " + "\033[0m"
+                    s += "\033[33m" + ii + ": " + "\033[0m"
                 else:
-                    s += colorize_for_print(ii)
+                    s += colorize_for_print(ii, yaml=True)
 
                 cnt += 1
         else:
             if i.strip().startswith("---"):
                 s += "\033[93m" + i + "\033[0m"
             else:
-                s += "\033[91m" + i + "\033[0m"
+                s += "\033[33m" + i + "\033[0m"
 
         s += "\n"
 
@@ -2313,7 +2314,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                    after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2486,7 +2487,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                    after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                      after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
