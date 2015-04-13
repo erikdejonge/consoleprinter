@@ -344,7 +344,8 @@ class Info(object):
         @return: None
         """
         linenr = get_line_number()
-        #print("\033[30m== " + str(self.command), linenr, "==\033[0m")
+
+        # print("\033[30m== " + str(self.command), linenr, "==\033[0m")
         longest = 0
 
         for line in self.items:
@@ -1512,9 +1513,26 @@ def get_print_yaml(yamlmystring):
     @type yamlmystring: str
     @return: None
     """
+
+    # print({1:yamlmystring})
     s = ""
+    currnumdashes = 0
+    currnumspaces = 0
 
     for i in yamlmystring.split("\n"):
+        numdashes = i.count("-") - i.lstrip("-").count("-")
+
+        if numdashes > currnumdashes:
+            s += "\n"
+
+        currnumdashes = numdashes
+        numspaces = i.count(" ") - i.lstrip(" ").count(" ")
+
+        if numspaces is 0 and currnumspaces > 0:
+            if not s.endswith("\n\n"):
+                s += "\n"
+
+        currnumspaces = numspaces
         ls = [x for x in i.split(":") if x]
         cnt = 0
 
@@ -1534,6 +1552,7 @@ def get_print_yaml(yamlmystring):
 
         s += "\n"
 
+    s = s.replace("items:\x1b[0m\n\n\x1b[95m-", "\nitems:\x1b[0m\n\x1b[95m-")
     return s.strip()
 
 
@@ -2294,7 +2313,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                             after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                   after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2467,7 +2486,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                             after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                   after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
