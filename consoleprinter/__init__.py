@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import io
 import os
 import re
@@ -605,19 +605,6 @@ def clear_screen():
         sys.stderr.flush()
 
 
-def header_trigger(s):
-    """
-    @type s: str
-    @return: None
-    """
-
-    for t in ["CONTROLLER", "POD", "NAME", "FIRSTSEEN"]:
-        if s.strip().startswith(t):
-            return True
-
-    return False
-
-
 def colorize_for_print(v):
     """
     @type v: str
@@ -657,17 +644,18 @@ def colorize_for_print(v):
                             v2 += str(i) + ","
 
                         sl.append(v2.strip(","))
-                elif "/" in v and v.count("/") == 1 and not v.startswith("/") and not v.count(".")>2:
+
+                elif "/" in v and v.count("/") == 1 and not v.startswith("/") and not v.count(".") > 2:
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[93m" + v + "\033[0m")
-                elif v.strip() in ["up", "true", "active", "running", "Ready", "Running"]:
+                elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
                     sl.append("\033[91m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
                     sl.append("\033[93m" + v + "\033[0m")
-                elif v.strip() in ["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]:
+                elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
                     sl.append("\033[31m" + snake_case(v) + "\033[0m")
                 elif ("core" in v or "node" in v) and ".nl" in v:
                     sl.append("\033[91m" + v + "\033[0m")
@@ -708,7 +696,6 @@ def colorize_for_print(v):
                 else:
                     if first:
                         sl.append("\033[38m" + v + "\033[0m")
-
                     else:
                         sl.append("\033[97m" + v + "\033[0m")
             else:
@@ -1846,6 +1833,18 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
     return "\033[93m" + error_msg
 
 
+def header_trigger(s):
+    """
+    @type s: str
+    @return: None
+    """
+    for t in ["CONTROLLER", "POD", "NAME", "FIRSTSEEN"]:
+        if s.strip().startswith(t):
+            return True
+
+    return False
+
+
 def human_now(timedelta_seconds=3600):
     """
     @type timedelta_seconds: str
@@ -1879,6 +1878,22 @@ def info(command, description):
         console(command, color="red", plaintext=not get_debugmode(), line_num_only=4)
     else:
         console_cmd_desc(command, description, "default")
+
+
+def list_add_capitalize(l):
+    """
+    @type l: list
+    @return: list
+    """
+    nl = []
+
+    for i in l:
+        nl.append(i)
+
+        if hasattr(i, "capitalize"):
+            nl.append(i.capitalize())
+
+    return list(set(nl))
 
 
 def log_date_time_string():
@@ -2312,7 +2327,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                         after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                           after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2485,7 +2500,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                         after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                           after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2581,7 +2596,6 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
-
 
 if __name__ == "__main__":
     main()
