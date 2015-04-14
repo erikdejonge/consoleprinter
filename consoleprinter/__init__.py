@@ -629,7 +629,7 @@ def colorize_for_print(v):
     spacecnt = 0
 
     if header_trigger(v):
-        retval = "\033[97m" + v + "\033[0m"
+        retval = "\033[97m" + v.lower() + "\033[0m"
     else:
         first = True
         scanning = False
@@ -646,32 +646,38 @@ def colorize_for_print(v):
                         scanning = False
                         sl.append(scanbuff)
 
-                elif v == "false":
-                    v = "False"
-                    sl.append("\033[31m" + v + "\033[0m")
-                elif v == "true":
-                    v = "True"
-                    sl.append("\033[92m" + v + "\033[0m")
                 elif v.startswith("{"):
                     scanning = True
                     scanbuff = v
+                elif "=" in v:
+                    for v in v.split(","):
+                        vs = v.split("=")
+                        v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
+                        for i in vs[1:]:
+                            v2 += str(i) + ","
+
+                        sl.append(v2.strip(","))
+                elif "/" in v and v.count("/") == 1 and not v.startswith("/") and not v.count(".")>2:
+                    sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[93m" + v + "\033[0m")
-                elif v.strip() == "up":
-                    sl.append("\033[32m" + v + "\033[0m")
-                elif v.strip() == "down":
-                    sl.append("\033[31m" + v + "\033[0m")
-                elif "core" in v or "node" in v:
+                elif v.strip() in ["up", "true", "active", "running", "Ready", "Running"]:
+                    sl.append("\033[32m" + snake_case(v) + "\033[0m")
+                elif v.strip().lower() in ["activating"]:
                     sl.append("\033[91m" + v + "\033[0m")
-                elif v.strip() == "killing":
-                    sl.append("\033[31m" + v + "\033[0m")
+                elif v.strip().lower() in ["exited", "loaded"]:
+                    sl.append("\033[93m" + v + "\033[0m")
+                elif v.strip() in ["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]:
+                    sl.append("\033[31m" + snake_case(v) + "\033[0m")
+                elif ("core" in v or "node" in v) and ".nl" in v:
+                    sl.append("\033[91m" + v + "\033[0m")
                 elif v == "<none>":
                     sl.append("\033[37m" + v + "\033[0m")
-                elif v.count(".") == 3:
-                    vip = v.replace(".", "")
+                elif v.count(".") % 3 == 0:
+                    vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").strip()
 
                     if vip.isdigit():
-                        sl.append("\033[32m" + v + "\033[0m")
+                        sl.append("\033[96m" + v + "\033[0m")
                     else:
                         sl.append(v)
 
@@ -695,24 +701,16 @@ def colorize_for_print(v):
                     else:
                         sl.append("\033[32m" + v + "\033[0m")
 
-                elif os.path.exists(v):
+                elif "/" in v and os.path.exists(v):
                     sl.append("\033[35m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
                 else:
-                    if "=" in v:
-                        for v in v.split(","):
-                            vs = v.split("=")
-                            v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
-                            for i in vs[1:]:
-                                v2 += str(i) + ","
+                    if first:
+                        sl.append("\033[38m" + v + "\033[0m")
 
-                            sl.append(v2.strip(","))
                     else:
-                        if first:
-                            sl.append("\033[38m" + v + "\033[0m")
-                        else:
-                            sl.append("\033[97m" + v + "\033[0m")
+                        sl.append("\033[97m" + v + "\033[0m")
             else:
                 sl.append(v)
 
@@ -2314,7 +2312,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                         after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2487,7 +2485,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                      after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                         after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
