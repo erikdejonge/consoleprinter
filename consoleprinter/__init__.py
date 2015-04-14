@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -596,13 +596,16 @@ def class_without_address(cls):
     return str(cls.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object>"
 
 
-def clear_screen():
+def clear_screen(ctrlkey=False):
     """
-    clear_screen
+    @type ctrlkey: bool
+    @return: None
     """
-    if sys.stderr.isatty():
+    if sys.stderr.isatty() and ctrlkey is True:
         sys.stderr.write('\x1Bc')
         sys.stderr.flush()
+    else:
+        os.system("clear")
 
 
 def colorize_for_print(v):
@@ -2327,7 +2330,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                           after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                             after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2500,7 +2503,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                           after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                             after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2596,6 +2599,7 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
