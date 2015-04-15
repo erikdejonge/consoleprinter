@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import io
 import os
 import re
@@ -611,7 +611,6 @@ def clear_screen(ctrlkey=False):
 def colorize_for_print(v):
     """
     @type v: str
-    @type yaml: bool
     @return: None
     """
     sl = []
@@ -1530,7 +1529,7 @@ def get_print_yaml(yamlmystring):
                 if cnt == 0:
                     s += "\033[33m" + ii + ": " + "\033[0m"
                 else:
-                    s += colorize_for_print(ii, yaml=True)
+                    s += colorize_for_print(ii)
 
                 cnt += 1
         else:
@@ -2599,7 +2598,6 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
-
 
 if __name__ == "__main__":
     main()
