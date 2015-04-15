@@ -2581,7 +2581,7 @@ def warning(command, description):
         command = "?"
 
     linno = get_line_number()
-    command = "warning " + command
+
     description += " \033[90m(" + str(linno) + ") \033[0m"
     console_cmd_desc(command, description, "red", enteraftercmd=False)
 
