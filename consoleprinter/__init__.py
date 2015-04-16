@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -1487,13 +1487,16 @@ def get_line_number(line_num_only=4):
     @type line_num_only: int
     @return: None
     """
-    strce = stack_trace(line_num_only=line_num_only).strip()
+    try:
+        strce = stack_trace(line_num_only=line_num_only).strip()
 
-    if "__init__.py" in strce:
-        strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
+        if "__init__.py" in strce:
+            strce = stack_trace(line_num_only=line_num_only, extralevel=True).strip().replace(os.getcwd(), "")
 
-    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("/__init__.py", "")
-    return linenr
+        linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("/__init__.py", "")
+        return linenr
+    except BaseException as exc:
+        print("\033[30m", exc, "\033[0m")
 
 
 def get_print_yaml(yamlmystring):
@@ -2329,7 +2332,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                             after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                              after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2502,7 +2505,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                             after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                              after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2580,7 +2583,6 @@ def warning(command, description):
         command = "?"
 
     linno = get_line_number()
-
     description += " \033[90m(" + str(linno) + ") \033[0m"
     console_cmd_desc(command, description, "red", enteraftercmd=False)
 
@@ -2598,6 +2600,7 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
