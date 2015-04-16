@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import io
 import os
 import re
@@ -2588,7 +2588,6 @@ def warning(command, description):
 
 
 SystemGlobals()
-
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2596,11 +2595,8 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
-
 set_console_start_time()
-
 standard_library.install_aliases()
-
 
 if __name__ == "__main__":
     main()
