@@ -2332,7 +2332,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                              after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2505,7 +2505,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                              after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                      after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2588,6 +2588,7 @@ def warning(command, description):
 
 
 SystemGlobals()
+
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2595,8 +2596,11 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
+
 set_console_start_time()
+
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
