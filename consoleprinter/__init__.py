@@ -161,14 +161,14 @@ class Bar(object):
         @return: None
         """
         stream = sys.stderr
-        bar_template = '%s[%s%s] %s/%s - %s\r'
+        bar_template = '%s|%s%s| %s/%s - %s\r'
 
         # How long to wait before recalculating the ETA
         eta_interval = 1
 
         # How many intervals (excluding the current one) to calculate the simple moving
         # average
-        eta_sma_window = 9
+        eta_sma_window = 14
 
         if count is not None:
             self.expected_size = count
