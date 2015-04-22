@@ -511,8 +511,8 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
     @return: None
     """
     if filled_char is None:
-        filled_char = b'\xe2\x96\x88'.decode()
-
+        filled_char_tmp = b'\xe2\x96\x88'.decode()
+        filled_char = "\033[0;30m" + filled_char_tmp + "\033[0m"
 
     count = len(it) if expected_size is None else expected_size
     with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
@@ -996,9 +996,14 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     else:
         subcolor = color
         color = "blue"
+    try:
+        cmdstr = str(cmdstr).replace(str(os.getcwd()), ".")
+        description = str(description).replace(os.getcwd(), ".")
+    except FileNotFoundError:
+        cmdstr += "<file not found>"
+        description += "<file not found>"
 
-    cmdstr = str(cmdstr).replace(str(os.getcwd()), ".")
-    description = str(description).replace(os.getcwd(), ".")
+
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
     if "\n" not in description:
@@ -2339,7 +2344,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                 after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2512,7 +2517,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                 after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
