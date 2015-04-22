@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -493,10 +493,11 @@ def abort(command, description, stack=False):
 
     if stack is True:
         console("⚡", print_stack=True)
+
     raise SystemExit(1)
 
 
-def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char='#', expected_size=None, every=1):
+def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, expected_size=None, every=1):
     """
     Progress iterator. Wrap your iterables with it.
     @type it: str
@@ -509,6 +510,9 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char='#', expe
     @type every: int
     @return: None
     """
+    if filled_char is None:
+        filled_char = b'\xe2\x96\x88'.decode()
+
     count = len(it) if expected_size is None else expected_size
     with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
         for i, item in enumerate(it):
@@ -1027,6 +1031,7 @@ def console_error(stacktracemsg, exceptiontoraise, errorplaintxt=None, line_num_
         console(errorplaintxt, color="red", plainprint=True)
 
     console_warning(stacktracemsg, print_stack=True, color="darkyellow", line_num_only=line_num_only)
+
     raise exceptiontoraise
 
 
@@ -1115,6 +1120,7 @@ def console_warning(*args, **kwargs):
 
     if bexit is True:
         retval = console(*args, print_stack=print_stack, color=color, line_num_only=line_num_only, once=once, retval=True, plaintext=True)
+
         raise SystemExit(retval)
 
     return retval
@@ -2332,7 +2338,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2505,7 +2511,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                      after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
