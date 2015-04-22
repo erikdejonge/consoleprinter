@@ -203,7 +203,7 @@ class Bar(object):
         self.elapsed = time.time() - self.start
         elapsed_disp = self.format_time(self.elapsed)
         stream = sys.stderr
-        bar_template = '%s[%s%s] %s/%s - %s\r'
+        bar_template = '%s|%s%s| %s/%s - %s\r'
         self.last_progress = "%.1f" % float(self.last_progress)
         self.expected_size = "%.1f" % float(self.expected_size)
 
@@ -512,6 +512,7 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
     """
     if filled_char is None:
         filled_char = b'\xe2\x96\x88'.decode()
+
 
     count = len(it) if expected_size is None else expected_size
     with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
