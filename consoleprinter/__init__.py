@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import io
 import os
 import re
@@ -25,6 +25,7 @@ import traceback
 import collections
 import unicodedata
 
+from sh import whoami
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
@@ -626,6 +627,8 @@ def colorize_for_print(v):
     sl = []
     v = v.strip()
     spacecnt = 0
+    me = str(whoami()).strip()
+
 
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
@@ -661,10 +664,18 @@ def colorize_for_print(v):
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[93m" + v + "\033[0m")
+                elif me in v.strip():
+                    sl.append("\033[91m" + v + "\033[0m")
+                elif v.strip().startswith("-"):
+                    sl.append("\033[94m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
                     sl.append("\033[91m" + v + "\033[0m")
+                elif "am" in v or "pm" in v:
+                    sl.append("\033[93m" + v + "\033[0m")
+                elif v.count(":")==5 and len(v.strip())==17:
+                    sl.append("\033[30m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
                     sl.append("\033[93m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
@@ -673,7 +684,7 @@ def colorize_for_print(v):
                     sl.append("\033[91m" + v + "\033[0m")
                 elif v == "<none>":
                     sl.append("\033[37m" + v + "\033[0m")
-                elif v.count(".") % 3 == 0:
+                elif "." in v and v.count(".") % 3 == 0:
                     vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").strip()
 
                     if vip.isdigit():
@@ -681,7 +692,8 @@ def colorize_for_print(v):
                     else:
                         sl.append(v)
 
-                elif v.isdigit():
+
+                elif v.isnumeric() or v.strip().replace(".", "").isdigit():
                     num = v.isdigit()
                     isfloat = False
 
@@ -697,12 +709,11 @@ def colorize_for_print(v):
                         v = v2
 
                     if isfloat:
-                        sl.append("\033[36m" + v + "\033[0m")
+                        sl.append("\033[96m" + v + "\033[0m")
                     else:
                         sl.append("\033[32m" + v + "\033[0m")
-
                 elif "/" in v and os.path.exists(v):
-                    sl.append("\033[35m" + v + "\033[0m")
+                    sl.append("\n\t\033[93m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
                 else:
@@ -721,7 +732,8 @@ def colorize_for_print(v):
                 spacecnt = 0
 
         retval = " ".join(sl)
-
+    retval = retval.replace("--", "\n\t--")
+    retval = retval.replace("\t", " "*4)
     return retval.lstrip()
 
 
@@ -2049,7 +2061,7 @@ def pretty_print_json(jsondata, tofilename=None):
         return tofilename
 
 
-def query_yes_no(*args, force=False, default=True, command=None):
+def query_yes_no(args, force=False, default=True, command=None):
     """
     @type args: list
     @type force: bool
@@ -2608,7 +2620,6 @@ def warning(command, description):
 
 
 SystemGlobals()
-
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2616,11 +2627,8 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
-
 set_console_start_time()
-
 standard_library.install_aliases()
-
 
 if __name__ == "__main__":
     main()
