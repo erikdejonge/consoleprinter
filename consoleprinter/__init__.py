@@ -209,6 +209,8 @@ class Bar(object):
 
         if not self.hide:
             # Print completed bar with elapsed time
+            stream.write('\r')
+            stream.write('                                                                                        \r')
             stream.write(bar_template % (
                 self.label, self.filled_char * self.width,
                 self.empty_char * 0, self.last_progress,
@@ -517,6 +519,9 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
     count = len(it) if expected_size is None else expected_size
     with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
         for i, item in enumerate(it):
+            if isinstance(item, tuple) and len(item) == 2:
+                mybar.label = item[0]
+                item = item[1]
             yield item
             mybar.show(i + 1)
 
@@ -1002,7 +1007,6 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
     except FileNotFoundError:
         cmdstr += "<file not found>"
         description += "<file not found>"
-
 
     console(cmdstr, color=color, plaintext=not get_debugmode(), line_num_only=4, newline=enteraftercmd)
 
@@ -2302,7 +2306,11 @@ def sizeof_fmt(num, suffix=''):
     if num is None:
         return num
 
+    numorg = num
     num = float(num) / 1024
+
+    if num < 0.1:
+        return numorg
     for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -2344,7 +2352,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                 after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                  after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2517,7 +2525,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                 after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                  after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
