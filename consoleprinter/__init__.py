@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import io
 import os
 import re
@@ -26,7 +26,6 @@ import collections
 import unicodedata
 
 from sh import whoami
-
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
@@ -1855,7 +1854,7 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
             console(error_msg)
 
     if again:
-        raise
+        raise exc
 
     return "\033[93m" + error_msg
 
@@ -2057,7 +2056,7 @@ def pretty_print_json(jsondata, tofilename=None):
 
 def query_yes_no(args, force=False, default=True, command=None):
     """
-    @type args: list
+    @type args: str,list
     @type force: bool
     @type default: bool
     @type command: str, None
@@ -2066,14 +2065,19 @@ def query_yes_no(args, force=False, default=True, command=None):
     question = ""
     t = True
 
-    for arg in args:
-        if t:
-            question += "\033[96m"
-            t = False
-        else:
-            question += "\033[93m"
+    if isinstance(args, list):
+        for arg in args:
+            if t:
+                question += "\033[96m"
+                t = False
+            else:
+                question += "\033[93m"
 
-        question += str(arg)
+            question += str(arg)
+            question += "? \033[0m"
+    else:
+        question += "\033[96m"
+        question += str(args)
         question += "? \033[0m"
 
     if force is True:
@@ -2358,7 +2362,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                     after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                       after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2531,7 +2535,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                     after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                       after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2614,7 +2618,6 @@ def warning(command, description):
 
 
 SystemGlobals()
-
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2622,11 +2625,8 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
-
 set_console_start_time()
-
 standard_library.install_aliases()
-
 
 if __name__ == "__main__":
     main()
