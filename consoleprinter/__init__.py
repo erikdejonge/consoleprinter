@@ -161,7 +161,7 @@ class Bar(object):
         @return: None
         """
         stream = sys.stderr
-        bar_template = '%s|%s%s| %s/%s - %s\r'
+        bar_template = '%s|%s%s| \033[34m%s/%s - %s\033[0m\r'
 
         # How long to wait before recalculating the ETA
         eta_interval = 1
@@ -177,7 +177,7 @@ class Bar(object):
             raise Exception("expected_size not initialized")
 
         self.last_progress = "%.2f" % progress
-
+        self.label = "\033[93m" + self.label + "\033[0m"
         if (time.time() - self.etadelta) > eta_interval:
             self.etadelta = time.time()
             self.ittimes = self.ittimes[-eta_sma_window:] + [-(self.start - time.time()) / (progress + 1)]
@@ -203,7 +203,7 @@ class Bar(object):
         self.elapsed = time.time() - self.start
         elapsed_disp = self.format_time(self.elapsed)
         stream = sys.stderr
-        bar_template = '%s|%s%s| %s/%s - %s\r'
+        bar_template = '%s|%s%s| \033[32m%s/%s - %s\033[0m\r'
         self.last_progress = "%.1f" % float(self.last_progress)
         self.expected_size = "%.1f" % float(self.expected_size)
 
@@ -502,7 +502,7 @@ def abort(command, description, stack=False):
 def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, expected_size=None, every=1):
     """
     Progress iterator. Wrap your iterables with it.
-    @type it: str
+    @type it: iterator
     @type label: str
     @type width: int
     @type hide: str, None
@@ -2310,7 +2310,7 @@ def sizeof_fmt(num, suffix=''):
     num = float(num) / 1024
 
     if num < 0.1:
-        return numorg
+        return numorg+1
     for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
