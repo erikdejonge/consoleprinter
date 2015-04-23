@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -26,6 +26,7 @@ import collections
 import unicodedata
 
 from sh import whoami
+
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
@@ -179,6 +180,7 @@ class Bar(object):
 
         self.last_progress = "%.2f" % progress
         self.label = "\033[93m" + self.label + "\033[0m"
+
         if (time.time() - self.etadelta) > eta_interval:
             self.etadelta = time.time()
             self.ittimes = self.ittimes[-eta_sma_window:] + [-(self.start - time.time()) / (progress + 1)]
@@ -277,6 +279,7 @@ class FastList(object):
         return len(list(self.dictlist.keys()))
 
 
+# noinspection PyClassicStyleClass
 class HistoryConsole(code.InteractiveConsole):
     """
     HistoryConsole
@@ -624,11 +627,11 @@ def colorize_for_print(v):
     @type v: str
     @return: None
     """
+    spacesbefore = len(v) - len(v.lstrip())
     sl = []
     v = v.strip()
     spacecnt = 0
     me = str(whoami()).strip()
-
 
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
@@ -663,10 +666,11 @@ def colorize_for_print(v):
                 elif "/" in v and v.count("/") == 1 and not v.startswith("/") and not v.count(".") > 2:
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
-                    sl.append("\033[93m" + v + "\033[0m")
-                elif me in v.strip():
                     sl.append("\033[91m" + v + "\033[0m")
-                elif v.strip().startswith("-"):
+                elif v.strip().startswith("-") and not v.endswith("+"):
+                    if len(v) > 4:
+                        v = v.replace("--", "\n\t--")
+
                     sl.append("\033[94m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
@@ -674,7 +678,7 @@ def colorize_for_print(v):
                     sl.append("\033[91m" + v + "\033[0m")
                 elif "am" in v or "pm" in v:
                     sl.append("\033[93m" + v + "\033[0m")
-                elif v.count(":")==5 and len(v.strip())==17:
+                elif v.count(":") == 5 and len(v.strip()) == 17:
                     sl.append("\033[30m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
                     sl.append("\033[93m" + v + "\033[0m")
@@ -692,37 +696,27 @@ def colorize_for_print(v):
                     else:
                         sl.append(v)
 
-
-                elif v.isnumeric() or v.strip().replace(".", "").isdigit():
-                    num = v.isdigit()
-                    isfloat = False
-
-                    if num is True:
-                        isfloat = num == int(float(int(num)))
-
-                    if not num:
-                        v.replace("'", "").replace('"', "")
-                        num = v.isdigit()
-
-                    if not num:
-                        v2 = v.replace("'", "").replace('"', "")
-                        v = v2
-
-                    if isfloat:
-                        sl.append("\033[96m" + v + "\033[0m")
+                elif v.count(":") == 1 and v.strip().replace(":", "").isdigit():
+                    sl.append("\033[93m" + v + "\033[0m")
+                elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('"', "").isdigit():
+                    if "." in v:
+                        sl.append("\033[34m" + v + "\033[0m")
                     else:
-                        sl.append("\033[32m" + v + "\033[0m")
+                        sl.append("\033[96m" + v + "\033[0m")
+
                 elif "/" in v and os.path.exists(v):
-                    sl.append("\n\t\033[93m" + v + "\033[0m")
+                    sl.append("\033[32m" + v + "\033[0m")
+                elif me in v.strip():
+                    sl.append("\033[30m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
                 else:
                     if first:
                         sl.append("\033[38m" + v + "\033[0m")
                     else:
-                        sl.append("\033[97m" + v + "\033[0m")
+                        sl.append("\033[98m" + v + "\033[0m")
             else:
-                sl.append(v)
+                sl.append("\033[98m" + v + "\033[0m")
 
             if v == "":
                 spacecnt += 1
@@ -731,10 +725,10 @@ def colorize_for_print(v):
                 first = False
                 spacecnt = 0
 
-        retval = " ".join(sl)
-    retval = retval.replace("--", "\n\t--")
-    retval = retval.replace("\t", " "*4)
-    return retval.lstrip()
+        retval = " ".join([x for x in sl])
+
+    retval = retval.replace("\t", " " * 4)
+    return spacesbefore * " " + retval.strip()
 
 
 def console(*args, **kwargs):
@@ -1590,13 +1584,13 @@ def get_safe_string(s, extrachars=None):
     @return: None
     """
     if extrachars is not None:
-        mysafechars = [ord(ch) for ch in SALPHA + extrachars]
+        mysafechars = [ord(mch) for mch in SALPHA + extrachars]
     else:
         mysafechars = SAFECHARS
 
     s = remove_escapecodes(s)
-    targetdict = {ord(ch): ord(ch) for ch in SALPHA}
-    targetdict.update({ord(ch): None for ch in s if ord(ch) not in mysafechars})
+    targetdict = {ord(mch): ord(mch) for mch in SALPHA}
+    targetdict.update({ord(mch): None for mch in s if ord(mch) not in mysafechars})
     s = s.translate(targetdict)
 
     return s
@@ -1675,9 +1669,9 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             sm = sm[:indent] + ".."
 
         subheader = colors['orange'] + subs + " | " + sm
-        subheader += (37 - len(get_safe_string(subheader))) * " "
+        subheader += (37 - len(get_safe_string(str(subheader)))) * " "
         subheader += "type"
-        subheader += (68 - len(get_safe_string(subheader))) * " "
+        subheader += (68 - len(get_safe_string(str(subheader)))) * " "
         subheader += "value" + colors['default'] + "\n"
         members = set()
 
@@ -2322,7 +2316,7 @@ def sizeof_fmt(num, suffix=''):
     num = float(num) / 1024
 
     if num < 0.1:
-        return numorg+1
+        return numorg + 1
     for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -2364,7 +2358,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                  after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                     after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2537,7 +2531,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                  after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                     after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2620,6 +2614,7 @@ def warning(command, description):
 
 
 SystemGlobals()
+
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2627,8 +2622,11 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
+
 set_console_start_time()
+
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
