@@ -191,10 +191,19 @@ class Bar(object):
         if not self.hide:
             if ((progress % self.every) == 0 or      # True every "every" updates
                     (progress == self.expected_size)):   # And when we're done
-                stream.write(bar_template % (
-                    self.label, self.filled_char * x,
-                    self.empty_char * (self.width - x), sizeof_fmt(progress),
-                    sizeof_fmt(self.expected_size), self.etadisp))
+
+                if len(remove_color(self.label.strip()))==0:
+                    bar_template = '%s|%s%s| \033[34m%s/%s\033[0m\r'
+                    stream.write(bar_template % (
+                        self.etadisp, self.filled_char * x,
+                        self.empty_char * (self.width - x), sizeof_fmt(progress),
+                        sizeof_fmt(self.expected_size)))
+
+                else:
+                    stream.write(bar_template % (
+                        self.label, self.filled_char * x,
+                        self.empty_char * (self.width - x), sizeof_fmt(progress),
+                        sizeof_fmt(self.expected_size), self.etadisp))
 
                 stream.flush()
 
@@ -213,10 +222,17 @@ class Bar(object):
             # Print completed bar with elapsed time
             stream.write('\r')
             stream.write('                                                                                        \r')
-            stream.write(bar_template % (
-                self.label, self.filled_char * self.width,
-                self.empty_char * 0, self.last_progress,
-                self.expected_size, elapsed_disp))
+            if len(remove_color(self.label.strip())) == 0:
+                bar_template = '%s|%s%s| \033[34m%s/%s\033[0m\r'
+                stream.write(bar_template % (
+                    elapsed_disp, self.filled_char * self.width,
+                    self.empty_char * 0, self.last_progress,
+                    self.expected_size))
+            else:
+                stream.write(bar_template % (
+                    self.label, self.filled_char * self.width,
+                    self.empty_char * 0, self.last_progress,
+                    self.expected_size, elapsed_disp))
 
             stream.write('\n')
             stream.flush()
