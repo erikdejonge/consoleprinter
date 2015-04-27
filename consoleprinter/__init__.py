@@ -202,7 +202,7 @@ class Bar(object):
                 else:
                     stream.write(bar_template % (
                         self.label, self.filled_char * x,
-                        self.empty_char * (self.width - x), sizeof_fmt(progress),
+                        self.empty_char * (self.width - x), sizeof_fmt(progress+1),
                         sizeof_fmt(self.expected_size), self.etadisp))
 
                 stream.flush()
@@ -1567,7 +1567,7 @@ def get_print_yaml(yamlmystring):
         if len(ls) > 1:
             for ii in ls:
                 if cnt == 0:
-                    s += "\033[33m" + ii + ": " + "\033[0m"
+                    s += "\033[33m" + ii + ":" + "\033[0m"
                 else:
                     s += colorize_for_print(ii)
 
@@ -2336,7 +2336,7 @@ def sizeof_fmt(num, suffix=''):
     num = float(num) / 1024
 
     if num < 0.1:
-        return numorg + 1
+        return numorg
     for unit in ['Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
