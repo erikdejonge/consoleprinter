@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -25,7 +25,8 @@ import traceback
 import collections
 import unicodedata
 
-from sh import whoami
+from sh import clear, whoami
+
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
@@ -192,17 +193,16 @@ class Bar(object):
             if ((progress % self.every) == 0 or      # True every "every" updates
                     (progress == self.expected_size)):   # And when we're done
 
-                if len(remove_color(self.label.strip()))==0:
+                if len(remove_color(self.label.strip())) == 0:
                     bar_template = '%s|%s%s| \033[34m%s/%s\033[0m\r'
                     stream.write(bar_template % (
                         self.etadisp, self.filled_char * x,
                         self.empty_char * (self.width - x), sizeof_fmt(progress),
                         sizeof_fmt(self.expected_size)))
-
                 else:
                     stream.write(bar_template % (
                         self.label, self.filled_char * x,
-                        self.empty_char * (self.width - x), sizeof_fmt(progress+1),
+                        self.empty_char * (self.width - x), sizeof_fmt(progress + 1),
                         sizeof_fmt(self.expected_size), self.etadisp))
 
                 stream.flush()
@@ -222,6 +222,7 @@ class Bar(object):
             # Print completed bar with elapsed time
             stream.write('\r')
             stream.write('                                                                                        \r')
+
             if len(remove_color(self.label.strip())) == 0:
                 bar_template = '%s|%s%s| \033[34m%s/%s\033[0m\r'
                 stream.write(bar_template % (
@@ -634,7 +635,7 @@ def clear_screen(ctrlkey=False):
         sys.stderr.write('\x1Bc')
         sys.stderr.flush()
     else:
-        os.system("clear")
+        clear()
 
 
 def colorize_for_print(v):
@@ -669,10 +670,11 @@ def colorize_for_print(v):
                 elif v.startswith("{"):
                     scanning = True
                     scanbuff = v
-                elif "=" in v:
+                elif "=" in v and not "====" in v and not "|=" in v:
                     for v in v.split(","):
                         vs = v.split("=")
                         v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
+                        print(v)
                         for i in vs[1:]:
                             v2 += str(i) + ","
 
@@ -682,7 +684,7 @@ def colorize_for_print(v):
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[91m" + v + "\033[0m")
-                elif v.strip().startswith("-") and not v.endswith("+"):
+                elif v.strip().startswith("-") and not v.endswith("+") and not "---" in v:
                     if len(v) > 4:
                         v = v.replace("--", "\n\t--")
 
@@ -691,7 +693,7 @@ def colorize_for_print(v):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
                     sl.append("\033[91m" + v + "\033[0m")
-                elif "am" in v or "pm" in v:
+                elif " am" in v or "pm" in v:
                     sl.append("\033[93m" + v + "\033[0m")
                 elif v.count(":") == 5 and len(v.strip()) == 17:
                     sl.append("\033[30m" + v + "\033[0m")
@@ -713,11 +715,14 @@ def colorize_for_print(v):
 
                 elif v.count(":") == 1 and v.strip().replace(":", "").isdigit():
                     sl.append("\033[93m" + v + "\033[0m")
-                elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('"', "").isdigit():
+                elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('|', "").replace('"', "").isdigit():
                     if "." in v:
                         sl.append("\033[34m" + v + "\033[0m")
                     else:
-                        sl.append("\033[96m" + v + "\033[0m")
+                        if "|" in v:
+                            sl.append("|\033[96m" + v.split("|")[1] + "\033[0m")
+                        else:
+                            sl.append("\033[96m" + v + "\033[0m")
 
                 elif "/" in v and os.path.exists(v):
                     sl.append("\033[32m" + v + "\033[0m")
@@ -725,6 +730,8 @@ def colorize_for_print(v):
                     sl.append("\033[30m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
+                elif "----" in v or "====" in v or v.strip().startswith("|"):
+                    sl.append("\033[90m" + v + "\033[0m")
                 else:
                     if first:
                         sl.append("\033[38m" + v + "\033[0m")
@@ -2193,6 +2200,21 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None):
     return newdoc
 
 
+def stripall(astr):
+    """
+    @type astr: str
+    @return: None
+    """
+    return remove_extra_indentation(astr)
+
+
+def reset_terminal():
+    """
+    reset_terminal
+    """
+    stty_sane()
+
+
 def resetterminal():
     """
     resetterminal():
@@ -2378,7 +2400,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                       after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                           after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2551,7 +2573,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                       after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                           after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2564,6 +2586,13 @@ def strcmp(s1, s2):
     s2 = s2.strip()
     equal = s1 == s2
     return equal
+
+
+def stty_sane():
+    """
+    stty_sane
+    """
+    os.system('stty sane')
 
 
 def tableize(word):
@@ -2634,6 +2663,7 @@ def warning(command, description):
 
 
 SystemGlobals()
+
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2641,8 +2671,11 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
+
 set_console_start_time()
+
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
