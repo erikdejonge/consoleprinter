@@ -674,7 +674,7 @@ def colorize_for_print(v):
                     for v in v.split(","):
                         vs = v.split("=")
                         v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
-                        print(v)
+
                         for i in vs[1:]:
                             v2 += str(i) + ","
 
