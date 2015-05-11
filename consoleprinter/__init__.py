@@ -2630,7 +2630,11 @@ def stty_sane():
     """
     os.system('stty sane')
 
-
+def reset_console():
+    """
+    reset console
+    """
+    stty_sane()
 def tableize(word):
     """
     @type word: str
