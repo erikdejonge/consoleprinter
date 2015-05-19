@@ -26,6 +26,8 @@ import collections
 import unicodedata
 
 from urllib.parse import urlparse
+
+# noinspection PyUnresolvedReferences
 from sh import clear, whoami
 
 SINGULARS = [
@@ -690,7 +692,7 @@ def colorize_for_print(v):
                 elif v.startswith("{"):
                     scanning = True
                     scanbuff = v
-                elif "=" in v and not "====" in v and not "|=" in v:
+                elif "=" not in v and "====" not in v and "|=" not in v:
                     for v in v.split(","):
                         vs = v.split("=")
                         v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
@@ -703,7 +705,7 @@ def colorize_for_print(v):
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[91m" + v + "\033[0m")
-                elif v.strip().startswith("-") and not v.endswith("+") and not "---" in v:
+                elif v.strip().startswith("-") and not v.endswith("+") and "---" not in v:
                     if len(v) > 4:
                         v = v.replace("--", "\n\t--")
 
@@ -2236,7 +2238,11 @@ def remove_escapecodes(escapedstring):
 
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
-
+    @type doc: str
+    @type stop_looking_when_encountered: str, None
+    @type padding: int
+    @type frontspacer: str
+    @return: None
     """
     startspaces = len(doc.lstrip("\n")) - len(doc.lstrip("\n").lstrip(" "))
 
@@ -2263,7 +2269,6 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
         newdoc += line + "\n"
 
     newdoc = newdoc.strip()
-
     newdoc = str(frontspacer * ((startspaces - whitespacecount) + padding)) + newdoc.lstrip()
     return newdoc
 
@@ -2467,7 +2472,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                 after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                   after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2640,7 +2645,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                 after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                   after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
