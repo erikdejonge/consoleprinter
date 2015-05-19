@@ -692,7 +692,7 @@ def colorize_for_print(v):
                 elif v.startswith("{"):
                     scanning = True
                     scanbuff = v
-                elif "=" not in v and "====" not in v and "|=" not in v:
+                elif "=" in v and not "====" in v and not "|=" in v:
                     for v in v.split(","):
                         vs = v.split("=")
                         v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
@@ -705,7 +705,7 @@ def colorize_for_print(v):
                     sl.append("\033[95m" + v + "\033[0m")
                 elif v.strip() == "Pod":
                     sl.append("\033[91m" + v + "\033[0m")
-                elif v.strip().startswith("-") and not v.endswith("+") and "---" not in v:
+                elif v.strip().startswith("-") and not v.endswith("+") and not "---" in v:
                     if len(v) > 4:
                         v = v.replace("--", "\n\t--")
 
