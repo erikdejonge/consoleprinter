@@ -6,9 +6,9 @@ console
 Active8 (05-03-15)
 license: GNU-GPL2
 """
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
+
 import io
 import os
 import re
@@ -25,7 +25,9 @@ import traceback
 import collections
 import unicodedata
 
+from urllib.parse import urlparse
 from sh import clear, whoami
+
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
     (r"(?i)(quiz)zes$", r'\1'),
@@ -644,7 +646,7 @@ def colorize_for_print(v):
     """
     spacesbefore = len(v) - len(v.lstrip())
     sl = []
-    v = v.strip()
+    v = v.rstrip()
     spacecnt = 0
     me = str(whoami()).strip()
 
@@ -656,7 +658,8 @@ def colorize_for_print(v):
         scanbuff = ""
 
         for v in v.split(" "):
-            v = remove_color(v.strip())
+            addenter = v.rstrip(" ").endswith("\n")
+            v = remove_color(v.rstrip())
 
             if len(v) > 0:
                 if scanning is True:
@@ -666,6 +669,24 @@ def colorize_for_print(v):
                         scanning = False
                         sl.append(scanbuff)
 
+                elif v.startswith("http") and not v.startswith("http_"):
+                    url = urlparse(v)
+                    strex = lambda val: val is not "" and val is not None
+                    validurl = strex(url.scheme) and strex(url.netloc)
+
+                    if validurl:
+                        sl.append("\033[91m" + v + "\033[0m")
+                    else:
+                        reason = ", "
+
+                        if not strex(url.scheme):
+                            reason += "no schema "
+
+                        if not strex(url.netloc):
+                            reason += "no location"
+
+                        sl.append("\033[31m" + v + reason + "\033[0m")
+
                 elif v.startswith("{"):
                     scanning = True
                     scanbuff = v
@@ -673,7 +694,6 @@ def colorize_for_print(v):
                     for v in v.split(","):
                         vs = v.split("=")
                         v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
-
                         for i in vs[1:]:
                             v2 += str(i) + ","
 
@@ -705,10 +725,10 @@ def colorize_for_print(v):
                 elif v == "<none>":
                     sl.append("\033[37m" + v + "\033[0m")
                 elif "." in v and v.count(".") % 3 == 0:
-                    vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").strip()
+                    vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").rstrip()
 
                     if vip.isdigit():
-                        sl.append("\033[96m" + v + "\033[0m")
+                        sl.append("\033[93m" + v + "\033[0m")
                     else:
                         sl.append(v)
 
@@ -716,15 +736,16 @@ def colorize_for_print(v):
                     sl.append("\033[93m" + v + "\033[0m")
                 elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('|', "").replace('"', "").isdigit():
                     if "." in v:
-                        sl.append("\033[34m" + v + "\033[0m")
+                        v = str(float(v))
+                        sl.append("\033[36m" + v + "\033[0m")
                     else:
                         if "|" in v:
-                            sl.append("|\033[96m" + v.split("|")[1] + "\033[0m")
+                            sl.append("|\033[94m" + v.split("|")[1] + "\033[0m")
                         else:
-                            sl.append("\033[96m" + v + "\033[0m")
+                            sl.append("\033[94m" + v + "\033[0m")
 
                 elif "/" in v and os.path.exists(v):
-                    sl.append("\033[32m" + v + "\033[0m")
+                    sl.append("\033[32m" + v.rstrip() + "\033[0m")
                 elif me in v.strip():
                     sl.append("\033[30m" + v + "\033[0m")
                 elif len(v) == 64:
@@ -746,10 +767,14 @@ def colorize_for_print(v):
                 first = False
                 spacecnt = 0
 
+            if addenter:
+                sl.append("\n")
+
         retval = " ".join([x for x in sl])
 
     retval = retval.replace("\t", " " * 4)
-    return spacesbefore * " " + retval.strip()
+    retval = spacesbefore * " " + retval.rstrip()
+    return retval
 
 
 def console(*args, **kwargs):
@@ -1598,6 +1623,8 @@ def get_print_yaml(yamlmystring):
     currnumspaces = 0
 
     for i in yamlmystring.split("\n"):
+        i = i.replace("http:", "http|")
+        i = i.replace("https:", "https|")
         numdashes = i.count("-") - i.lstrip("-").count("-")
 
         if numdashes > currnumdashes:
@@ -1616,6 +1643,9 @@ def get_print_yaml(yamlmystring):
 
         if len(ls) > 1:
             for ii in ls:
+                ii = ii.replace("http|", "http:")
+                ii = ii.replace("https|", "https:")
+
                 if cnt == 0:
                     s += "\033[33m" + ii + ":" + "\033[0m"
                 else:
@@ -2204,12 +2234,12 @@ def remove_escapecodes(escapedstring):
     return ansi_escape.sub('', escapedstring)
 
 
-def remove_extra_indentation(doc, stop_looking_when_encountered=None):
+def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
-    @type doc: str
-    @type stop_looking_when_encountered: str, None
-    @return: None
+
     """
+    startspaces = len(doc.lstrip("\n")) - len(doc.lstrip("\n").lstrip(" "))
+
     if doc is None:
         console_warning("doc is None")
         return doc
@@ -2229,11 +2259,20 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None):
             if whitespacecount == 0:
                 whitespacecount = len(line) - len(line.lstrip())
 
-        line = line[whitespacecount:]
+        line = str(" " * padding) + line[whitespacecount:]
         newdoc += line + "\n"
 
     newdoc = newdoc.strip()
+
+    newdoc = str(frontspacer * ((startspaces - whitespacecount) + padding)) + newdoc.lstrip()
     return newdoc
+
+
+def reset_console():
+    """
+    reset console
+    """
+    stty_sane()
 
 
 def reset_terminal():
@@ -2428,7 +2467,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                           after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                 after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2601,7 +2640,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                           after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                 after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2630,11 +2669,7 @@ def stty_sane():
     """
     os.system('stty sane')
 
-def reset_console():
-    """
-    reset console
-    """
-    stty_sane()
+
 def tableize(word):
     """
     @type word: str
@@ -2710,6 +2745,7 @@ def main():
 
 
 SystemGlobals()
+
 _irregular('child', 'children')
 _irregular('cow', 'kine')
 _irregular('man', 'men')
@@ -2717,8 +2753,11 @@ _irregular('move', 'moves')
 _irregular('person', 'people')
 _irregular('sex', 'sexes')
 _irregular('zombie', 'zombies')
+
 set_console_start_time()
+
 standard_library.install_aliases()
+
 
 if __name__ == "__main__":
     main()
