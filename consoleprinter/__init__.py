@@ -182,7 +182,7 @@ class Bar(object):
             raise Exception("expected_size not initialized")
 
         self.last_progress = "%.2f" % progress
-        self.label = "\033[93m" + self.label + "\033[0m"
+        self.label = "\033[33m" + self.label + "\033[0m"
 
         if (time.time() - self.etadelta) > eta_interval:
             self.etadelta = time.time()
@@ -715,11 +715,11 @@ def colorize_for_print(v):
                 elif v.strip().lower() in ["activating"]:
                     sl.append("\033[91m" + v + "\033[0m")
                 elif " am" in v or "pm" in v:
-                    sl.append("\033[93m" + v + "\033[0m")
+                    sl.append("\033[33m" + v + "\033[0m")
                 elif v.count(":") == 5 and len(v.strip()) == 17:
                     sl.append("\033[30m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
-                    sl.append("\033[93m" + v + "\033[0m")
+                    sl.append("\033[33m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
                     sl.append("\033[31m" + snake_case(v) + "\033[0m")
                 elif ("core" in v or "node" in v) and ".nl" in v:
@@ -730,12 +730,12 @@ def colorize_for_print(v):
                     vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").rstrip()
 
                     if vip.isdigit():
-                        sl.append("\033[93m" + v + "\033[0m")
+                        sl.append("\033[33m" + v + "\033[0m")
                     else:
                         sl.append(v)
 
                 elif v.count(":") == 1 and v.strip().replace(":", "").isdigit():
-                    sl.append("\033[93m" + v + "\033[0m")
+                    sl.append("\033[33m" + v + "\033[0m")
                 elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('|', "").replace('"', "").isdigit():
                     if "." in v:
                         v = str(float(v))
@@ -1294,7 +1294,7 @@ def doinput(description="", default=None, answers=None, force=False):
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
     if default is not None:
-        description += "\033[96m (default: \033[93m" + str(default) + "\033[96m" + ", quit: q)?"
+        description += "\033[96m (default: \033[33m" + str(default) + "\033[96m" + ", quit: q)?"
 
     if answers is not None:
         display_answers = ["quit/q"]
@@ -1535,7 +1535,7 @@ def get_colors():
               'green': '\033[32m',
               'darkgreen': '\033[92m',
               'yellow': '\033[33m',
-              'darkyellow': '\033[93m',
+              'darkyellow': '\033[33m',
               'blue': '\033[94m',
               'magenta': '\033[35m',
               'cyan': '\033[36m',
@@ -1656,7 +1656,7 @@ def get_print_yaml(yamlmystring):
                 cnt += 1
         else:
             if i.strip().startswith("---"):
-                s += "\033[93m" + i + "\033[0m"
+                s += "\033[33m" + i + "\033[0m"
             else:
                 s += "\033[33m" + i + "\033[0m"
 
@@ -1954,7 +1954,7 @@ def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_c
     if again:
         raise exc
 
-    return "\033[93m" + error_msg
+    return "\033[33m" + error_msg
 
 
 def header_trigger(s):
@@ -2162,7 +2162,7 @@ def query_yes_no(args, force=False, default=True, command=None):
                 question += "\033[96m"
                 t = False
             else:
-                question += "\033[93m"
+                question += "\033[33m"
 
             question += str(arg)
             question += "? \033[0m"
