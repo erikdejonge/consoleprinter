@@ -709,7 +709,7 @@ def colorize_for_print(v):
                     if len(v) > 4:
                         v = v.replace("--", "\n\t--")
 
-                    sl.append("\033[94m" + v + "\033[0m")
+                    sl.append("\033[34m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
@@ -742,9 +742,9 @@ def colorize_for_print(v):
                         sl.append("\033[36m" + v + "\033[0m")
                     else:
                         if "|" in v:
-                            sl.append("|\033[94m" + v.split("|")[1] + "\033[0m")
+                            sl.append("|\033[34m" + v.split("|")[1] + "\033[0m")
                         else:
-                            sl.append("\033[94m" + v + "\033[0m")
+                            sl.append("\033[34m" + v + "\033[0m")
 
                 elif "/" in v and os.path.exists(v):
                     sl.append("\033[32m" + v.rstrip() + "\033[0m")
@@ -1536,7 +1536,7 @@ def get_colors():
               'darkgreen': '\033[92m',
               'yellow': '\033[33m',
               'darkyellow': '\033[33m',
-              'blue': '\033[94m',
+              'blue': '\033[34m',
               'magenta': '\033[35m',
               'cyan': '\033[36m',
               'darkcyan': '\033[96m',
