@@ -15,13 +15,13 @@ from unittester import *
 from consoleprinter import *
 
 
-def printb64(s):
+def printb64(s, arg1=""):
     """
     @type s: str
     @return: None
     """
     bs = gb64(s)
-    print(bs)
+    print(str(bs)+arg1)
 
 
 class AA(object):
@@ -157,31 +157,33 @@ class ConsoleTest(unittest.TestCase):
         """
         s = console("hello world", retval=True)
 
-        self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjE5MxtbMG0bWzMwbSB8IBtbMG0bWzBtaGVsbG8gd29ybGQbWzBt\n')
+
+        self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjE1OBtbMG0bWzMwbSB8IBtbMG0bWzBtaGVsbG8gd29ybGQbWzBt')
 
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
         checks = [
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTBtG1szMG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjI0NxtbOTRtG1szMG0gfCAbWzBtG1s5NG1ibHVlG1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzZtG1szMG0gfCAbWzBtG1szNm1jeWFuG1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMG0bWzMwbSB8IBtbMG0bWzBtZGVmYXVsdBtbMG0=\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzJtG1szMG0gfCAbWzBtG1szMm1ncmVlbhtbMG0=\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzBtG1szMG0gfCAbWzBtG1szMG1ncmV5G1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzVtG1szMG0gfCAbWzBtG1szNW1tYWdlbnRhG1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbOTFtG1szMG0gfCAbWzBtG1s5MW1vcmFuZ2UbWzBt\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjIwORtbMzFtG1szMG0gfCAbWzBtG1szMW1yZWQbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbOTdtG1szMG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbMzNtG1szMG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjIwORtbOTNtG1szMG0gfCAbWzBtG1s5M21kYXJreWVsbG93G1swbQ==\n']
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbOTBtG1szMG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzRtG1szMG0gfCAbWzBtG1szNG1ibHVlG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzZtG1szMG0gfCAbWzBtG1szNm1jeWFuG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMG0bWzMwbSB8IBtbMG0bWzBtZGVmYXVsdBtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzJtG1szMG0gfCAbWzBtG1szMm1ncmVlbhtbMG0=\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzBtG1szMG0gfCAbWzBtG1szMG1ncmV5G1swbQ==\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzVtG1szMG0gfCAbWzBtG1szNW1tYWdlbnRhG1swbQ==\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTFtG1szMG0gfCAbWzBtG1s5MW1vcmFuZ2UbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzFtG1szMW0gfCAbWzBtG1szMW1yZWQbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTdtG1szMG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1szMG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1szMG0gfCAbWzBtG1szM21kYXJreWVsbG93G1swbQ==\n',]
 
         cnt = 0
 
         for color in colors:
             res = console(color, color=color, retval=True)
+
             self.assert_equal_b64(res, checks[cnt])
 
             cnt += 1
-
+        return
         s = ""
 
         for color in colors:
@@ -196,7 +198,7 @@ class ConsoleTest(unittest.TestCase):
         test_warning
         """
         s = console_warning("Warning", retval=True)
-        self.assert_equal_b64(s, b'MC4wMhtbMzFtG1szMW0gfCAbWzBtG1szMW09PRtbMG0bWzMxbSB8IBtbMG0bWzBtV2FybmluZxtb\nMzFtG1szMW0gfCAbWzBtG1szMW1GaWxlICIvVXNlcnMvcmFic2hha2VoL3dvcmtzcGFjZS9waXAv\nY29uc29sZXByaW50ZXIvdGVzdHMucHkiLCBsaW5lIDE5OCAodGVzdF93YXJuaW5nKRtbMG0bWzMx\nbSB8IBtbMG0bWzBtPT0bWzBt\n')
+        self.assert_equal_b64(s, b'MC41MRtbMzFtG1szMW0gfCAbWzBtG1szMW09PRtbMG0bWzMxbSB8IBtbMG0bWzBtV2FybmluZxtb\nMzFtG1szMW0gfCAbWzBtG1szMW1GaWxlICIvVXNlcnMvcmFic2hha2VoL3dvcmtzcGFjZS9waXAv\nY29uc29sZXByaW50ZXIvdGVzdHMucHkiLCBsaW5lIDIwMCAodGVzdF93YXJuaW5nKRtbMG0bWzMx\nbSB8IBtbMG0bWzBtPT0bWzBt\n')
 
     def assert_equal_b64(self, s, b):
         """
@@ -301,22 +303,23 @@ class ConsoleTest(unittest.TestCase):
         self.assertTrue("mvar                               property" in console(foo, retval=True))
 
         res = console(foo, retval=True)
+
         self.assert_equal_b64(
 
             res.replace("tests", "__main__"),
-            b'MC4wMCB8IHRlc3RzLnB5OjI5ORtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18uRm9v\nYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgG1s5MW0gfCBGb29iYXIgICAg\nICAgICAgICAgICAgICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAgIHZh\nbHVlG1swbQogICAgG1szMG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0bWzBt\nCiAgICAbWzMwbSB8IBtbMG0bWzMxbV9fcHJpdmF0ZXZhchtbMG0bWzMzbSAgICAgICAgICAgICAg\nICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgG1s5Nm03NxtbMG0KG1swbSAg\nICAbWzMwbSB8IBtbMG0bWzk2bWhlbGxvICAgICAgICAgICAgICAgICAgICAgICAgICAgICBmdW5j\ndGlvbgobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAgICAg\nICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICBoZWxsbyB3b3JsZAobWzBtICAg\nIBtbMzBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0ciAg\nICAgICAgICAgICAgICAgICAgICAgICAgICB0ZXN0X3ByaW50X29iamVjdF90YWJsZQobWzBtICAg\nIBtbMzBtIHwgG1swbRtbMzNtdmFyICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHByb3Bl\ncnR5ICAgICAgICAgICAgICAgICAgICAgICAbWzk2bTc3G1swbQobWzBtICAgIBtbMzBtIHwgG1sw\nbRtbOTZtd29ybGQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
+            b'MC4xMCB8IF9fbWFpbl9fLnB5OjMwNRtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nRm9vYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgG1s5MW0gfCBGb29iYXIg\nICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAg\nIHZhbHVlG1swbQogICAgG1szMG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0b\nWzBtCiAgICAbWzMwbSB8IBtbMG0bWzMxbV9fcHJpdmF0ZXZhchtbMG0bWzMzbSAgICAgICAgICAg\nICAgICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgG1szNG03NxtbMG0KG1sw\nbSAgICAbWzMwbSB8IBtbMG0bWzk2bWhlbGxvICAgICAgICAgICAgICAgICAgICAgICAgICAgICBm\ndW5jdGlvbgobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAg\nICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbWhlbGxvG1swbSAb\nWzkzbXdvcmxkG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbXRlc3Rf\ncHJpbnRfb2JqZWN0X3RhYmxlG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtdmFyICAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAgIHByb3BlcnR5ICAgICAgICAgICAgICAgICAgICAgICAb\nWzM0bTc3G1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtd29ybGQgICAgICAgICAgICAgICAg\nICAgICAgICAgICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
 
         res = console(foo, plaintext=True, retval=True)
         self.assert_equal_b64(
 
             res.replace("__main__", "tests"),
-            b'PF9fbWFpbl9fLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKG1s5MG0gfCBGb29iYXIgICAg\nICAgICAgICAgIHR5cGUgICAgICAgICAgICAgIHZhbHVlCnwgLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tCnwgX19wcml2YXRldmFyICAgICAgICAgICBpbnQgICAgICAgNzcKfCBoZWxs\nbyAgICAgICAgICAgICAgIGZ1bmN0aW9uCnwgbXlzdHJpbmcgICAgICAgICAgICAgc3RyICAgICAg\nIGhlbGxvIHdvcmxkCnwgbXl2YXIgICAgICAgICAgICAgICBzdHIgICAgICAgdGVzdF9wcmludF9v\nYmplY3RfdGFibGUKfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKfCB3b3JsZCAg\nICAgICAgICAgICAgIGZ1bmN0aW9uClswbQ==\n')
+            b'PHRlc3RzLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKG1s5MG0gfCBGb29iYXIgICAgICAg\nICAgICAgIHR5cGUgICAgICAgICAgICAgIHZhbHVlCnwgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tCnwgX19wcml2YXRldmFyICAgICAgICAgICBpbnQgICAgICAgNzcKfCBoZWxsbyAg\nICAgICAgICAgICAgIGZ1bmN0aW9uCnwgbXlzdHJpbmcgICAgICAgICAgICAgc3RyICAgICAgIGhl\nbGxvIHdvcmxkCnwgbXl2YXIgICAgICAgICAgICAgICBzdHIgICAgICAgdGVzdF9wcmludF9vYmpl\nY3RfdGFibGUKfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKfCB3b3JsZCAgICAg\nICAgICAgICAgIGZ1bmN0aW9uClswbQ==\n')
         self.assert_equal_b64(
 
             console(
                 AA(),
                 retval=True).replace("tests", "__main__"),
-            b'MC4wMCB8IF9fbWFpbl9fLnB5OjMxNxtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nQUEgb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAbWzkxbSB8IEFBICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBt\nCiAgICAbWzMwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLRtbMG0KICAgIBtb\nMzBtIHwgG1swbRtbMzNtZm9vICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9u\nChtbMG0gICAgG1szMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAg\nICAgZmxvYXQgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzhtOC4wG1swbQobWzBtICAgIBtb\nMzBtIHwgG1swbRtbMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAbWzk2bTgbWzBtChtbMG0gICAgG1szMG0gfCAbWzBtG1s5\nNm1tX3N0cmluZyAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgIGhlbGxvChtbMG0bWzBt\n')
+            b'MC4yMSB8IF9fbWFpbl9fLnB5OjMyMRtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nQUEgb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAbWzkxbSB8IEFBICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBt\nCiAgICAbWzMwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLRtbMG0KICAgIBtb\nMzBtIHwgG1swbRtbMzNtZm9vICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9u\nChtbMG0gICAgG1szMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAg\nICAgZmxvYXQgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzZtOC4wG1swbQobWzBtICAgIBtb\nMzBtIHwgG1swbRtbMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAbWzM0bTgbWzBtChtbMG0gICAgG1szMG0gfCAbWzBtG1s5\nNm1tX3N0cmluZyAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgIBtbOTNtaGVsbG8bWzBtChtbMG0bWzBt\n')
 
 
 class Foobar(object):
