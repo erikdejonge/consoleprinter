@@ -670,13 +670,20 @@ def colorize_for_print(v):
                     if v.endswith("}"):
                         scanning = False
                         sl.append(scanbuff)
-
-                elif v.startswith("http") and not v.startswith("http_"):
+                elif "charset" in v:
+                    sl.append("\033[35m" + v + "\033[0m")
+                elif v.startswith("http") and not v.startswith("http_") or v.startswith("www."):
+                    addhttp = False
+                    if v.startswith("www."):
+                        addhttp = True
+                        v = "http://"+v
                     url = urlparse(v)
                     strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
+                        if addhttp:
+                            v = v.lstrip("http://")
                         sl.append("\033[91m" + v + "\033[0m")
                     else:
                         reason = ", "
@@ -756,11 +763,11 @@ def colorize_for_print(v):
                     sl.append("\033[90m" + v + "\033[0m")
                 else:
                     if first:
-                        sl.append("\033[38m" + v + "\033[0m")
+                        sl.append("\033[93m" + v + "\033[0m")
                     else:
-                        sl.append("\033[98m" + v + "\033[0m")
+                        sl.append("\033[93m" + v + "\033[0m")
             else:
-                sl.append("\033[98m" + v + "\033[0m")
+                sl.append("\033[93m" + v + "\033[0m")
 
             if v == "":
                 spacecnt += 1
@@ -1649,16 +1656,16 @@ def get_print_yaml(yamlmystring):
                 ii = ii.replace("https|", "https:")
 
                 if cnt == 0:
-                    s += "\033[33m" + ii + ":" + "\033[0m"
+                    s += "\033[30m" + ii + ":" + "\033[0m"
                 else:
                     s += colorize_for_print(ii)
 
                 cnt += 1
         else:
             if i.strip().startswith("---"):
-                s += "\033[33m" + i + "\033[0m"
+                s += "\033[30m" + i + "\033[0m"
             else:
-                s += "\033[33m" + i + "\033[0m"
+                s += "\033[30m" + i + "\033[0m"
 
         s += "\n"
 
