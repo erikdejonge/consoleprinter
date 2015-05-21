@@ -2,7 +2,6 @@
 # coding=utf-8
 """
 console
-
 Active8 (05-03-15)
 license: GNU-GPL2
 """
@@ -546,7 +545,7 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
                 mybar.label = item[0]
                 item = item[1]
             yield item
-            mybar.show(i + 1)
+            mybar.show(i)
 
 
 def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
@@ -670,13 +669,16 @@ def colorize_for_print(v):
                     if v.endswith("}"):
                         scanning = False
                         sl.append(scanbuff)
+
                 elif "charset" in v:
                     sl.append("\033[35m" + v + "\033[0m")
                 elif v.startswith("http") and not v.startswith("http_") or v.startswith("www."):
                     addhttp = False
+
                     if v.startswith("www."):
                         addhttp = True
-                        v = "http://"+v
+                        v = "http://" + v
+
                     url = urlparse(v)
                     strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
@@ -684,6 +686,7 @@ def colorize_for_print(v):
                     if validurl:
                         if addhttp:
                             v = v.lstrip("http://")
+
                         sl.append("\033[91m" + v + "\033[0m")
                     else:
                         reason = ", "
@@ -2261,7 +2264,7 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
     whitespacecount = 0
     keeplookingforindention = True
 
-    for line in doc.strip().split("\n"):
+    for line in doc.split("\n"):
         line = line.rstrip()
 
         if stop_looking_when_encountered is not None:
@@ -2479,7 +2482,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                   after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                    after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2652,7 +2655,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                   after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                    after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
