@@ -27,6 +27,7 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
+
 # noinspection PyUnresolvedReferences
 from sh import clear, whoami
 
@@ -1287,12 +1288,13 @@ def dasherize(word):
     return word.replace('_', '-')
 
 
-def doinput(description="", default=None, answers=None, force=False):
+def doinput(description="", default=None, answers=None, force=False, returnnum=False):
     """
     @type description: str
     @type default: str, None
     @type answers: list, None
     @type force: bool
+    @type returnnum: bool
     @return: None
     """
     if force is True:
@@ -1308,7 +1310,7 @@ def doinput(description="", default=None, answers=None, force=False):
         description += "\033[96m (default: \033[33m" + str(default) + "\033[96m" + ", quit: q)?"
 
     if answers is not None:
-        display_answers = ["quit/q"]
+        display_answers = []
 
         for ans in answers:
             ans = str(ans)
@@ -1327,13 +1329,16 @@ def doinput(description="", default=None, answers=None, force=False):
         for cnt, pa in enumerate(display_answers):
             console(pa, indent=" " + str(cnt + 1) + ". ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
+        ianswer = -1
+
         while True:
             answer = get_input_answer(default)
 
             if answer not in answers:
                 try:
                     answer = int(answer)
-                    answer = answers[answer]
+                    ianswer = answer - 1
+                    answer = answers[ianswer]
                 except ValueError:
                     pass
 
@@ -1346,11 +1351,21 @@ def doinput(description="", default=None, answers=None, force=False):
     else:
         console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
         answer = get_input_answer(default)
+        try:
+            answer = int(answer)
+            ianswer = answer - 1
+        except ValueError:
+            pass
 
     if answer in quitanswers:
+        #print("SystemExit(doinput quit)", quitanswers, answer)
         raise SystemExit("doinput quit")
 
     console("ok: " + str(answer), color="green", plaintext=not get_debugmode(), line_num_only=4, newline=True)
+
+    if returnnum:
+        return ianswer
+
     return answer
 
 
@@ -2483,7 +2498,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                     after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2656,7 +2671,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                     after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                      after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
