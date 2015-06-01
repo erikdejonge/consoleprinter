@@ -18,17 +18,14 @@ import time
 import ujson
 import atexit
 import base64
+import random
 import socket
 import readline
 import traceback
 import collections
 import unicodedata
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 
-# noinspection PyUnresolvedReferences
+from urllib.parse import urlparse
 from sh import clear, whoami
 
 SINGULARS = [
@@ -518,7 +515,7 @@ def abort(command, description, stack=False):
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
-        console("⚡", print_stack=True)
+        console(str(chr(9889)), print_stack=True)
 
     raise SystemExit(1)
 
@@ -1280,6 +1277,218 @@ def consoletasks(*args, **kwargs):
     console(*args, **kwargs)
 
 
+def coolname():
+    names = """
+    Aldous
+    Ara
+    Azarias
+    Balthazar
+    Barnaby
+    Bastien
+    Berlin
+    Birch
+    Bridge
+    Cabe
+    Cabot
+    Calixto
+    Callaghan
+    Calloway
+    Carlson
+    Christo
+    Chuck
+    Clovis
+    Columbus
+    Connelly
+    Costello
+    Cyprian
+    Dermot
+    Detroit
+    Drexel
+    Driver
+    Fergus
+    Finbar
+    Finch
+    Fitzpatrick
+    Gardner
+    Garth
+    Griffith
+    Grover
+    Hanan
+    Harrington
+    Hawthorne
+    Heron
+    Horatio
+    Huckleberry
+    Humphrey
+    Hunt
+    Jupiter
+    Keene
+    Keir
+    Kelso
+    Kermit
+    Kipling
+    Kristof
+    Lambert
+    Lancelot
+    Lanier
+    Laurent
+    Leib
+    Llewellyn
+    Loch
+    Mackson
+    Mcgregor
+    Mcguire
+    Mercury
+    Morocco
+    Moss
+    Nicasio
+    Oak
+    Octavion
+    Ogden
+    Oracio
+    Osborn
+    Osias
+    Osric
+    Pacer
+    Park
+    Phelan
+    Pilot
+    Primo
+    Quint
+    Racer
+    Rafferty
+    Ralston
+    Raoul
+    Redmond
+    Reynolds
+    Romulus
+    Saber
+    Sadler
+    Satchel
+    Sender
+    Severus
+    Spence
+    best
+    Thurman
+    Topher
+    Wagner
+    Waldo
+    Wally
+    Webster
+    Witt
+    Yale
+    Zed
+    Zoran
+    """
+    lastnames = """
+    Abernathy
+    Abner
+    Aldaine
+    Amor
+    Amherst
+    Armstrong
+    Angeles
+    Annesley
+    Archer
+    Ash
+    Bancroft
+    Bandini
+    Banner
+    Barringer
+    Blackwood
+    Blood
+    Bloom
+    Boulder
+    Cadwell
+    Cage
+    Carmichael
+    Chase
+    Cobain
+    Cohen
+    Colburn
+    Colt
+    Crabtree
+    Crassus
+    Creed
+    Crew
+    Cullen
+    Dalton
+    Danger
+    Davenport
+    Dillinger
+    Duke
+    East
+    Fall
+    Fawn
+    Freeze
+    Gamble
+    Granger
+    Gryffon
+    Gunn
+    Halifax
+    Havoc
+    Hilton
+    Holly
+    Hope
+    Hunter
+    Ice
+    Iris
+    Iver
+    Ivy
+    Jarvis
+    Joy
+    Kelly
+    Kennicot
+    King
+    Knight
+    Lily
+    Love
+    Mayhem
+    Merry
+    Noble
+    North
+    Paris
+    Pendleton
+    Pevensie
+    Phoenix
+    Poe
+    Potter
+    Power
+    Quake
+    Radcliffe
+    Raven
+    River
+    Rose
+    Savage
+    Slade
+    Slayer
+    Star
+    Stratton
+    Stryker
+    Styles
+    Tatum
+    Tremaine
+    Troublefield
+    Underwood
+    Verbeck
+    Violet
+    Vow
+    Waldgrave
+    Walker
+    Winter
+    Wolf
+    York
+    Young
+    Zedler
+    Zimmerman
+    """
+    names = [x.strip() for x in names.split("\n") if x]
+    lastnames = [x.strip() for x in lastnames.split("\n") if x]
+    randomnumbername = random.randint(0, len(names) - 1)
+    randomnumberlastname = random.randint(0, len(names) - 1)
+    print(names[randomnumbername], lastnames[randomnumberlastname])
+
+
 def dasherize(word):
     """
     @type word: str
@@ -1358,7 +1567,8 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
             pass
 
     if answer in quitanswers:
-        #print("SystemExit(doinput quit)", quitanswers, answer)
+        # print("SystemExit(doinput quit)", quitanswers, answer)
+
         raise SystemExit("doinput quit")
 
     console("ok: " + str(answer), color="green", plaintext=not get_debugmode(), line_num_only=4, newline=True)
@@ -2498,7 +2708,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                          after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -2671,7 +2881,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                      after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                          after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
@@ -2788,6 +2998,68 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
+
+
+def slugify(value):
+    """
+    @type value: str
+    """
+    sysglob = hvalue = str(value)
+    if hvalue in sysglob.g_slugified_unicode_lut:
+        return sysglob.g_slugified_unicode_lut[hvalue]
+
+    value = value.lower().replace("\\", "").replace("/", "")
+    value = value.strip()
+    slug = ""
+
+    if sysglob.g_safe_alphabet:
+        safechars = sysglob.g_safe_alphabet
+    else:
+        safechars = set(get_safe_alphabet())
+    try:
+        value = str(value)
+    except UnicodeError:
+        value = str(value)
+
+    safechars = list(safechars)
+    safechars.remove(" ")
+    safechars = tuple(safechars)
+
+    for c in value:
+        if c in safechars:
+            slug += c
+        else:
+            if isinstance(c, str):
+                # noinspection PyArgumentEqualDefault #                                                                                                           after keyword 0
+                c = c.encode()
+
+            c64 = base64.encodebytes(c)
+            slug += c64.decode("utf-8").strip().rstrip("=")
+
+    retval = slug.lower()
+    sysglob.g_slugified_unicode_lut[hvalue] = retval
+    return retval
+
+
+def strcmp(s1, s2):
+    """
+    @type s1: str or unicode
+    @type s2: str or unicode
+    @return: @rtype: bool
+    """
+    # noinspection PyArgumentEqualDefault #                                                                                                           after keyword 0
+    s1 = s1.encode()
+
+    # noinspection PyArgumentEqualDefault
+    s2 = s2.encode()
+
+    if not s1 or not s2:
+        return False
+
+    s1 = s1.strip()
+    s2 = s2.strip()
+    equal = s1 == s2
+    return equal
 
 
 if __name__ == "__main__":
