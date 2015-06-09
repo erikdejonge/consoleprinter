@@ -2487,8 +2487,9 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
         return doc
 
     newdoc = ""
-    whitespacecount = 0
+    whitespacecount = -1
     keeplookingforindention = True
+
 
     for line in doc.split("\n"):
         line = line.rstrip()
@@ -2497,11 +2498,17 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
             if line.lower().startswith(stop_looking_when_encountered):
                 keeplookingforindention = False
 
-        if keeplookingforindention is True:
-            if whitespacecount == 0:
-                whitespacecount = len(line) - len(line.lstrip())
+        if keeplookingforindention is True and '"""' not in line and len(line.strip())>0:
+            whitespacecount2 = len(line) - len(line.lstrip())
+
+            if (whitespacecount2 < whitespacecount) or (whitespacecount<0):
+                whitespacecount = whitespacecount2
+
+
+    for line in doc.split("\n"):
 
         line = str(" " * padding) + line[whitespacecount:]
+
         newdoc += line + "\n"
 
     newdoc = newdoc.strip()
