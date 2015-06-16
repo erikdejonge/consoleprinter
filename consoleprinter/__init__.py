@@ -647,6 +647,7 @@ def colorize_for_print(v):
     spacesbefore = len(v) - len(v.lstrip())
     sl = []
     v = v.rstrip()
+    maxspace = 0
     spacecnt = 0
     me = str(whoami()).strip()
 
@@ -656,12 +657,28 @@ def colorize_for_print(v):
         first = True
         scanning = False
         scanbuff = ""
+        spacecnt2 = 0
+
+
+        for v2 in v.split(" "):
+
+            if v2.strip() == '':
+                spacecnt2 += 1
+            else:
+
+                if maxspace < spacecnt2:
+                    maxspace = spacecnt2
+
+                spacecnt2 = 0
+
 
         for v in v.split(" "):
             addenter = v.rstrip(" ").endswith("\n")
             v = remove_color(v.rstrip())
 
             if len(v) > 0:
+
+
                 if scanning is True:
                     scanbuff += " " + v
 
@@ -719,6 +736,7 @@ def colorize_for_print(v):
                         v = v.replace("--", "\n\t--")
 
                     sl.append("\033[34m" + v + "\033[0m")
+
                 elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
@@ -765,11 +783,15 @@ def colorize_for_print(v):
                     sl.append("\033[90m" + v + "\033[0m")
                 else:
                     if first:
+
                         sl.append("\033[93m" + v + "\033[0m")
                     else:
                         sl.append("\033[93m" + v + "\033[0m")
             else:
-                sl.append("\033[93m" + v + "\033[0m")
+
+
+                if v.strip():
+                    sl.append("\033[93m" + v + "\033[0m")
 
             if v == "":
                 spacecnt += 1
@@ -785,7 +807,8 @@ def colorize_for_print(v):
 
     retval = retval.replace("\t", " " * 4)
     retval = spacesbefore * " " + retval.rstrip()
-    return retval
+    print(retval, maxspace, len(retval))
+    return retval.strip()
 
 
 def console(*args, **kwargs):
@@ -1046,6 +1069,19 @@ def console(*args, **kwargs):
     sys.stderr.write(dbs)
     sys.stderr.flush()
 
+
+def print_stdout(chara, cnt=0, moddiv=1):
+    """
+    @type chara: str
+    @return: None
+    """
+    cnt += 1
+
+    if cnt % moddiv == 0:
+        sys.stdout.write(chara)
+        sys.stdout.flush()
+
+    return cnt
 
 def console_cmd_desc(command, description, color, enteraftercmd=False):
     """
