@@ -12,6 +12,6 @@ setup(name='consoleprinter',
       author='Erik de Jonge',
       author_email='erik@a8.nl',
       license='GPL',
-      packages=[b'consoleprinter'],
+      packages=['consoleprinter'],
       zip_safe=True,
       install_requires=['ujson'])
