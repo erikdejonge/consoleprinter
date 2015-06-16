@@ -25,7 +25,11 @@ import traceback
 import collections
 import unicodedata
 
-from urllib.parse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
 from sh import clear, whoami
 
 SINGULARS = [
