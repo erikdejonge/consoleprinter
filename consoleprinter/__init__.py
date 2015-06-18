@@ -642,8 +642,155 @@ def clear_screen(ctrlkey=False):
     else:
         clear()
 
-
 def colorize_for_print(v):
+    """
+    @type v: str
+    @return: None
+    """
+    spacesbefore = len(v) - len(v.lstrip())
+    sl = []
+    v = v.rstrip()
+    spacecnt = 0
+    me = str(whoami()).strip()
+
+    if header_trigger(v):
+        retval = "\033[97m" + v.lower() + "\033[0m"
+    else:
+        first = True
+        scanning = False
+        scanbuff = ""
+
+        for v in v.split(" "):
+            addenter = v.rstrip(" ").endswith("\n")
+            v = remove_color(v.rstrip())
+
+            if len(v) > 0:
+                if scanning is True:
+                    scanbuff += " " + v
+
+                    if v.endswith("}"):
+                        scanning = False
+                        sl.append(scanbuff)
+
+                elif "charset" in v:
+                    sl.append("\033[35m" + v + "\033[0m")
+                elif v.startswith("http") and not v.startswith("http_") or v.startswith("www."):
+                    addhttp = False
+
+                    if v.startswith("www."):
+                        addhttp = True
+                        v = "http://" + v
+
+                    url = urlparse(v)
+                    strex = lambda val: val is not "" and val is not None
+                    validurl = strex(url.scheme) and strex(url.netloc)
+
+                    if validurl:
+                        if addhttp:
+                            v = v.lstrip("http://")
+
+                        sl.append("\033[91m" + v + "\033[0m")
+                    else:
+                        reason = ", "
+
+                        if not strex(url.scheme):
+                            reason += "no schema "
+
+                        if not strex(url.netloc):
+                            reason += "no location"
+
+                        sl.append("\033[31m" + v + reason + "\033[0m")
+
+                elif v.startswith("{"):
+                    scanning = True
+                    scanbuff = v
+                elif "=" in v and not "====" in v and not "|=" in v:
+                    for v in v.split(","):
+                        vs = v.split("=")
+                        v2 = "\033[35m" + vs[0] + "\033[0m\033[36m=\033[34m"
+                        for i in vs[1:]:
+                            v2 += str(i) + ","
+
+                        sl.append(v2.strip(","))
+
+                elif "/" in v and v.count("/") == 1 and not v.startswith("/") and not v.count(".") > 2:
+                    sl.append("\033[95m" + v + "\033[0m")
+                elif v.strip() == "Pod":
+                    sl.append("\033[91m" + v + "\033[0m")
+                elif v.strip().startswith("-") and not v.endswith("+") and not "---" in v:
+                    if len(v) > 4:
+                        v = v.replace("--", "\n\t--")
+
+                    sl.append("\033[34m" + v + "\033[0m")
+                elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
+                    sl.append("\033[32m" + snake_case(v) + "\033[0m")
+                elif v.strip().lower() in ["activating"]:
+                    sl.append("\033[91m" + v + "\033[0m")
+                elif " am" in v or "pm" in v:
+                    sl.append("\033[33m" + v + "\033[0m")
+                elif v.count(":") == 5 and len(v.strip()) == 17:
+                    sl.append("\033[30m" + v + "\033[0m")
+                elif v.strip().lower() in ["exited", "loaded"]:
+                    sl.append("\033[33m" + v + "\033[0m")
+                elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
+                    sl.append("\033[31m" + snake_case(v) + "\033[0m")
+                elif ("core" in v or "node" in v) and ".nl" in v:
+                    sl.append("\033[91m" + v + "\033[0m")
+                elif v == "<none>":
+                    sl.append("\033[37m" + v + "\033[0m")
+                elif "." in v and v.count(".") % 3 == 0:
+                    vip = v.replace(".", "").replace(":", "").replace("(", "").replace(")", "").replace("/", "").rstrip()
+
+                    if vip.isdigit():
+                        sl.append("\033[33m" + v + "\033[0m")
+                    else:
+                        sl.append(v)
+
+                elif v.count(":") == 1 and v.strip().replace(":", "").isdigit():
+                    sl.append("\033[33m" + v + "\033[0m")
+                elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('|', "").replace('"', "").isdigit():
+                    if "." in v:
+                        v = str(float(v))
+                        sl.append("\033[36m" + v + "\033[0m")
+                    else:
+                        if "|" in v:
+                            sl.append("|\033[34m" + v.split("|")[1] + "\033[0m")
+                        else:
+                            sl.append("\033[34m" + v + "\033[0m")
+
+                elif "/" in v and os.path.exists(v):
+                    sl.append("\033[32m" + v.rstrip() + "\033[0m")
+                elif me in v.strip():
+                    sl.append("\033[30m" + v + "\033[0m")
+                elif len(v) == 64:
+                    sl.append("\033[90m" + v[:8] + "\033[0m")
+                elif "----" in v or "====" in v or v.strip().startswith("|"):
+                    sl.append("\033[90m" + v + "\033[0m")
+                else:
+                    if first:
+                        sl.append("\033[93m" + v + "\033[0m")
+                    else:
+                        sl.append("\033[93m" + v + "\033[0m")
+            else:
+                sl.append("\033[93m" + v + "\033[0m")
+
+            if v == "":
+                spacecnt += 1
+
+            if spacecnt == 2:
+                first = False
+                spacecnt = 0
+
+            if addenter:
+                sl.append("\n")
+
+        retval = " ".join([x for x in sl])
+
+    retval = retval.replace("\t", " " * 4)
+    retval = spacesbefore * " " + retval.rstrip()
+    return retval
+
+def colorize_for_print2(v):
     """
     @type v: str
     @return: None
@@ -811,8 +958,8 @@ def colorize_for_print(v):
 
     retval = retval.replace("\t", " " * 4)
     retval = spacesbefore * " " + retval.rstrip()
-    print(retval, maxspace, len(retval))
-    return retval.strip()
+    #print(retval, maxspace, len(retval))
+    return retval.rstrip()
 
 
 def console(*args, **kwargs):
@@ -2511,6 +2658,42 @@ def remove_escapecodes(escapedstring):
     ansi_escape = re.compile(r'\x1b[^a-z]*[a-z]')
     return ansi_escape.sub('', escapedstring)
 
+
+def deprecated_remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
+    """
+    @type doc: str
+    @type stop_looking_when_encountered: str, None
+    @type padding: int
+    @type frontspacer: str
+    @return: None
+    """
+    startspaces = len(doc.lstrip("\n")) - len(doc.lstrip("\n").lstrip(" "))
+
+    if doc is None:
+        console_warning("doc is None")
+        return doc
+
+    newdoc = ""
+    whitespacecount = 0
+    keeplookingforindention = True
+
+    for line in doc.split("\n"):
+        line = line.rstrip()
+
+        if stop_looking_when_encountered is not None:
+            if line.lower().startswith(stop_looking_when_encountered):
+                keeplookingforindention = False
+
+        if keeplookingforindention is True:
+            if whitespacecount == 0:
+                whitespacecount = len(line) - len(line.lstrip())
+
+        line = str(" " * padding) + line[whitespacecount:]
+        newdoc += line + "\n"
+
+    newdoc = newdoc.strip()
+    newdoc = str(frontspacer * ((startspaces - whitespacecount) + padding)) + newdoc.lstrip()
+    return newdoc
 
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
