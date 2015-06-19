@@ -372,7 +372,7 @@ class Info(object):
         """
         linenr = get_line_number()
 
-        # print("\033[30m== " + str(self.command), linenr, "==\033[0m")
+        # print("\033[37m== " + str(self.command), linenr, "==\033[0m")
         longest = 0
 
         for line in self.items:
@@ -539,7 +539,7 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
     """
     if filled_char is None:
         filled_char_tmp = b'\xe2\x96\x88'.decode()
-        filled_char = "\033[0;30m" + filled_char_tmp + "\033[0m"
+        filled_char = "\033[0;37m" + filled_char_tmp + "\033[0m"
 
     count = len(it) if expected_size is None else expected_size
     with Bar(label=label, width=width, hide=hide, expected_size=count, every=every, empty_char=empty_char, filled_char=filled_char) as mybar:
@@ -729,7 +729,7 @@ def colorize_for_print(v):
                 elif " am" in v or "pm" in v:
                     sl.append("\033[33m" + v + "\033[0m")
                 elif v.count(":") == 5 and len(v.strip()) == 17:
-                    sl.append("\033[30m" + v + "\033[0m")
+                    sl.append("\033[37m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
                     sl.append("\033[33m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
@@ -761,7 +761,7 @@ def colorize_for_print(v):
                 elif "/" in v and os.path.exists(v):
                     sl.append("\033[32m" + v.rstrip() + "\033[0m")
                 elif me in v.strip():
-                    sl.append("\033[30m" + v + "\033[0m")
+                    sl.append("\033[37m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
                 elif "----" in v or "====" in v or v.strip().startswith("|"):
@@ -895,7 +895,7 @@ def colorize_for_print2(v):
                 elif " am" in v or "pm" in v:
                     sl.append("\033[33m" + v + "\033[0m")
                 elif v.count(":") == 5 and len(v.strip()) == 17:
-                    sl.append("\033[30m" + v + "\033[0m")
+                    sl.append("\033[37m" + v + "\033[0m")
                 elif v.strip().lower() in ["exited", "loaded"]:
                     sl.append("\033[33m" + v + "\033[0m")
                 elif v.strip() in list_add_capitalize(["down", "dead", "inactive", "killing", "false", "failed", "NotReady"]):
@@ -927,7 +927,7 @@ def colorize_for_print2(v):
                 elif "/" in v and os.path.exists(v):
                     sl.append("\033[32m" + v.rstrip() + "\033[0m")
                 elif me in v.strip():
-                    sl.append("\033[30m" + v + "\033[0m")
+                    sl.append("\033[37m" + v + "\033[0m")
                 elif len(v) == 64:
                     sl.append("\033[90m" + v[:8] + "\033[0m")
                 elif "----" in v or "====" in v or v.strip().startswith("|"):
@@ -1966,7 +1966,7 @@ def get_colors():
               'white': '\033[97m',
               'black': '\033[90m',
               'purple': '\033[34m',
-              'grey': '\033[30m',
+              'grey': '\033[90m',
               'orange': '\033[91m',
               'default': '\033[0m'}
 
@@ -2033,7 +2033,7 @@ def get_line_number(line_num_only=4):
         linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("/__init__.py", "")
         return linenr
     except BaseException as exc:
-        print("\033[30m", exc, "\033[0m")
+        print("\033[37m", exc, "\033[0m")
 
 
 def get_print_yaml(yamlmystring):
@@ -2072,16 +2072,16 @@ def get_print_yaml(yamlmystring):
                 ii = ii.replace("https|", "https:")
 
                 if cnt == 0:
-                    s += "\033[30m" + ii + ":" + "\033[0m"
+                    s += "\033[37m" + ii + ":" + "\033[0m"
                 else:
                     s += colorize_for_print(ii)
 
                 cnt += 1
         else:
             if i.strip().startswith("---"):
-                s += "\033[30m" + i + "\033[0m"
+                s += "\033[37m" + i + "\033[0m"
             else:
-                s += "\033[30m" + i + "\033[0m"
+                s += "\033[37m" + i + "\033[0m"
 
         s += "\n"
 
