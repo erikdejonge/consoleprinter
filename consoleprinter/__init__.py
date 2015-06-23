@@ -355,6 +355,27 @@ class FastList(object):
         return len(list(self.dictlist.keys()))
 
 
+class Colors(object):
+    """
+    Colors
+    """
+    black = "black"
+    blue = "blue"
+    cyan = "cyan"
+    darkcyan = "darkcyan"
+    darkgreen = "darkgreen"
+    darkmagenta = "darkmagenta"
+    darkyellow = "darkyellow"
+    default = "default"
+    green = "green"
+    grey = "grey"
+    magenta = "magenta"
+    orange = "orange"
+    purple = "purple"
+    red = "red"
+    white = "white"
+    yellow = "yellow"
+
 # noinspection PyClassicStyleClass
 class HistoryConsole(code.InteractiveConsole):
     """
@@ -376,13 +397,11 @@ class HistoryConsole(code.InteractiveConsole):
         @return: None
         """
         readline.parse_and_bind("tab: complete")
-
         if hasattr(readline, "read_history_file"):
             try:
                 readline.read_history_file(histfile)
             except IOError:
                 pass
-
             atexit.register(self.save_history, histfile)
 
     @staticmethod
@@ -404,7 +423,6 @@ class Info(object):
         @return: None
         """
         command = ""
-
         for i in args:
             command += str(i) + " "
 
@@ -416,8 +434,8 @@ class Info(object):
         __enter__
         """
         return self
-
     # noinspection PyUnusedLocal
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         @type exc_type: str
@@ -429,16 +447,13 @@ class Info(object):
 
         # print("\033[37m== " + str(self.command), linenr, "==\033[0m")
         longest = 0
-
         for line in self.items:
             for item in line:
                 if len(str(item)) > longest:
                     longest = len(str(item))
                 break
-
         for line in self.items:
             t = True
-
             for item in line:
                 if t:
                     sys.stdout.write("\033[0m" + item + " \033[0m")
@@ -449,10 +464,8 @@ class Info(object):
                     item = colorize_for_print(str(item))
                     sys.stdout.write("\033[32m" + item + " \033[0m")
                     t = True
-
             sys.stdout.write("\n")
             sys.stdout.flush()
-
         return False
 
     def add(self, *args):
@@ -503,7 +516,6 @@ class SystemGlobals(object):
         """
         if not cls._instance:
             cls._instance = super(SystemGlobals, cls).__new__(cls, *args, **kwargs)
-
         return cls._instance
 
     def __init__(self):
@@ -528,7 +540,6 @@ class SystemGlobals(object):
         """
         if not isinstance(k, str):
             raise AssertionError("keys must be mystring")
-
         if k not in self.g_memory:
             raise AssertionError(k + " not found")
 
@@ -1073,6 +1084,7 @@ def console(*args, **kwargs):
     plainprint = check_for_positional_arguments(kwargs, ["plaintext", "plain_text", "plainprint", "plain_print"])
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
+    fileref = check_for_positional_argument(kwargs, "fileref", default=True)
     indent = ""
 
     if prefix is not None:
@@ -1175,7 +1187,7 @@ def console(*args, **kwargs):
 
             source_code_link_msg += "\n\t"
 
-    if not print_stack:
+    if not print_stack and fileref is False:
         if line_num_only >= 0:
             if return_string is False:
                 subs = " | " + colors[color] + source_code_link_msg + colors[color]
@@ -2512,6 +2524,7 @@ def humansize(inbytes, system=g_sizesystem_alternative_lower):
     """
     factor = 1
     suffix = "b."
+
     for factor, suffix in system:
         if inbytes >= factor:
             break
@@ -3309,6 +3322,7 @@ def slugify(value):
     """
     sysglob = SystemGlobals()
     hvalue = str(value)
+
     if hvalue in sysglob.g_slugified_unicode_lut:
         return sysglob.g_slugified_unicode_lut[hvalue]
 
@@ -3334,7 +3348,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                    after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3351,7 +3365,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                     after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                       after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
