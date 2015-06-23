@@ -162,25 +162,26 @@ class ConsoleTest(unittest.TestCase):
 
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
         checks = [
-            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbOTBtG1szMG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzRtG1szMG0gfCAbWzBtG1szNG1ibHVlG1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzZtG1szMG0gfCAbWzBtG1szNm1jeWFuG1swbQ==\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMG0bWzMwbSB8IBtbMG0bWzBtZGVmYXVsdBtbMG0=\n',
-            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzJtG1szMG0gfCAbWzBtG1szMm1ncmVlbhtbMG0=\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzBtG1szMG0gfCAbWzBtG1szMG1ncmV5G1swbQ==\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzVtG1szMG0gfCAbWzBtG1szNW1tYWdlbnRhG1swbQ==\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTFtG1szMG0gfCAbWzBtG1s5MW1vcmFuZ2UbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzFtG1szMW0gfCAbWzBtG1szMW1yZWQbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTdtG1szMG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1szMG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1szMG0gfCAbWzBtG1szM21kYXJreWVsbG93G1swbQ==\n',]
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbOTBtG1s5MG0gfCAbWzBtG1s5MG1ibGFjaxtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzRtG1s5MG0gfCAbWzBtG1szNG1ibHVlG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzZtG1s5MG0gfCAbWzBtG1szNm1jeWFuG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMG0bWzkwbSB8IBtbMG0bWzBtZGVmYXVsdBtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzJtG1s5MG0gfCAbWzBtG1szMm1ncmVlbhtbMG0=\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbOTBtG1s5MG0gfCAbWzBtG1s5MG1ncmV5G1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzVtG1s5MG0gfCAbWzBtG1szNW1tYWdlbnRhG1swbQ==\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbOTFtG1s5MG0gfCAbWzBtG1s5MW1vcmFuZ2UbWzBt\n',
+            b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzFtG1szMW0gfCAbWzBtG1szMW1yZWQbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTdtG1s5MG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1s5MG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1s5MG0gfCAbWzBtG1szM21kYXJreWVsbG93G1swbQ==\n',]
 
         cnt = 0
-
+        self.assertEqual(len(colors), len(checks))
         for color in colors:
             res = console(color, color=color, retval=True)
 
             self.assert_equal_b64(res, checks[cnt])
+
 
             cnt += 1
         return
@@ -198,7 +199,15 @@ class ConsoleTest(unittest.TestCase):
         test_warning
         """
         s = console_warning("Warning", retval=True)
-        self.assert_equal_b64(s, b'MC41MRtbMzFtG1szMW0gfCAbWzBtG1szMW09PRtbMG0bWzMxbSB8IBtbMG0bWzBtV2FybmluZxtb\nMzFtG1szMW0gfCAbWzBtG1szMW1GaWxlICIvVXNlcnMvcmFic2hha2VoL3dvcmtzcGFjZS9waXAv\nY29uc29sZXByaW50ZXIvdGVzdHMucHkiLCBsaW5lIDIwMCAodGVzdF93YXJuaW5nKRtbMG0bWzMx\nbSB8IBtbMG0bWzBtPT0bWzBt\n')
+        s = s.replace("/Users/rabshakeh/workspace/pip/consoleprinter/", "")
+        s = list(s)
+        s.pop(0)
+        s.pop(0)
+        s.pop(0)
+        s.pop(0)
+        s = "".join(s)
+
+        self.assertEqual(s, '\x1b[31m\x1b[31m | \x1b[0m\x1b[31m==\x1b[0m\x1b[31m | \x1b[0m\x1b[0mWarning\x1b[31m\x1b[31m | \x1b[0m\x1b[31mFile "tests.py", line 201 (test_warning)\x1b[0m\x1b[31m | \x1b[0m\x1b[0m==\x1b[0m')
 
     def assert_equal_b64(self, s, b):
         """
@@ -307,19 +316,19 @@ class ConsoleTest(unittest.TestCase):
         self.assert_equal_b64(
 
             res.replace("tests", "__main__"),
-            b'MC4xMCB8IF9fbWFpbl9fLnB5OjMwNRtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nRm9vYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgG1s5MW0gfCBGb29iYXIg\nICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAg\nIHZhbHVlG1swbQogICAgG1szMG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0b\nWzBtCiAgICAbWzMwbSB8IBtbMG0bWzMxbV9fcHJpdmF0ZXZhchtbMG0bWzMzbSAgICAgICAgICAg\nICAgICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgG1szNG03NxtbMG0KG1sw\nbSAgICAbWzMwbSB8IBtbMG0bWzk2bWhlbGxvICAgICAgICAgICAgICAgICAgICAgICAgICAgICBm\ndW5jdGlvbgobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAg\nICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbWhlbGxvG1swbSAb\nWzkzbXdvcmxkG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbXRlc3Rf\ncHJpbnRfb2JqZWN0X3RhYmxlG1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbMzNtdmFyICAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAgIHByb3BlcnR5ICAgICAgICAgICAgICAgICAgICAgICAb\nWzM0bTc3G1swbQobWzBtICAgIBtbMzBtIHwgG1swbRtbOTZtd29ybGQgICAgICAgICAgICAgICAg\nICAgICAgICAgICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
+            b'MC4xMSB8IF9fbWFpbl9fLnB5OjMwNxtbMG0bWzkwbSB8IBtbMG0bWzBtG1s5MG08X19tYWluX18u\nRm9vYmFyIG9iamVjdD46IBtbMzRtRm9vYmFyIGNsYXNzG1swbQogICAgG1s5MW0gfCBGb29iYXIg\nICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAg\nIHZhbHVlG1swbQogICAgG1s5MG0gfCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0b\nWzBtCiAgICAbWzkwbSB8IBtbMG0bWzMxbV9fcHJpdmF0ZXZhchtbMG0bWzMzbSAgICAgICAgICAg\nICAgICAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgG1szNG03NxtbMG0KG1sw\nbSAgICAbWzkwbSB8IBtbMG0bWzk2bWhlbGxvICAgICAgICAgICAgICAgICAgICAgICAgICAgICBm\ndW5jdGlvbgobWzBtICAgIBtbOTBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAg\nICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbWhlbGxvG1swbSAb\nWzkzbXdvcmxkG1swbQobWzBtICAgIBtbOTBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzkzbXRlc3Rf\ncHJpbnRfb2JqZWN0X3RhYmxlG1swbQobWzBtICAgIBtbOTBtIHwgG1swbRtbMzNtdmFyICAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAgIHByb3BlcnR5ICAgICAgICAgICAgICAgICAgICAgICAb\nWzM0bTc3G1swbQobWzBtICAgIBtbOTBtIHwgG1swbRtbOTZtd29ybGQgICAgICAgICAgICAgICAg\nICAgICAgICAgICAgIGZ1bmN0aW9uChtbMG0bWzBt\n')
 
         res = console(foo, plaintext=True, retval=True)
         self.assert_equal_b64(
 
             res.replace("__main__", "tests"),
-            b'PHRlc3RzLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKG1s5MG0gfCBGb29iYXIgICAgICAg\nICAgICAgIHR5cGUgICAgICAgICAgICAgIHZhbHVlCnwgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tCnwgX19wcml2YXRldmFyICAgICAgICAgICBpbnQgICAgICAgNzcKfCBoZWxsbyAg\nICAgICAgICAgICAgIGZ1bmN0aW9uCnwgbXlzdHJpbmcgICAgICAgICAgICAgc3RyICAgICAgIGhl\nbGxvIHdvcmxkCnwgbXl2YXIgICAgICAgICAgICAgICBzdHIgICAgICAgdGVzdF9wcmludF9vYmpl\nY3RfdGFibGUKfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKfCB3b3JsZCAgICAg\nICAgICAgICAgIGZ1bmN0aW9uClswbQ==\n')
+            b'PHRlc3RzLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKG1s5MG0gfCBGb29iYXIgICAgICAg\nICAgICAgIHR5cGUgICAgICAgICAgICAgIHZhbHVlCiB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLQogfCBfX3ByaXZhdGV2YXIgICAgICAgICAgIGludCAgICAgICA3NwogfCBoZWxs\nbyAgICAgICAgICAgICAgIGZ1bmN0aW9uCiB8IG15c3RyaW5nICAgICAgICAgICAgIHN0ciAgICAg\nICBoZWxsbyB3b3JsZAogfCBteXZhciAgICAgICAgICAgICAgIHN0ciAgICAgICB0ZXN0X3ByaW50\nX29iamVjdF90YWJsZQogfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKIHwgd29y\nbGQgICAgICAgICAgICAgICBmdW5jdGlvbgobWzBt\n')
         self.assert_equal_b64(
 
             console(
                 AA(),
                 retval=True).replace("tests", "__main__"),
-            b'MC4yMSB8IF9fbWFpbl9fLnB5OjMyMRtbMG0bWzMwbSB8IBtbMG0bWzBtG1szMG08X19tYWluX18u\nQUEgb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAbWzkxbSB8IEFBICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBt\nCiAgICAbWzMwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLRtbMG0KICAgIBtb\nMzBtIHwgG1swbRtbMzNtZm9vICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9u\nChtbMG0gICAgG1szMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAg\nICAgZmxvYXQgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzZtOC4wG1swbQobWzBtICAgIBtb\nMzBtIHwgG1swbRtbMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAbWzM0bTgbWzBtChtbMG0gICAgG1szMG0gfCAbWzBtG1s5\nNm1tX3N0cmluZyAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgIBtbOTNtaGVsbG8bWzBtChtbMG0bWzBt\n')
+            b'MC4yMiB8IF9fbWFpbl9fLnB5OjMyMxtbMG0bWzkwbSB8IBtbMG0bWzBtG1s5MG08X19tYWluX18u\nQUEgb2JqZWN0PjogG1szNG1BQSd0amUbWzBtCiAgICAbWzkxbSB8IEFBICAgICAgICAgICAgICAg\nICAgICAgICAgICAgICAgICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBt\nCiAgICAbWzkwbSB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLRtbMG0KICAgIBtb\nOTBtIHwgG1swbRtbMzNtZm9vICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9u\nChtbMG0gICAgG1s5MG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAg\nICAgZmxvYXQgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzZtOC4wG1swbQobWzBtICAgIBtb\nOTBtIHwgG1swbRtbMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAg\nICAgICAgICAgICAgICAgICAgICAgICAbWzM0bTgbWzBtChtbMG0gICAgG1s5MG0gfCAbWzBtG1s5\nNm1tX3N0cmluZyAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgIBtbOTNtaGVsbG8bWzBtChtbMG0bWzBt\n')
 
 
 class Foobar(object):

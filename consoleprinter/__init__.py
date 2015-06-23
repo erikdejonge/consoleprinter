@@ -25,12 +25,13 @@ import traceback
 import collections
 import unicodedata
 
+# noinspection PyUnresolvedReferences
+from sh import clear, whoami
 try:
     from urllib.parse import urlparse
 except ImportError:
+    # noinspection PyUnresolvedReferences
     from urlparse import urlparse
-
-from sh import clear, whoami
 
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
@@ -90,6 +91,60 @@ PLURALS = [
     (r"(?i)^(ax|test)is$", r'\1es'),
     (r"(?i)s$", 's'),
     (r"$", 's'),
+]
+
+g_sizesystem_verbose = [
+    (1024 ** 5, (' petabyte', ' petabytes')),
+    (1024 ** 4, (' terabyte', ' terabytes')),
+    (1024 ** 3, (' gigabyte', ' gigabytes')),
+    (1024 ** 2, (' megabyte', ' megabytes')),
+    (1024 ** 1, (' kilobyte', ' kilobytes')),
+    (1024 ** 0, (' byte', ' bytes')),
+]
+
+g_sizesystem_alternative_lower = [
+    (1024 ** 5, ' pb'),
+    (1024 ** 4, ' tb'),
+    (1024 ** 3, ' gb'),
+    (1024 ** 2, ' mb'),
+    (1024 ** 1, ' kb'),
+    (1024 ** 0, (' b.', ' bytes')),
+]
+
+g_sizesystem_alternative = [
+    (1024 ** 5, ' PB'),
+    (1024 ** 4, ' TB'),
+    (1024 ** 3, ' GB'),
+    (1024 ** 2, ' MB'),
+    (1024 ** 1, ' KB'),
+    (1024 ** 0, (' byte', ' bytes')),
+]
+
+g_sizesystem_traditional = [
+    (1024 ** 5, 'P'),
+    (1024 ** 4, 'T'),
+    (1024 ** 3, 'G'),
+    (1024 ** 2, 'M'),
+    (1024 ** 1, 'K'),
+    (1024 ** 0, 'B'),
+]
+
+g_sizesystem_iec = [
+    (1024 ** 5, 'Pi'),
+    (1024 ** 4, 'Ti'),
+    (1024 ** 3, 'Gi'),
+    (1024 ** 2, 'Mi'),
+    (1024 ** 1, 'Ki'),
+    (1024 ** 0, ''),
+]
+
+g_sizesystem_si = [
+    (1000 ** 5, 'P'),
+    (1000 ** 4, 'T'),
+    (1000 ** 3, 'G'),
+    (1000 ** 2, 'M'),
+    (1000 ** 1, 'K'),
+    (1000 ** 0, 'B'),
 ]
 
 UNCOUNTABLES = {'equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'}
@@ -408,6 +463,22 @@ class Info(object):
         self.items.append(args)
 
 
+class SizeSystems(object):
+    """
+    SizeSystems
+    """
+    def __init__(self):
+        """
+        __init__
+        """
+        self.traditional = g_sizesystem_traditional
+        self.alternative = g_sizesystem_alternative
+        self.alternative_lower = g_sizesystem_alternative_lower
+        self.verbose = g_sizesystem_verbose
+        self.iec = g_sizesystem_iec
+        self.si = g_sizesystem_si
+
+
 class SystemGlobals(object):
     """
     SystemGlobals
@@ -642,6 +713,7 @@ def clear_screen(ctrlkey=False):
     else:
         clear()
 
+
 def colorize_for_print(v):
     """
     @type v: str
@@ -665,6 +737,7 @@ def colorize_for_print(v):
             v = remove_color(v.rstrip())
 
             if len(v) > 0:
+                # noinspection PyPep8,PyPep8
                 if scanning is True:
                     scanbuff += " " + v
 
@@ -790,6 +863,7 @@ def colorize_for_print(v):
     retval = spacesbefore * " " + retval.rstrip()
     return retval
 
+
 def colorize_for_print2(v):
     """
     @type v: str
@@ -810,26 +884,21 @@ def colorize_for_print2(v):
         scanbuff = ""
         spacecnt2 = 0
 
-
         for v2 in v.split(" "):
-
             if v2.strip() == '':
                 spacecnt2 += 1
             else:
-
                 if maxspace < spacecnt2:
                     maxspace = spacecnt2
 
                 spacecnt2 = 0
-
 
         for v in v.split(" "):
             addenter = v.rstrip(" ").endswith("\n")
             v = remove_color(v.rstrip())
 
             if len(v) > 0:
-
-
+                # noinspection PyPep8,PyPep8
                 if scanning is True:
                     scanbuff += " " + v
 
@@ -887,7 +956,6 @@ def colorize_for_print2(v):
                         v = v.replace("--", "\n\t--")
 
                     sl.append("\033[34m" + v + "\033[0m")
-
                 elif v.strip() in list_add_capitalize(["up", "true", "active", "running", "ready", "running", "true"]):
                     sl.append("\033[32m" + snake_case(v) + "\033[0m")
                 elif v.strip().lower() in ["activating"]:
@@ -934,13 +1002,10 @@ def colorize_for_print2(v):
                     sl.append("\033[90m" + v + "\033[0m")
                 else:
                     if first:
-
                         sl.append("\033[93m" + v + "\033[0m")
                     else:
                         sl.append("\033[93m" + v + "\033[0m")
             else:
-
-
                 if v.strip():
                     sl.append("\033[93m" + v + "\033[0m")
 
@@ -958,7 +1023,8 @@ def colorize_for_print2(v):
 
     retval = retval.replace("\t", " " * 4)
     retval = spacesbefore * " " + retval.rstrip()
-    #print(retval, maxspace, len(retval))
+
+    # print(retval, maxspace, len(retval))
     return retval.rstrip()
 
 
@@ -1221,19 +1287,6 @@ def console(*args, **kwargs):
     sys.stderr.flush()
 
 
-def print_stdout(chara, cnt=0, moddiv=1):
-    """
-    @type chara: str
-    @return: None
-    """
-    cnt += 1
-
-    if cnt % moddiv == 0:
-        sys.stdout.write(chara)
-        sys.stdout.flush()
-
-    return cnt
-
 def console_cmd_desc(command, description, color, enteraftercmd=False):
     """
     @type command: str
@@ -1465,6 +1518,9 @@ def consoletasks(*args, **kwargs):
 
 
 def coolname():
+    """
+    coolname
+    """
     names = """
     Aldous
     Ara
@@ -1684,6 +1740,43 @@ def dasherize(word):
     return word.replace('_', '-')
 
 
+def deprecated_remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
+    """
+    @type doc: str
+    @type stop_looking_when_encountered: str, None
+    @type padding: int
+    @type frontspacer: str
+    @return: None
+    """
+    startspaces = len(doc.lstrip("\n")) - len(doc.lstrip("\n").lstrip(" "))
+
+    if doc is None:
+        console_warning("doc is None")
+        return doc
+
+    newdoc = ""
+    whitespacecount = 0
+    keeplookingforindention = True
+
+    for line in doc.split("\n"):
+        line = line.rstrip()
+
+        if stop_looking_when_encountered is not None:
+            if line.lower().startswith(stop_looking_when_encountered):
+                keeplookingforindention = False
+
+        if keeplookingforindention is True:
+            if whitespacecount == 0:
+                whitespacecount = len(line) - len(line.lstrip())
+
+        line = str(" " * padding) + line[whitespacecount:]
+        newdoc += line + "\n"
+
+    newdoc = newdoc.strip()
+    newdoc = str(frontspacer * ((startspaces - whitespacecount) + padding)) + newdoc.lstrip()
+    return newdoc
+
+
 def doinput(description="", default=None, answers=None, force=False, returnnum=False):
     """
     @type description: str
@@ -1700,6 +1793,7 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
         return default
 
     answer = ""
+    ianswer = -1
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
     if default is not None:
@@ -1724,8 +1818,6 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
 
         for cnt, pa in enumerate(display_answers):
             console(pa, indent=" " + str(cnt + 1) + ". ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
-
-        ianswer = -1
 
         while True:
             answer = get_input_answer(default)
@@ -2412,6 +2504,31 @@ def humanize(word):
     return word
 
 
+def humansize(inbytes, system=g_sizesystem_alternative_lower):
+    """
+    @type inbytes: int
+    @type system: list
+    @return: None
+    """
+    factor = 1
+    suffix = "b."
+    for factor, suffix in system:
+        if inbytes >= factor:
+            break
+
+    amount = int(inbytes / factor)
+
+    if isinstance(suffix, tuple):
+        singular, multiple = suffix
+
+        if amount == 1:
+            suffix = singular
+        else:
+            suffix = multiple
+
+    return str(amount) + suffix
+
+
 def info(command, description):
     """
     @type command: str, None
@@ -2568,6 +2685,22 @@ def pretty_print_json(jsondata, tofilename=None):
         return tofilename
 
 
+def print_stdout(chara, cnt=0, moddiv=1):
+    """
+    @type chara: str
+    @type cnt: int
+    @type moddiv: int
+    @return: None
+    """
+    cnt += 1
+
+    if cnt % moddiv == 0:
+        sys.stdout.write(chara)
+        sys.stdout.flush()
+
+    return cnt
+
+
 def query_yes_no(args, force=False, default=True, command=None):
     """
     @type args: str,list
@@ -2659,42 +2792,6 @@ def remove_escapecodes(escapedstring):
     return ansi_escape.sub('', escapedstring)
 
 
-def deprecated_remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
-    """
-    @type doc: str
-    @type stop_looking_when_encountered: str, None
-    @type padding: int
-    @type frontspacer: str
-    @return: None
-    """
-    startspaces = len(doc.lstrip("\n")) - len(doc.lstrip("\n").lstrip(" "))
-
-    if doc is None:
-        console_warning("doc is None")
-        return doc
-
-    newdoc = ""
-    whitespacecount = 0
-    keeplookingforindention = True
-
-    for line in doc.split("\n"):
-        line = line.rstrip()
-
-        if stop_looking_when_encountered is not None:
-            if line.lower().startswith(stop_looking_when_encountered):
-                keeplookingforindention = False
-
-        if keeplookingforindention is True:
-            if whitespacecount == 0:
-                whitespacecount = len(line) - len(line.lstrip())
-
-        line = str(" " * padding) + line[whitespacecount:]
-        newdoc += line + "\n"
-
-    newdoc = newdoc.strip()
-    newdoc = str(frontspacer * ((startspaces - whitespacecount) + padding)) + newdoc.lstrip()
-    return newdoc
-
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
     @type doc: str
@@ -2713,7 +2810,6 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
     whitespacecount = -1
     keeplookingforindention = True
 
-
     for line in doc.split("\n"):
         line = line.rstrip()
 
@@ -2721,17 +2817,13 @@ def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0,
             if line.lower().startswith(stop_looking_when_encountered):
                 keeplookingforindention = False
 
-        if keeplookingforindention is True and '"""' not in line and len(line.strip())>0:
+        if keeplookingforindention is True and '"""' not in line and len(line.strip()) > 0:
             whitespacecount2 = len(line) - len(line.lstrip())
-
-            if (whitespacecount2 < whitespacecount) or (whitespacecount<0):
+            if (whitespacecount2 < whitespacecount) or (whitespacecount < 0):
                 whitespacecount = whitespacecount2
 
-
     for line in doc.split("\n"):
-
         line = str(" " * padding) + line[whitespacecount:]
-
         newdoc += line + "\n"
 
     newdoc = newdoc.strip()
@@ -2906,49 +2998,6 @@ def sizeof_fmt(num, suffix=''):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
-def slugify(value):
-    """
-    @type value: str
-    """
-    sysglob = SystemGlobals()
-    hvalue = str(value)
-
-    if hvalue in sysglob.g_slugified_unicode_lut:
-        return sysglob.g_slugified_unicode_lut[hvalue]
-
-    value = value.lower().replace("\\", "").replace("/", "")
-    value = value.strip()
-    slug = ""
-
-    if sysglob.g_safe_alphabet:
-        safechars = sysglob.g_safe_alphabet
-    else:
-        safechars = set(get_safe_alphabet())
-    try:
-        value = str(value)
-    except UnicodeError:
-        value = str(value)
-
-    safechars = list(safechars)
-    safechars.remove(" ")
-    safechars = tuple(safechars)
-
-    for c in value:
-        if c in safechars:
-            slug += c
-        else:
-            if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                          after keyword 0
-                c = c.encode()
-
-            c64 = base64.encodebytes(c)
-            slug += c64.decode("utf-8").strip().rstrip("=")
-
-    retval = slug.lower()
-    sysglob.g_slugified_unicode_lut[hvalue] = retval
-    return retval
-
-
 def snake_case(word, remove_spaces=True):
     """
     @type word: str
@@ -3105,27 +3154,6 @@ def stdoutwriteline(*args):
     return s
 
 
-def strcmp(s1, s2):
-    """
-    @type s1: str or unicode
-    @type s2: str or unicode
-    @return: @rtype: bool
-    """
-    # noinspection PyArgumentEqualDefault #                                                                                                          after keyword 0
-    s1 = s1.encode()
-
-    # noinspection PyArgumentEqualDefault
-    s2 = s2.encode()
-
-    if not s1 or not s2:
-        return False
-
-    s1 = s1.strip()
-    s2 = s2.strip()
-    equal = s1 == s2
-    return equal
-
-
 def stripall(astr):
     """
     @type astr: str
@@ -3228,13 +3256,59 @@ _irregular('zombie', 'zombies')
 set_console_start_time()
 
 standard_library.install_aliases()
+"""
+Human-readable file size.
+Using the traditional system, where a factor of 1024 is used::
+>>> size(10)
+'10B'
+>>> size(100)
+'100B'
+>>> size(1000)
+'1000B'
+>>> size(2000)
+'1K'
+>>> size(10000)
+'9K'
+>>> size(20000)
+'19K'
+>>> size(100000)
+'97K'
+>>> size(200000)
+'195K'
+>>> size(1000000)
+'976K'
+>>> size(2000000)
+'1M'
+Using the SI system, with a factor 1000::
+>>> size(10, system=si)
+'10B'
+>>> size(100, system=si)
+'100B'
+>>> size(1000, system=si)
+'1K'
+>>> size(2000, system=si)
+'2K'
+>>> size(10000, system=si)
+'10K'
+>>> size(20000, system=si)
+'20K'
+>>> size(100000, system=si)
+'100K'
+>>> size(200000, system=si)
+'200K'
+>>> size(1000000, system=si)
+'1M'
+>>> size(2000000, system=si)
+'2M'
+"""
 
 
 def slugify(value):
     """
     @type value: str
     """
-    sysglob = hvalue = str(value)
+    sysglob = SystemGlobals()
+    hvalue = str(value)
     if hvalue in sysglob.g_slugified_unicode_lut:
         return sysglob.g_slugified_unicode_lut[hvalue]
 
@@ -3260,7 +3334,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                           after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                    after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3277,7 +3351,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                           after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                     after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
