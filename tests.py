@@ -2,7 +2,6 @@
 # coding=utf-8
 """
 console
-
 Active8 (05-03-15)
 license: GNU-GPL2
 """
@@ -21,7 +20,7 @@ def printb64(s, arg1=""):
     @return: None
     """
     bs = gb64(s)
-    print(str(bs)+arg1)
+    print(str(bs) + arg1)
 
 
 class AA(object):
@@ -157,7 +156,6 @@ class ConsoleTest(unittest.TestCase):
         """
         s = console("hello world", retval=True)
 
-
         self.assert_equal_b64(s, b'MC4wMCB8IHRlc3RzLnB5OjE1OBtbMG0bWzMwbSB8IBtbMG0bWzBtaGVsbG8gd29ybGQbWzBt')
 
         colors = ['black', 'blue', 'cyan', 'default', 'green', 'grey', 'magenta', 'orange', 'red', 'white', 'yellow', 'darkyellow']
@@ -173,17 +171,18 @@ class ConsoleTest(unittest.TestCase):
             b'MC4wMCB8IHRlc3RzLnB5OjE4MRtbMzFtG1szMW0gfCAbWzBtG1szMW1yZWQbWzBt\n',
             b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbOTdtG1s5MG0gfCAbWzBtG1s5N213aGl0ZRtbMG0=\n',
             b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1s5MG0gfCAbWzBtG1szM215ZWxsb3cbWzBt\n',
-            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1s5MG0gfCAbWzBtG1szM21kYXJreWVsbG93G1swbQ==\n',]
+            b'MC4wMSB8IHRlc3RzLnB5OjE4MRtbMzNtG1s5MG0gfCAbWzBtG1szM21kYXJreWVsbG93G1swbQ==\n', ]
 
         cnt = 0
+
         self.assertEqual(len(colors), len(checks))
+
         for color in colors:
             res = console(color, color=color, retval=True)
-
             self.assert_equal_b64(res, checks[cnt])
 
-
             cnt += 1
+
         return
         s = ""
 
@@ -206,7 +205,6 @@ class ConsoleTest(unittest.TestCase):
         s.pop(0)
         s.pop(0)
         s = "".join(s)
-
         self.assertEqual(s, '\x1b[31m\x1b[31m | \x1b[0m\x1b[31m==\x1b[0m\x1b[31m | \x1b[0m\x1b[0mWarning\x1b[31m\x1b[31m | \x1b[0m\x1b[31mFile "tests.py", line 201 (test_warning)\x1b[0m\x1b[31m | \x1b[0m\x1b[0m==\x1b[0m')
 
     def assert_equal_b64(self, s, b):
@@ -312,7 +310,6 @@ class ConsoleTest(unittest.TestCase):
         self.assertTrue("mvar                               property" in console(foo, retval=True))
 
         res = console(foo, retval=True)
-
         self.assert_equal_b64(
 
             res.replace("tests", "__main__"),

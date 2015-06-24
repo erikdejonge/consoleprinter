@@ -147,7 +147,7 @@ g_sizesystem_si = [
     (1000 ** 0, 'B'),
 ]
 
-UNCOUNTABLES = {'equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'}
+UNCOUNTABLES = set(['equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'])
 
 SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 SAFECHARS = [ord(ch) for ch in SALPHA]
@@ -376,6 +376,7 @@ class Colors(object):
     white = "white"
     yellow = "yellow"
 
+
 # noinspection PyClassicStyleClass
 class HistoryConsole(code.InteractiveConsole):
     """
@@ -397,11 +398,13 @@ class HistoryConsole(code.InteractiveConsole):
         @return: None
         """
         readline.parse_and_bind("tab: complete")
+
         if hasattr(readline, "read_history_file"):
             try:
                 readline.read_history_file(histfile)
             except IOError:
                 pass
+
             atexit.register(self.save_history, histfile)
 
     @staticmethod
@@ -423,6 +426,7 @@ class Info(object):
         @return: None
         """
         command = ""
+
         for i in args:
             command += str(i) + " "
 
@@ -434,8 +438,8 @@ class Info(object):
         __enter__
         """
         return self
-    # noinspection PyUnusedLocal
 
+    # noinspection PyUnusedLocal
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         @type exc_type: str
@@ -447,13 +451,16 @@ class Info(object):
 
         # print("\033[37m== " + str(self.command), linenr, "==\033[0m")
         longest = 0
+
         for line in self.items:
             for item in line:
                 if len(str(item)) > longest:
                     longest = len(str(item))
                 break
+
         for line in self.items:
             t = True
+
             for item in line:
                 if t:
                     sys.stdout.write("\033[0m" + item + " \033[0m")
@@ -464,8 +471,10 @@ class Info(object):
                     item = colorize_for_print(str(item))
                     sys.stdout.write("\033[32m" + item + " \033[0m")
                     t = True
+
             sys.stdout.write("\n")
             sys.stdout.flush()
+
         return False
 
     def add(self, *args):
@@ -516,6 +525,7 @@ class SystemGlobals(object):
         """
         if not cls._instance:
             cls._instance = super(SystemGlobals, cls).__new__(cls, *args, **kwargs)
+
         return cls._instance
 
     def __init__(self):
@@ -540,6 +550,7 @@ class SystemGlobals(object):
         """
         if not isinstance(k, str):
             raise AssertionError("keys must be mystring")
+
         if k not in self.g_memory:
             raise AssertionError(k + " not found")
 
@@ -2213,10 +2224,16 @@ def get_safe_string(s, extrachars=None):
         mysafechars = SAFECHARS
 
     s = remove_escapecodes(s)
-    targetdict = {ord(mch): ord(mch) for mch in SALPHA}
-    targetdict.update({ord(mch): None for mch in s if ord(mch) not in mysafechars})
-    s = s.translate(targetdict)
+    targetdict = {}
 
+    for mch in SALPHA:
+        targetdict[ord(mch)] = ord(mch)
+
+    for mch in s:
+        if ord(mch) not in mysafechars:
+            targetdict[ord(mch)] = None
+
+    s = s.translate(targetdict)
     return s
 
 
@@ -3348,7 +3365,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                        after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3365,7 +3382,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                       after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                         after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
