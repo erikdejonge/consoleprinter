@@ -736,6 +736,23 @@ def clear_screen(ctrlkey=False):
         clear()
 
 
+def colorize_path(p):
+    """
+    @type p: str
+    @return: None
+    """
+    orgp = p
+    if os.getcwd() not in p:
+        p = os.path.join(os.getcwd(), p)
+
+    if os.path.isdir(p):
+        p = "\033[34m" + orgp + "\033[0m"
+    else:
+        p = "\033[93m" + orgp + "\033[0m"
+
+    return p
+
+
 def colorize_for_print(v):
     """
     @type v: str
@@ -1076,8 +1093,7 @@ def console(*args, **kwargs):
         print(s)
         return
     global g_start_time
-
-    runtime = "%0.2f" % (1000*float(time.time() - g_start_time))
+    runtime = "%0.2f" % (1000 * float(time.time() - g_start_time))
     arglist = list(args)
     line_num_only = 3
     once = False
@@ -2534,7 +2550,7 @@ def humanize(word):
     return word
 
 
-def humansize(inbytes, system=g_sizesystem_alternative_lower):
+def humansize(inbytes, system=g_sizesystem_alternative_lower, color=True):
     """
     @type inbytes: int
     @type system: list
@@ -2557,7 +2573,27 @@ def humansize(inbytes, system=g_sizesystem_alternative_lower):
         else:
             suffix = multiple
 
-    return str(amount) + suffix
+    if color is True:
+        inbytes = float(inbytes)
+
+        if inbytes >= 1024 * 1024 * 1024:
+            color = 35
+        elif inbytes >= 1024 * 1024 * 1024:
+            color = 92
+        elif inbytes >= 1024 * 1024:
+            color = 34
+        elif inbytes >= 1024 * 10:
+            color = 33
+        elif inbytes < 1024 * 10:
+            color = 36
+        else:
+            color = 91
+
+        result = "\033[" + str(color) + "m" + str(amount) + suffix + "\033[0m"
+    else:
+        result = str(amount) + suffix
+
+    return result
 
 
 def info(command, description):
@@ -3366,7 +3402,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                        after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                              after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3383,7 +3419,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                         after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                               after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
