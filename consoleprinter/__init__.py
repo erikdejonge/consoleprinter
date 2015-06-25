@@ -1076,7 +1076,8 @@ def console(*args, **kwargs):
         print(s)
         return
     global g_start_time
-    runtime = "%0.2f" % float(time.time() - g_start_time)
+
+    runtime = "%0.2f" % (1000*float(time.time() - g_start_time))
     arglist = list(args)
     line_num_only = 3
     once = False
@@ -1095,7 +1096,7 @@ def console(*args, **kwargs):
     plainprint = check_for_positional_arguments(kwargs, ["plaintext", "plain_text", "plainprint", "plain_print"])
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
-    fileref = check_for_positional_argument(kwargs, "fileref", default=True)
+    fileref = check_for_positional_argument(kwargs, "fileref", default=False)
     indent = ""
 
     if prefix is not None:
@@ -1198,7 +1199,7 @@ def console(*args, **kwargs):
 
             source_code_link_msg += "\n\t"
 
-    if not print_stack and fileref is False:
+    if not print_stack and fileref is True:
         if line_num_only >= 0:
             if return_string is False:
                 subs = " | " + colors[color] + source_code_link_msg + colors[color]
