@@ -763,7 +763,7 @@ def colorize_for_print(v):
     v = v.rstrip()
     spacecnt = 0
     me = str(whoami()).strip()
-
+    commands = [""]
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
     else:
