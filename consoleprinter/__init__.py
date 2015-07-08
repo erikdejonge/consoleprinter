@@ -1102,8 +1102,6 @@ def console(*args, **kwargs):
     if "msg" in kwargs:
         arglist = [kwargs["msg"]]
 
-    if "stack" in kwargs:
-        line_num_only += kwargs["stack"]
 
     prefix = check_for_positional_argument(kwargs, "prefix", default=None)
     stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
@@ -1123,6 +1121,9 @@ def console(*args, **kwargs):
             raise AssertionError("console: indent only works for plainprint")
 
         indent = str(kwargs["indent"])
+
+    if "stack" in kwargs:
+        line_num_only += kwargs["stack"]
 
     toggle = True
 
