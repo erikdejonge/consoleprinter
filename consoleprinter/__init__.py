@@ -2081,6 +2081,43 @@ def get_alphabet_lower_numbers():
     """
     return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
+def remove_youtube_tag(fpath):
+    """
+    @type fpath: str
+    @return: None
+    """
+    fpathsplit = os.path.splitext(fpath)
+    fpathsplitext = fpathsplit[0].strip()
+    fpathsplitextlast = fpathsplit[1]
+    splitrev = fpathsplitext.split("-")
+    splitrev.reverse()
+    taglen = 0
+    tag = ""
+    nfpath = fpath
+
+    for fpj in splitrev:
+        tag = fpj
+        taglen = len(fpj)
+        break
+
+    if taglen >= 11 and "." in tag:
+        for fpk in tag.split("."):
+            tag = fpk
+            taglen = fpk
+            break
+
+    if taglen == 10:
+        nfpath = forceascii(fpathsplitext).replace("-" + tag, "").strip("_").strip("-").strip() + fpathsplitextlast
+    elif taglen == 11:
+        if "-" + tag in fpath:
+            nfpath = forceascii(fpathsplitext).replace("-" + tag, "").strip("_").strip("-").strip() + fpathsplitextlast
+
+    elif fpathsplitext.endswith("_") or fpathsplitext.endswith("-") or fpathsplitext.endswith(" ") or fpathsplitext.startswith("_") or fpathsplitext.startswith("-") or fpathsplitext.startswith(" "):
+        nfpath = forceascii(fpathsplitext).strip("_").strip("-").strip() + fpathsplitextlast
+
+    return nfpath
+
+
 
 def get_colors():
     """
