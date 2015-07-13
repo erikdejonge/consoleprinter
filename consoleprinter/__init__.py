@@ -729,12 +729,14 @@ def clear_screen(ctrlkey=False):
     @type ctrlkey: bool
     @return: None
     """
-    if sys.stderr.isatty() and ctrlkey is True:
-        sys.stderr.write('\x1Bc')
-        sys.stderr.flush()
-    else:
-        clear()
-
+    try:
+        if sys.stderr.isatty() and ctrlkey is True:
+            sys.stderr.write('\x1Bc')
+            sys.stderr.flush()
+        else:
+            clear()
+    except BaseException:
+        pass
 
 def colorize_path(p):
     """
