@@ -603,12 +603,12 @@ def abort(command, description, stack=False):
     @type stack: bool
     @return: None
     """
-
     if command is None:
         command = "?"
 
     linno = get_line_number()
     command = "\033[31m" + "abort:" + str(linno) + ":" + str(command).strip() + "\033[0m"
+
     console_cmd_desc(str(command).strip(), str(description), "red", enteraftercmd=False)
 
     if stack is True:
@@ -738,12 +738,14 @@ def clear_screen(ctrlkey=False):
     except BaseException:
         pass
 
+
 def colorize_path(p):
     """
     @type p: str
     @return: None
     """
     orgp = p
+
     if os.getcwd() not in p:
         p = os.path.join(os.getcwd(), p)
 
@@ -766,6 +768,7 @@ def colorize_for_print(v):
     spacecnt = 0
     me = str(whoami()).strip()
     commands = [""]
+
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
     else:
@@ -1069,6 +1072,15 @@ def colorize_for_print2(v):
     return retval.rstrip()
 
 
+def require_python3():
+    """
+    require_python3
+    """
+    if (sys.version_info < (3, 0)):
+        print("python2 not supported")
+        exit(1)
+
+
 def console(*args, **kwargs):
     """
     @param args:
@@ -1103,7 +1115,6 @@ def console(*args, **kwargs):
 
     if "msg" in kwargs:
         arglist = [kwargs["msg"]]
-
 
     prefix = check_for_positional_argument(kwargs, "prefix", default=None)
     stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
@@ -1928,7 +1939,6 @@ def exist(data):
     """
     @type data: str, int, float, None, dict, list
     """
-
     if data is None:
         return False
 
@@ -2083,6 +2093,7 @@ def get_alphabet_lower_numbers():
     """
     return tuple([' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
+
 def remove_youtube_tag(fpath):
     """
     @type fpath: str
@@ -2118,7 +2129,6 @@ def remove_youtube_tag(fpath):
         nfpath = forceascii(fpathsplitext).strip("_").strip("-").strip() + fpathsplitextlast
 
     return nfpath
-
 
 
 def get_colors():
@@ -3442,7 +3452,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                              after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3459,7 +3469,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                               after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                 after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
