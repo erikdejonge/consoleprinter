@@ -2343,7 +2343,10 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
 
         if not sys.stdout.isatty():
-            subs = get_safe_string(subs, "@:-_?/")
+            try:
+                subs = get_safe_string(subs, "@:-_?/")
+            except:
+                pass
 
     elif isinstance(value, BaseException):
         if plaintext is True:
