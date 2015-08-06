@@ -15,7 +15,7 @@ import sys
 import code
 import json
 import time
-import ujson
+import json
 import atexit
 import base64
 import random
