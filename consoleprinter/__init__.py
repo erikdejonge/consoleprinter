@@ -94,12 +94,12 @@ PLURALS = [
 ]
 
 g_sizesystem_verbose = [
-    (1024 ** 5, (' petabyte', ' petabytes')),
-    (1024 ** 4, (' terabyte', ' terabytes')),
-    (1024 ** 3, (' gigabyte', ' gigabytes')),
-    (1024 ** 2, (' megabyte', ' megabytes')),
-    (1024 ** 1, (' kilobyte', ' kilobytes')),
-    (1024 ** 0, (' byte', ' bytes')),
+    (1024 ** 5, (' Petabyte', ' Petabytes')),
+    (1024 ** 4, (' Terabyte', ' Terabytes')),
+    (1024 ** 3, (' Gigabyte', ' Gigabytes')),
+    (1024 ** 2, (' Megabyte', ' Megabytes')),
+    (1024 ** 1, (' Kilobyte', ' Kilobytes')),
+    (1024 ** 0, (' Byte', ' Bytes')),
 ]
 
 g_sizesystem_alternative_lower = [
