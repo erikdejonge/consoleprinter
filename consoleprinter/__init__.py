@@ -13,7 +13,6 @@ import os
 import re
 import sys
 import code
-import json
 import time
 import json
 import atexit
@@ -26,7 +25,6 @@ import collections
 import unicodedata
 
 # noinspection PyUnresolvedReferences
-from sh import clear, whoami
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -147,7 +145,7 @@ g_sizesystem_si = [
     (1000 ** 0, 'B'),
 ]
 
-UNCOUNTABLES = set(['equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'])
+UNCOUNTABLES = {'equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'}
 
 SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 SAFECHARS = [ord(ch) for ch in SALPHA]
@@ -734,7 +732,7 @@ def clear_screen(ctrlkey=False):
             sys.stderr.write('\x1Bc')
             sys.stderr.flush()
         else:
-            clear()
+            os.system("clear")
     except BaseException:
         pass
 
@@ -756,6 +754,8 @@ def colorize_path(p):
 
     return p
 
+me = os.popen("whoami").read()
+
 
 def colorize_for_print(v):
     """
@@ -766,8 +766,6 @@ def colorize_for_print(v):
     sl = []
     v = v.rstrip()
     spacecnt = 0
-    me = str(whoami()).strip()
-    commands = [""]
 
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
@@ -918,7 +916,6 @@ def colorize_for_print2(v):
     v = v.rstrip()
     maxspace = 0
     spacecnt = 0
-    me = str(whoami()).strip()
 
     if header_trigger(v):
         retval = "\033[97m" + v.lower() + "\033[0m"
@@ -1109,7 +1106,6 @@ def console(*args, **kwargs):
     global g_start_time
     runtime = "%0.2f" % (1000 * float(time.time() - g_start_time))
     arglist = list(args)
-    line_num_only = 3
     once = False
     colors = get_colors()
 
@@ -2327,7 +2323,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
         # noinspection PyBroadException
         try:
-            value = ujson.dumps(value)
+            value = json.dumps(value)
         except Exception:
             try:
                 for k in value:
@@ -2605,8 +2601,9 @@ def humanize(word):
 
 def humansize(inbytes, system=g_sizesystem_alternative_lower, color=True):
     """
-    @type inbytes: int
-    @type system: list
+    @type inbytes: list
+    @type system: float
+    @type color: bool
     @return: None
     """
     factor = 1
@@ -2796,7 +2793,7 @@ def pretty_print_json(jsondata, tofilename=None):
     @type jsondata: str
     @type tofilename: str, None
     """
-    jsonproxy = ujson.decode(jsondata)
+    jsonproxy = json.decode(jsondata)
 
     if tofilename is None:
         return json.dumps(jsonproxy, sort_keys=True, indent=4, separators=', ')
@@ -3455,7 +3452,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                                after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                  after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3472,7 +3469,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                                 after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                   after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault

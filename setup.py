@@ -19,7 +19,6 @@ setup(name='consoleprinter',
       classifiers=[
           "Programming Language :: Python",
           "Programming Language :: Python :: 3",
-          "Development Status :: 4 - Beta ",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
           "Operating System :: POSIX",
