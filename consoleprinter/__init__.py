@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import code
+import copy
 import time
 import json
 import atexit
@@ -1827,15 +1828,16 @@ def deprecated_remove_extra_indentation(doc, stop_looking_when_encountered=None,
     return newdoc
 
 
-def doinput(description="", default=None, answers=None, force=False, returnnum=False):
+def doinput(description="", default=None, theanswers=None, force=False, returnnum=False):
     """
     @type description: str
     @type default: str, None
-    @type answers: list, None
+    @type theanswers: list, None
     @type force: bool
     @type returnnum: bool
     @return: None
     """
+    answers=copy.deepcopy(theanswers)
     if force is True:
         if default is None:
             raise AssertionError("no default set")
@@ -1861,7 +1863,7 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
             display_answers.append(ans)
 
         display_answers.sort(key=lambda x: str(x).lower().strip())
-        answers.extend(quitanswers)
+        #answers.extend(quitanswers)
         console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
         if len(description) == 0:
             console("options:", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
@@ -1871,17 +1873,20 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
 
         while True:
             answer = get_input_answer(default)
-
+            if answer in quitanswers:
+                raise SystemExit()
             if answer not in answers:
                 try:
-                    answer = int(answer)
-                    ianswer = answer - 1
+                    ianswer = int(answer)
+                    ianswer = ianswer - 1
                     answer = answers[ianswer]
                 except ValueError:
                     pass
+                except IndexError:
+                    pass
 
             if answer not in answers:
-                console("$: invalid -> ", answer.strip(), color="red", plaintext=not get_debugmode(), line_num_only=4)
+                console("$: invalid -> ", answer, color="red", plaintext=not get_debugmode(), line_num_only=4)
                 for cnt, pa in enumerate(display_answers):
                     console(pa, indent=" " + str(cnt + 1) + ". ", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
             else:
@@ -1898,7 +1903,7 @@ def doinput(description="", default=None, answers=None, force=False, returnnum=F
     if answer in quitanswers:
         # print("SystemExit(doinput quit)", quitanswers, answer)
 
-        raise SystemExit("doinput quit")
+        raise SystemExit()
 
     console("ok: " + str(answer), color="green", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
