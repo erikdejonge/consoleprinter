@@ -1893,7 +1893,7 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
                 try:
                     ianswer = int(answer)
                     ianswer = ianswer - 1
-                    answer = answers[ianswer]
+                    answer = display_answers[ianswer]
                 except ValueError:
                     pass
 
