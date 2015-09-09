@@ -1828,6 +1828,26 @@ def deprecated_remove_extra_indentation(doc, stop_looking_when_encountered=None,
     return newdoc
 
 
+def doinput_display_answers(answers, default):
+    """
+    @type answers: list
+    @type default: str
+    @return: None
+    """
+    display_answers = []
+
+    for ans in answers:
+        ans = str(ans)
+
+        if ans is default:
+            ans = ans.upper()
+
+        display_answers.append(ans)
+
+    display_answers.sort(key=lambda x: str(x).lower().strip())
+    return display_answers
+
+
 def doinput(description="", default=None, theanswers=None, force=False, returnnum=False):
     """
     @type description: str
@@ -1837,7 +1857,8 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
     @type returnnum: bool
     @return: None
     """
-    answers=copy.deepcopy(theanswers)
+    answers = copy.deepcopy(theanswers)
+
     if force is True:
         if default is None:
             raise AssertionError("no default set")
@@ -1852,18 +1873,9 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
         description += "\033[96m (default: \033[33m" + str(default) + "\033[96m" + ", quit: q)?"
 
     if answers is not None:
-        display_answers = []
+        display_answers = doinput_display_answers(answers, default)
 
-        for ans in answers:
-            ans = str(ans)
-
-            if ans is default:
-                ans = ans.upper()
-
-            display_answers.append(ans)
-
-        display_answers.sort(key=lambda x: str(x).lower().strip())
-        #answers.extend(quitanswers)
+        # answers.extend(quitanswers)
         console(description, color="darkcyan", plaintext=not get_debugmode(), line_num_only=4, newline=True)
         if len(description) == 0:
             console("options:", color="grey", plaintext=not get_debugmode(), line_num_only=4, newline=True)
@@ -1873,8 +1885,10 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
 
         while True:
             answer = get_input_answer(default)
+
             if answer in quitanswers:
                 raise SystemExit()
+
             if answer not in answers:
                 try:
                     ianswer = int(answer)
@@ -1882,6 +1896,7 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
                     answer = answers[ianswer]
                 except ValueError:
                     pass
+
                 except IndexError:
                     pass
 
@@ -1902,15 +1917,14 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
 
     if answer in quitanswers:
         # print("SystemExit(doinput quit)", quitanswers, answer)
-
         raise SystemExit()
 
     console("ok: " + str(answer), color="green", plaintext=not get_debugmode(), line_num_only=4, newline=True)
 
     if returnnum:
-        return ianswer
+        return ianswer, display_answers
 
-    return answer
+    return answer, display_answers
 
 
 def dot_print(cnt=0, total=0, modint=10):
@@ -3457,7 +3471,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                                  after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                    after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3474,7 +3488,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                                   after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                     after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
