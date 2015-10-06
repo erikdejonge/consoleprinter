@@ -15,7 +15,6 @@ from builtins import str
 from builtins import range
 from builtins import object
 from future import standard_library
-
 import io
 import os
 import re
@@ -2919,14 +2918,6 @@ def query_yes_no(args, force=False, default=True, command=None):
             console("please respond with 'yes', 'no' or 'quit'.\n", color="darkyellow", plaintext=True)
 
 
-def remove_color(mystring):
-    """
-    @type mystring: str
-    @return: None
-    """
-    return remove_escapecodes(mystring)
-
-
 def remove_escapecodes(escapedstring):
     """
     @type escapedstring: str
@@ -2934,6 +2925,9 @@ def remove_escapecodes(escapedstring):
     """
     ansi_escape = re.compile(r'\x1b[^a-z]*[a-z]')
     return ansi_escape.sub('', escapedstring)
+
+remove_color = remove_escapecodes
+remove_colors = remove_escapecodes
 
 
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
@@ -3479,7 +3473,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                                    after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                      after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3496,7 +3490,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                                     after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                       after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
