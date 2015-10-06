@@ -6,6 +6,14 @@ Active8 (05-03-15)
 license: GNU-GPL2
 """
 from __future__ import division, print_function, absolute_import, unicode_literals
+from builtins import open
+from builtins import super
+from builtins import int
+from builtins import input
+from builtins import chr
+from builtins import str
+from builtins import range
+from builtins import object
 from future import standard_library
 
 import io
@@ -30,7 +38,7 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     # noinspection PyUnresolvedReferences
-    from urlparse import urlparse
+    from urllib.parse import urlparse
 
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
@@ -2895,7 +2903,7 @@ def query_yes_no(args, force=False, default=True, command=None):
             else:
                 return False
 
-        elif choice in valid.keys():
+        elif choice in list(valid.keys()):
             choice = valid[choice]
 
             if choice == "quit":
