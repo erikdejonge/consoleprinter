@@ -37,7 +37,7 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     # noinspection PyUnresolvedReferences
-    from urllib.parse import urlparse
+    from urlparse import urlparse
 
 SINGULARS = [
     (r"(?i)(database)s$", r'\1'),
@@ -2020,7 +2020,7 @@ def forceascii(unicrap):
              0xa1: '!', 0xa2: '{cent}', 0xa3: '{pound}', 0xa4: '{currency}',
              0xa5: '{yen}', 0xa6: '|', 0xa7: '{section}', 0xa8: '{umlaut}',
              0xa9: '{C}', 0xaa: '{^a}', 0xab: '<<', 0xac: '{not}',
-             0xad: '-', 0xae: '{R}', 0xaf: '_', 0xb0: '{degrees}',
+             0xad: '-', 0xae: '{R}', 0xaf: '_', 0xb0: ' degr.',
              0xb1: '{+/-}', 0xb2: '{^2}', 0xb3: '{^3}', 0xb4: "'",
              0xb5: '{micro}', 0xb6: '{paragraph}', 0xb7: '*', 0xb8: '{cedilla}',
              0xb9: '{^1}', 0xba: '{^o}', 0xbb: '>>',
