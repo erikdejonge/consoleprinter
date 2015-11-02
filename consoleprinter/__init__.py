@@ -2928,7 +2928,7 @@ def remove_escapecodes(escapedstring):
 
 remove_color = remove_escapecodes
 remove_colors = remove_escapecodes
-
+strip_colors = remove_escapecodes
 
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
