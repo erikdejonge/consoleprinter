@@ -2322,7 +2322,14 @@ def get_safe_string(s, extrachars=None):
         if ord(mch) not in mysafechars:
             targetdict[ord(mch)] = None
 
-    s = s.translate(targetdict)
+    try:
+        s = s.translate(targetdict)
+    except TypeError:
+        s = ""
+        for c in s:
+            if c in mysafechars:
+                s += c
+
     return s
 
 
