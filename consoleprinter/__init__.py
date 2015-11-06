@@ -27,10 +27,10 @@ import atexit
 import base64
 import random
 import socket
+# noinspection PyUnresolvedReferences
 import readline
 import traceback
 import collections
-import unicodedata
 
 # noinspection PyUnresolvedReferences
 try:
@@ -256,8 +256,8 @@ class Bar(object):
         x = int(self.width * progress // self.expected_size)
 
         if not self.hide:
-            if ((progress % self.every) == 0 or      # True every "every" updates
-                    (progress == self.expected_size)):   # And when we're done
+            if ((progress % self.every) == 0 or  # True every "every" updates
+                    (progress == self.expected_size)):  # And when we're done
 
                 if len(remove_color(self.label.strip())) == 0:
                     bar_template = '%s|%s%s| \033[34m%s/%s\033[0m\r'
@@ -650,6 +650,14 @@ def bar(it, label='', width=32, hide=None, empty_char=' ', filled_char=None, exp
             mybar.show(i)
 
 
+def strex(val):
+    """
+    @type val: str
+    @return: None
+    """
+    return val is not "" and val is not None
+
+
 def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
     """
     @type mystring: str
@@ -735,14 +743,11 @@ def clear_screen(ctrlkey=False):
     @type ctrlkey: bool
     @return: None
     """
-    try:
-        if sys.stderr.isatty() and ctrlkey is True:
-            sys.stderr.write('\x1Bc')
-            sys.stderr.flush()
-        else:
-            os.system("clear")
-    except BaseException:
-        pass
+    if sys.stderr.isatty() and ctrlkey is True:
+        sys.stderr.write('\x1Bc')
+        sys.stderr.flush()
+    else:
+        os.system("clear")
 
 
 def colorize_path(p):
@@ -805,7 +810,6 @@ def colorize_for_print(v):
                         v = "http://" + v
 
                     url = urlparse(v)
-                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -873,7 +877,7 @@ def colorize_for_print(v):
                     sl.append("\033[33m" + v + "\033[0m")
                 elif v.isnumeric() or v.strip().replace(".", "").replace("'", "").replace('|', "").replace('"', "").isdigit():
                     if "." in v:
-                        v = str(float(v))
+                        v = str(float(v.replace('|', '')))
                         sl.append("\033[36m" + v + "\033[0m")
                     else:
                         if "|" in v:
@@ -965,7 +969,6 @@ def colorize_for_print2(v):
                         v = "http://" + v
 
                     url = urlparse(v)
-                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -1081,7 +1084,7 @@ def require_python3():
     """
     require_python3
     """
-    if (sys.version_info < (3, 0)):
+    if sys.version_info < (3, 0):
         print("python2 not supported")
         exit(1)
 
@@ -1879,6 +1882,8 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
     if default is not None:
         description += "\033[96m (default: \033[33m" + str(default) + "\033[96m" + ", quit: q)?"
 
+    display_answers = []
+
     if answers is not None:
         display_answers = doinput_display_answers(answers, default)
 
@@ -1899,7 +1904,7 @@ def doinput(description="", default=None, theanswers=None, force=False, returnnu
             if answer not in answers:
                 try:
                     ianswer = int(answer)
-                    ianswer = ianswer - 1
+                    ianswer -= 1
                     answer = display_answers[ianswer]
                 except ValueError:
                     pass
@@ -2185,10 +2190,12 @@ def get_debugmode():
     return sg.g_debug
 
 
+# noinspection PyUnresolvedReferences
 def get_hostname():
     """
     get_hostname
     """
+    # noinspection PyUnresolvedReferences
     return str(socket.gethostname())
 
 
@@ -2321,11 +2328,11 @@ def get_safe_string(s, extrachars=None):
     for mch in s:
         if ord(mch) not in mysafechars:
             targetdict[ord(mch)] = None
-
     try:
         s = s.translate(targetdict)
     except TypeError:
         s = ""
+
         for c in s:
             if c in mysafechars:
                 s += c
@@ -2361,7 +2368,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             try:
                 for k in value:
                     value[k] = str(value[k])
-                import json
+
                 value = json.dumps(value, indent=1)
             except Exception as e:
                 value = str(value)
@@ -2372,10 +2379,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
 
         if not sys.stdout.isatty():
-            try:
-                subs = get_safe_string(subs, "@:-_?/")
-            except:
-                pass
+            subs = get_safe_string(subs, "@:-_?/")
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -2634,8 +2638,8 @@ def humanize(word):
 
 def humansize(inbytes, system=g_sizesystem_alternative_lower, color=True):
     """
-    @type inbytes: list
-    @type system: float
+    @type inbytes: Number
+    @type system: iterable
     @type color: bool
     @return: None
     """
@@ -2748,8 +2752,8 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
         @return: None
         """
         if not hide:
-            if ((_i % every) == 0 or         # True every "every" updates
-                    (_i == count)):            # And when we're done
+            if ((_i % every) == 0 or  # True every "every" updates
+                    (_i == count)):  # And when we're done
                 stream.write(mill_template % (
                     label, _mill_char(_i), _i, count))
 
@@ -2826,7 +2830,7 @@ def pretty_print_json(jsondata, tofilename=None):
     @type jsondata: str
     @type tofilename: str, None
     """
-    jsonproxy = json.decode(jsondata)
+    jsonproxy = json.loads(jsondata)
 
     if tofilename is None:
         return json.dumps(jsonproxy, sort_keys=True, indent=4, separators=', ')
@@ -2935,7 +2939,9 @@ def remove_escapecodes(escapedstring):
 
 remove_color = remove_escapecodes
 remove_colors = remove_escapecodes
+
 strip_colors = remove_escapecodes
+
 
 def remove_extra_indentation(doc, stop_looking_when_encountered=None, padding=0, frontspacer=" "):
     """
@@ -3352,8 +3358,13 @@ def transliterate(mystring):
     @type mystring: str
     @return: None
     """
-    normalized = unicodedata.normalize('NFKD', mystring)
-    return normalized.encode('ascii', 'ignore').decode('ascii')
+    try:
+        # noinspection PyUnresolvedReferences
+        import unicodedata
+        normalized = unicodedata.normalize('NFKD', mystring)
+        return normalized.encode('ascii', 'ignore').decode('ascii')
+    except ImportError:
+        return mystring.encode('ascii', 'ignore').decode('ascii')
 
 
 def underscore(word):
@@ -3480,7 +3491,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                                      after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                          after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3497,7 +3508,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                                       after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                           after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
