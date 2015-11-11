@@ -12,6 +12,7 @@ author  : rabshakeh (erik@a8.nl)
 project : consoleprinter
 created : 10-11-15 / 17:31
 """
+import os
 import sys
 
 from arguments import Arguments
@@ -35,6 +36,16 @@ class IArguments(Arguments):
         super().__init__(doc)
 
 
+def write_newcontent(arguments_filepath, newcontent):
+    """
+    @type arguments_filepath: str
+    @type newcontent: str
+    @return: None
+    """
+    open(arguments_filepath, "w").write(newcontent)
+    os.remove(arguments_filepath + ".bak")
+
+
 def main():
     """
     main
@@ -44,11 +55,11 @@ def main():
     open(arguments.filepath + ".bak", "w").write(content)
     try:
         newcontent = transliterate(content)
+        write_newcontent(arguments.filepath, newcontent)
     except UnicodeEncodeError as ex:
         console(str(ex), color="red")
         newcontent = forceascii(content)
-
-    open(arguments.filepath, "w").write(newcontent)
+        write_newcontent(arguments.filepath, newcontent)
 
 
 if __name__ == "__main__":

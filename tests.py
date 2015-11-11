@@ -50,8 +50,8 @@ class ConsoleTest(unittest.TestCase):
         """
         test_slugify
         """
-        self.assertEqual(slugify("Hello€€€WorldFoo BarMy file.xls"), "hello4oks4oks4oksworldfooiabarmyiafile.xls")
-        self.assertEqual(slugify("Hello€€€WorldFoo Bar"), "hello4oks4oks4oksworldfooiabar")
+        self.assertEqual(slugify("HelloWorldFoo BarMy file.xls"), "hello4oks4oks4oksworldfooiabarmyiafile.xls")
+        self.assertEqual(slugify("HelloWorldFoo Bar"), "hello4oks4oks4oksworldfooiabar")
         self.assertEqual(slugify("Hello 7234 Foobar-World2"), "helloia7234iafoobar-world2")
         self.assertEqual(slugify("Hello WorldFoo Bar"), "helloiaworldfooiabar")
         self.assertEqual(slugify("yUo Xnm*a"), "yuoiaxnmkga")
