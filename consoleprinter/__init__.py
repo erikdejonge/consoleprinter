@@ -31,6 +31,7 @@ import socket
 import readline
 import traceback
 import collections
+import unicodedata
 
 # noinspection PyUnresolvedReferences
 try:
@@ -743,11 +744,14 @@ def clear_screen(ctrlkey=False):
     @type ctrlkey: bool
     @return: None
     """
+    try:
     if sys.stderr.isatty() and ctrlkey is True:
         sys.stderr.write('\x1Bc')
         sys.stderr.flush()
     else:
         os.system("clear")
+    except BaseException:
+        pass
 
 
 def colorize_path(p):
@@ -810,6 +814,7 @@ def colorize_for_print(v):
                         v = "http://" + v
 
                     url = urlparse(v)
+                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -969,6 +974,7 @@ def colorize_for_print2(v):
                         v = "http://" + v
 
                     url = urlparse(v)
+                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -2320,27 +2326,29 @@ def get_safe_string(s, extrachars=None):
         mysafechars = SAFECHARS
 
     s = remove_escapecodes(s)
-    targetdict = {}
-
-    for mch in SALPHA:
-        targetdict[ord(mch)] = ord(mch)
-
-    for mch in s:
-        if ord(mch) not in mysafechars:
-            targetdict[ord(mch)] = None
-    try:
-        s = s.translate(targetdict)
-    except TypeError:
-        s = ""
-
+    if sys.version_info.major ==2:
+        news = ""
         for c in s:
-            if c in mysafechars:
-                s += c
+            if c in SALPHA:
+                news += c
+        s = news
+    else:
+        targetdict = {}
 
+        for mch in SALPHA:
+            targetdict[ord(mch)] = ord(mch)
+
+        for mch in s:
+            if ord(mch) not in mysafechars:
+                targetdict[ord(mch)] = None
+
+        s = s.translate(targetdict)
     return s
 
 
-def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False):
+
+
+def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False, iterate_members=False):
     """
     @type colors: dict
     @type indent: int
@@ -2368,7 +2376,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             try:
                 for k in value:
                     value[k] = str(value[k])
-
+                import json
                 value = json.dumps(value, indent=1)
             except Exception as e:
                 value = str(value)
@@ -2379,7 +2387,10 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
 
         if not sys.stdout.isatty():
-            subs = get_safe_string(subs, "@:-_?/")
+            try:
+                subs = get_safe_string(subs, "@:-_?/")
+            except:
+                pass
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -2387,15 +2398,18 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         else:
             subs = handle_ex(value, False, True)
     else:
-        if return_string:
-            clsaddr = str(class_without_address(value))
-        else:
-            clsaddr = str(class_with_address(value))
+        clsaddr = ""
+        if iterate_members:
+            if return_string:
+                clsaddr = str(class_without_address(value))
+            else:
+                clsaddr = str(class_with_address(value))
+            clsaddr += ": "
         try:
             if str(clsaddr) == str(value):
                 dbs += colors["purple"] + str(value) + colors["default"] + "\n"
             else:
-                dbs += colors["grey"] + clsaddr + ": " + colors["purple"] + str(value) + colors["default"] + "\n"
+                dbs += colors["grey"] + clsaddr  + colors["purple"] + str(value) + colors["default"] + "\n"
         except TypeError:
             dbs += colors["grey"] + " |" + colors["default"] + "\n"
 
@@ -2408,98 +2422,98 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             subs = ""
 
         sm = get_safe_string(value.__class__.__name__)
+        if iterate_members:
+            if len(sm) > indent:
+                sm = sm[:indent] + ".."
 
-        if len(sm) > indent:
-            sm = sm[:indent] + ".."
+            subheader = colors['orange'] + subs + " | " + sm
+            subheader += (37 - len(get_safe_string(str(subheader)))) * " "
+            subheader += "type"
+            subheader += (68 - len(get_safe_string(str(subheader)))) * " "
+            subheader += "value" + colors['default'] + "\n"
+            members = set()
 
-        subheader = colors['orange'] + subs + " | " + sm
-        subheader += (37 - len(get_safe_string(str(subheader)))) * " "
-        subheader += "type"
-        subheader += (68 - len(get_safe_string(str(subheader)))) * " "
-        subheader += "value" + colors['default'] + "\n"
-        members = set()
+            for m in dir(value):
+                members.add(m)
 
-        for m in dir(value):
-            members.add(m)
+            members = sorted(members)
+            mycolors = collections.deque(["darkcyan", "yellow"])
 
-        members = sorted(members)
-        mycolors = collections.deque(["darkcyan", "yellow"])
+            if plaintext is False:
+                subs += " " * leftoffset
 
-        if plaintext is False:
-            subs += " " * leftoffset
+            numprintable = 0
 
-        numprintable = 0
+            for m in members:
+                if not m.startswith("__"):
+                    numprintable += 1
 
-        for m in members:
-            if not m.startswith("__"):
-                numprintable += 1
+            if numprintable > 0:
+                subs += subheader + (leftoffset * " ")
+                subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
 
-        if numprintable > 0:
-            subs += subheader + (leftoffset * " ")
-            subs += colors["grey"] + " | " + 90 * "-" + colors['default'] + "\n"
+            for m in members:
+                if not m.startswith("__"):
+                    if m.startswith("_"):
+                        if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
+                            continue
 
-        for m in members:
-            if not m.startswith("__"):
-                if m.startswith("_"):
-                    if not m.lstrip("_").startswith(get_safe_string(value.__class__.__name__)):
-                        continue
+                    if plaintext is False:
+                        subs += " " * leftoffset
 
-                if plaintext is False:
-                    subs += " " * leftoffset
+                    subs += colors["grey"] + " | " + colors['default']
+                    privatevar = False
 
-                subs += colors["grey"] + " | " + colors['default']
-                privatevar = False
+                    if ("_" + value.__class__.__name__) in m:
+                        privatevar = True
 
-                if ("_" + value.__class__.__name__) in m:
-                    privatevar = True
+                    sm = str(m).replace("_" + value.__class__.__name__, "")
+                    mycolor = mycolors.pop()
 
-                sm = str(m).replace("_" + value.__class__.__name__, "")
-                mycolor = mycolors.pop()
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".. "
 
-                if len(sm) > 31:
-                    sm = sm[:31] + ".. "
+                    tempcolor = mycolor
 
-                tempcolor = mycolor
+                    if privatevar is True:
+                        mycolor = "red"
 
-                if privatevar is True:
-                    mycolor = "red"
+                    subs += colors[mycolor] + sm
+                    mycolor = tempcolor
+                    mycolors.appendleft(mycolor)
 
-                subs += colors[mycolor] + sm
-                mycolor = tempcolor
-                mycolors.appendleft(mycolor)
+                    if privatevar is True:
+                        subs += colors['default']
+                        subs += colors[mycolor]
 
-                if privatevar is True:
-                    subs += colors['default']
-                    subs += colors[mycolor]
+                    subs += " " * (34 - len(sm))
 
-                subs += " " * (34 - len(sm))
-
-                if hasattr(value.__class__, m):
-                    t = type(getattr(value.__class__, m))
-                else:
-                    t = type(getattr(value, m))
-
-                sm = repr(t).replace("<class '", "").replace("'>", "")
-
-                # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
-                extraspacereduction = 0
-
-                if len(sm) > 31:
-                    sm = sm[:31] + ".."
-                    extraspacereduction = len("..")
-
-                subs += sm
-                memberval = getattr(value, m)
-
-                if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
-                    subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
-
-                    if plaintext is True:
-                        subs += str(memberval)
+                    if hasattr(value.__class__, m):
+                        t = type(getattr(value.__class__, m))
                     else:
-                        subs += colorize_for_print(str(memberval))
+                        t = type(getattr(value, m))
 
-                subs += "\n" + colors['default']
+                    sm = repr(t).replace("<class '", "").replace("'>", "")
+
+                    # sm += "jfhsjkdfjsdfhdjkshfjksdhfjsdhkfhsdjkhfskdhfdsksdfjkh"
+                    extraspacereduction = 0
+
+                    if len(sm) > 31:
+                        sm = sm[:31] + ".."
+                        extraspacereduction = len("..")
+
+                    subs += sm
+                    memberval = getattr(value, m)
+
+                    if isinstance(memberval, str) or isinstance(memberval, (int, float, complex)) or isinstance(memberval, (tuple, list, set)):
+                        subs += (72 - colwidthdelta - extraspacereduction - len(get_safe_string("".join(subs.split("\n")[-1:])))) * " "
+
+                        if plaintext is True:
+                            subs += str(memberval)
+                        else:
+                            subs += colorize_for_print(str(memberval))
+
+                    subs += "\n" + colors['default']
 
     return dbs, subs
 
