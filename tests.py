@@ -50,8 +50,8 @@ class ConsoleTest(unittest.TestCase):
         """
         test_slugify
         """
-        self.assertEqual(slugify("HelloWorldFoo BarMy file.xls"), "hello4oks4oks4oksworldfooiabarmyiafile.xls")
-        self.assertEqual(slugify("HelloWorldFoo Bar"), "hello4oks4oks4oksworldfooiabar")
+        self.assertEqual(slugify("HelloWorldFoo BarMy file.xls"), "helloworldfooiabarmyiafile.xls")
+        self.assertEqual(slugify("HelloWorldFoo Bar"), "helloworldfooiabar")
         self.assertEqual(slugify("Hello 7234 Foobar-World2"), "helloia7234iafoobar-world2")
         self.assertEqual(slugify("Hello WorldFoo Bar"), "helloiaworldfooiabar")
         self.assertEqual(slugify("yUo Xnm*a"), "yuoiaxnmkga")
@@ -291,25 +291,8 @@ class ConsoleTest(unittest.TestCase):
         test_print_object_table
         """
         foo = Foobar("test_print_object_table")
-        self.assertTrue("mvar                               property" in console(foo, retval=True))
 
-        res = console(foo, retval=True)
-        self.assert_equal_b64(
-
-            res.replace("tests", "__main__"),
-            b'MTEuMTEbWzBtG1s5MG0gfCAbWzBtG1swbRtbOTBtPF9fbWFpbl9fLkZvb2JhciBvYmplY3Q+OiAb\nWzM0bUZvb2JhciBjbGFzcxtbMG0KICAgICAgG1s5MW0gIHwgRm9vYmFyICAgICAgICAgICAgICAg\nICAgICAgICAgICAgdHlwZSAgICAgICAgICAgICAgICAgICAgICAgICAgIHZhbHVlG1swbQogICAg\nIBtbOTBtIHwgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tG1swbQogICAgIBtbOTBt\nIHwgG1swbRtbMzFtX19wcml2YXRldmFyG1swbRtbMzNtICAgICAgICAgICAgICAgICAgICAgIGlu\ndCAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzRtNzcbWzBtChtbMG0gICAgIBtbOTBtIHwg\nG1swbRtbOTZtaGVsbG8gICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmN0aW9uChtbMG0g\nICAgIBtbOTBtIHwgG1swbRtbMzNtbXlzdHJpbmcgICAgICAgICAgICAgICAgICAgICAgICAgIHN0\nciAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbOTNtaGVsbG8bWzBtIBtbOTNtd29ybGQbWzBt\nChtbMG0gICAgIBtbOTBtIHwgG1swbRtbOTZtbXl2YXIgICAgICAgICAgICAgICAgICAgICAgICAg\nICAgIHN0ciAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbOTNtdGVzdF9wcmludF9vYmplY3Rf\ndGFibGUbWzBtChtbMG0gICAgIBtbOTBtIHwgG1swbRtbMzNtdmFyICAgICAgICAgICAgICAgICAg\nICAgICAgICAgICAgIHByb3BlcnR5ICAgICAgICAgICAgICAgICAgICAgIBtbMzRtNzcbWzBtChtb\nMG0gICAgIBtbOTBtIHwgG1swbRtbOTZtd29ybGQgICAgICAgICAgICAgICAgICAgICAgICAgICAg\nIGZ1bmN0aW9uChtbMG0bWzBt\n')
-
-        res = console(foo, plaintext=True, retval=True)
-        self.assert_equal_b64(
-
-            res.replace("__main__", "tests"),
-            b'PHRlc3RzLkZvb2JhciBvYmplY3Q+OiBGb29iYXIgY2xhc3MKG1s5MG0gfCBGb29iYXIgICAgICAg\nICAgICAgIHR5cGUgICAgICAgICAgICAgIHZhbHVlCiB8IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLQogfCBfX3ByaXZhdGV2YXIgICAgICAgICAgIGludCAgICAgICA3NwogfCBoZWxs\nbyAgICAgICAgICAgICAgIGZ1bmN0aW9uCiB8IG15c3RyaW5nICAgICAgICAgICAgIHN0ciAgICAg\nICBoZWxsbyB3b3JsZAogfCBteXZhciAgICAgICAgICAgICAgIHN0ciAgICAgICB0ZXN0X3ByaW50\nX29iamVjdF90YWJsZQogfCB2YXIgICAgICAgICAgICAgICAgcHJvcGVydHkgICAgNzcKIHwgd29y\nbGQgICAgICAgICAgICAgICBmdW5jdGlvbgobWzBt\n')
-        self.assert_equal_b64(
-
-            console(
-                AA(),
-                retval=True).replace("tests", "__main__"),
-            b'MTMuMjIbWzBtG1s5MG0gfCAbWzBtG1swbRtbOTBtPF9fbWFpbl9fLkFBIG9iamVjdD46IBtbMzRt\nQUEndGplG1swbQogICAgICAbWzkxbSAgfCBBQSAgICAgICAgICAgICAgICAgICAgICAgICAgICAg\nICB0eXBlICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFsdWUbWzBtCiAgICAgG1s5MG0gfCAt\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t\nLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0bWzBtCiAgICAgG1s5MG0gfCAbWzBtG1sz\nM21mb28gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZnVuY3Rpb24KG1swbSAgICAgG1s5\nMG0gfCAbWzBtG1s5Nm1tX2Zsb2F0ICAgICAgICAgICAgICAgICAgICAgICAgICAgZmxvYXQgICAg\nICAgICAgICAgICAgICAgICAgICAgG1szNm04LjAbWzBtChtbMG0gICAgIBtbOTBtIHwgG1swbRtb\nMzNtbV9pbnQgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGludCAgICAgICAgICAgICAgICAg\nICAgICAgICAgIBtbMzRtOBtbMG0KG1swbSAgICAgG1s5MG0gfCAbWzBtG1s5Nm1tX3N0cmluZyAg\nICAgICAgICAgICAgICAgICAgICAgICAgc3RyICAgICAgICAgICAgICAgICAgICAgICAgICAgG1s5\nM21oZWxsbxtbMG0KG1swbRtbMG0=\n')
+        self.assertTrue("myvar" in console(foo, retval=True, iterate_members=True))
 
 
 class Foobar(object):

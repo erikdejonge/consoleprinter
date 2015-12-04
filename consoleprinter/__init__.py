@@ -22,16 +22,16 @@ import sys
 import code
 import copy
 import time
-import json
 import atexit
 import base64
 import random
 import socket
+
 # noinspection PyUnresolvedReferences
 import readline
 import traceback
 import collections
-import unicodedata
+import json
 
 # noinspection PyUnresolvedReferences
 try:
@@ -744,14 +744,15 @@ def clear_screen(ctrlkey=False):
     @type ctrlkey: bool
     @return: None
     """
+    # noinspection PyBroadException
     try:
-    if sys.stderr.isatty() and ctrlkey is True:
-        sys.stderr.write('\x1Bc')
-        sys.stderr.flush()
-    else:
-        os.system("clear")
-    except BaseException:
-        pass
+        if sys.stderr.isatty() and ctrlkey is True:
+            sys.stderr.write('\x1Bc')
+            sys.stderr.flush()
+        else:
+            os.system("clear")
+    except BaseException as ex:
+        print(ex)
 
 
 def colorize_path(p):
@@ -814,7 +815,6 @@ def colorize_for_print(v):
                         v = "http://" + v
 
                     url = urlparse(v)
-                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -974,7 +974,6 @@ def colorize_for_print2(v):
                         v = "http://" + v
 
                     url = urlparse(v)
-                    strex = lambda val: val is not "" and val is not None
                     validurl = strex(url.scheme) and strex(url.netloc)
 
                     if validurl:
@@ -1137,6 +1136,7 @@ def console(*args, **kwargs):
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
     fileref = check_for_positional_argument(kwargs, "fileref", default=False)
+    iterate_members = check_for_positional_argument(kwargs, "iterate_members", default=False)
     indent = ""
 
     if prefix is not None:
@@ -1167,7 +1167,7 @@ def console(*args, **kwargs):
         txt = ""
 
         for arg in arglist:
-            txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True)
+            txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True, iterate_members=iterate_members)
 
             if toggle:
                 txt += colors[color] + subs + "\033[0m"
@@ -1279,7 +1279,7 @@ def console(*args, **kwargs):
 
         toggle = not toggle
         indent = 19
-        dbs, subs = get_value_as_text(colors, indent, return_string, s, dbs)
+        dbs, subs = get_value_as_text(colors, indent, return_string, s, dbs, iterate_members=iterate_members)
         columncounter, subs = size_columns(columncounter, sysglob.g_width_console_columns, subs, donotuseredis)
         dbs += subs
 
@@ -2326,11 +2326,14 @@ def get_safe_string(s, extrachars=None):
         mysafechars = SAFECHARS
 
     s = remove_escapecodes(s)
-    if sys.version_info.major ==2:
+
+    if sys.version_info.major == 2:
         news = ""
+
         for c in s:
             if c in SALPHA:
                 news += c
+
         s = news
     else:
         targetdict = {}
@@ -2343,9 +2346,8 @@ def get_safe_string(s, extrachars=None):
                 targetdict[ord(mch)] = None
 
         s = s.translate(targetdict)
+
     return s
-
-
 
 
 def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False, iterate_members=False):
@@ -2356,6 +2358,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
     @type value: str
     @type dbs: str
     @type plaintext: bool
+    @type iterate_members: bool
     @return: None
     """
     if plaintext is True:
@@ -2371,6 +2374,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
 
         # noinspection PyBroadException
         try:
+            import json
             value = json.dumps(value)
         except Exception:
             try:
@@ -2387,10 +2391,11 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
         subs = str(value)
 
         if not sys.stdout.isatty():
+            # noinspection PyBroadException
             try:
                 subs = get_safe_string(subs, "@:-_?/")
-            except:
-                pass
+            except BaseException as ex:
+                print(ex)
 
     elif isinstance(value, BaseException):
         if plaintext is True:
@@ -2399,6 +2404,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             subs = handle_ex(value, False, True)
     else:
         clsaddr = ""
+
         if iterate_members:
             if return_string:
                 clsaddr = str(class_without_address(value))
@@ -2409,7 +2415,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             if str(clsaddr) == str(value):
                 dbs += colors["purple"] + str(value) + colors["default"] + "\n"
             else:
-                dbs += colors["grey"] + clsaddr  + colors["purple"] + str(value) + colors["default"] + "\n"
+                dbs += colors["grey"] + clsaddr + colors["purple"] + str(value) + colors["default"] + "\n"
         except TypeError:
             dbs += colors["grey"] + " |" + colors["default"] + "\n"
 
@@ -2422,6 +2428,7 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             subs = ""
 
         sm = get_safe_string(value.__class__.__name__)
+
         if iterate_members:
             if len(sm) > indent:
                 sm = sm[:indent] + ".."
@@ -3373,6 +3380,7 @@ def transliterate(mystring):
     @return: None
     """
     try:
+
         # noinspection PyUnresolvedReferences
         import unicodedata
         normalized = unicodedata.normalize('NFKD', mystring)
@@ -3505,7 +3513,7 @@ def slugify(value):
             slug += c
         else:
             if isinstance(c, str):
-                # noinspection PyArgumentEqualDefault #                                                                                                                                          after keyword 0
+                # noinspection PyArgumentEqualDefault #                                                                                                                                            after keyword 0
                 c = c.encode()
 
             c64 = base64.encodebytes(c)
@@ -3522,7 +3530,7 @@ def strcmp(s1, s2):
     @type s2: str or unicode
     @return: @rtype: bool
     """
-    # noinspection PyArgumentEqualDefault #                                                                                                                                           after keyword 0
+    # noinspection PyArgumentEqualDefault #                                                                                                                                             after keyword 0
     s1 = s1.encode()
 
     # noinspection PyArgumentEqualDefault
