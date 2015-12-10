@@ -1168,7 +1168,7 @@ def console(*args, **kwargs):
 
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True, iterate_members=iterate_members)
-
+            print(str({1:txt}))
             if toggle:
                 txt += colors[color] + subs + "\033[0m"
             else:
@@ -2413,9 +2413,9 @@ def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False
             clsaddr += ": "
         try:
             if str(clsaddr) == str(value):
-                dbs += colors["purple"] + str(value) + colors["default"] + "\n"
+                dbs += colors["purple"] + str(value) + colors["default"]
             else:
-                dbs += colors["grey"] + clsaddr + colors["purple"] + str(value) + colors["default"] + "\n"
+                dbs += colors["grey"] + clsaddr + colors["purple"] + str(value) + colors["default"]
         except TypeError:
             dbs += colors["grey"] + " |" + colors["default"] + "\n"
 
