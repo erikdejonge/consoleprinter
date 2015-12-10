@@ -1168,7 +1168,7 @@ def console(*args, **kwargs):
 
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True, iterate_members=iterate_members)
-            print(str({1:txt}))
+            
             if toggle:
                 txt += colors[color] + subs + "\033[0m"
             else:
