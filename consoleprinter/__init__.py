@@ -1168,7 +1168,7 @@ def console(*args, **kwargs):
 
         for arg in arglist:
             txt, subs = get_value_as_text(colors, 22, return_string, arg, txt, True, iterate_members=iterate_members)
-            
+
             if toggle:
                 txt += colors[color] + subs + "\033[0m"
             else:
@@ -2313,6 +2313,16 @@ def get_safe_alphabet():
     return tuple(['~', ' ', '|', '_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
                   'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
+def get_safe_name(instr):
+    alpha = ['_', '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+                  'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    instr = instr.replace('|', '').strip().lstrip('.').replace('__', '_').replace('_ _', '_').replace(' ', '_').replace('_-_', '_').strip().strip('_').lower()
+    outstr = ""
+    for c in instr:
+        if c in alpha:
+            outstr += c
+
+    return outstr
 
 def get_safe_string(s, extrachars=None):
     """
