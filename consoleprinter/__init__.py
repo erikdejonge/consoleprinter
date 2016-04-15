@@ -2542,97 +2542,97 @@ def get_vowels_lower():
     return tuple([' ', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'])
 
 
-def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_code_links=True):
-    """
-    @type exc: Exception, None
-    @type again: bool
-    @type give_string: bool
-    @type extra_info: str, list
-    @type source_code_links: bool
-    """
-    import sys
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    error_msg = ""
+    def handle_ex(exc=None, again=True, give_string=False, extra_info=None, source_code_links=True):
+        """
+        @type exc: Exception, None
+        @type again: bool
+        @type give_string: bool
+        @type extra_info: str, list
+        @type source_code_links: bool
+        """
+        import sys
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        error_msg = ""
 
-    if exc:
+        if exc:
+            if not give_string:
+                console("handle_ex", str(exc))
+
         if not give_string:
-            console("handle_ex", str(exc))
+            error_msg += "\033[91m\nTaceback:\n"
 
-    if not give_string:
-        error_msg += "\033[91m\nTaceback:\n"
+        items = traceback.extract_tb(exc_traceback)
 
-    items = traceback.extract_tb(exc_traceback)
+        # items.reverse()
+        leni = 0
 
-    # items.reverse()
-    leni = 0
+        if not give_string:
+            error_msg += "\033[91m  " + str(exc_type) + "\n"
+            error_msg += "\033[91m  " + str(exc_value) + "\n"
 
-    if not give_string:
-        error_msg += "\033[91m  " + str(exc_type) + "\n"
-        error_msg += "\033[91m  " + str(exc_value) + "\n"
+            if extra_info:
+                if isinstance(extra_info, list):
+                    spaces = ""
 
-        if extra_info:
-            if isinstance(extra_info, list):
-                spaces = ""
+                    for msg in extra_info:
+                        spaces += "  "
+                        error_msg += "\033[91m" + spaces + str(msg) + "\n"
+                else:
+                    error_msg += "\033[91m" + str(extra_info) + "\n"
 
-                for msg in extra_info:
-                    spaces += "  "
-                    error_msg += "\033[91m" + spaces + str(msg) + "\n"
-            else:
-                error_msg += "\033[91m" + str(extra_info) + "\n"
+            error_msg += "\033[91m\n"
+        else:
+            error_msg += str(exc_type) + "\n"
+            error_msg += str(exc_value) + "\n"
+        try:
+            linenumsize = 0
 
-        error_msg += "\033[91m\n"
-    else:
-        error_msg += str(exc_type) + "\n"
-        error_msg += str(exc_value) + "\n"
-    try:
-        linenumsize = 0
-
-        for line in items:
-            fnamesplit = str(line[0]).split("/")
-            fname = "/".join(fnamesplit[len(fnamesplit) - 2:])
-            ls = len(fname + ":" + str(line[1]))
-
-            if ls > linenumsize:
-                linenumsize = ls
-
-        items.reverse()
-
-        for line in items:
-            leni += 1
-
-            if source_code_links:
-                fname_number = '  File "' + line[0] + '", line ' + str(line[1]) + ', in ' + line[2].strip()
-            else:
+            for line in items:
                 fnamesplit = str(line[0]).split("/")
                 fname = "/".join(fnamesplit[len(fnamesplit) - 2:])
-                fname_number = fname + ":" + str(line[1])
-                fname_number += (" " * (linenumsize - len(fname_number)))
+                ls = len(fname + ":" + str(line[1]))
 
-            val = ""
+                if ls > linenumsize:
+                    linenumsize = ls
 
-            if line[3]:
-                val = line[3].strip()
+            items.reverse()
 
-            if give_string:
-                error_msg += val + " -> " + fname_number + "\n"
-            else:
-                error_msg += "" + fname_number + ": " + val + "\n"
+            for line in items:
+                leni += 1
 
-    except Exception as e:
-        console(e)
+                if source_code_links:
+                    fname_number = '  File "' + line[0] + '", line ' + str(line[1]) + ', in ' + line[2].strip()
+                else:
+                    fnamesplit = str(line[0]).split("/")
+                    fname = "/".join(fnamesplit[len(fnamesplit) - 2:])
+                    fname_number = fname + ":" + str(line[1])
+                    fname_number += (" " * (linenumsize - len(fname_number)))
 
-    if give_string:
-        return error_msg.replace("\033[95m", "")
-    else:
-        try:
-            sys.stderr.write(str(error_msg) + '\n\033[0m')
-        except IOError:
-            console(error_msg)
+                val = ""
 
-    if again:
-        raise exc
+                if line[3]:
+                    val = line[3].strip()
 
-    return "\033[33m" + error_msg
+                if give_string:
+                    error_msg += val + " -> " + fname_number + "\n"
+                else:
+                    error_msg += "" + fname_number + ": " + val + "\n"
+
+        except Exception as e:
+            console(e)
+
+        if give_string:
+            return error_msg.replace("\033[95m", "")
+        else:
+            try:
+                sys.stderr.write(str(error_msg) + '\n\033[0m')
+            except IOError:
+                console(error_msg)
+
+        if again:
+            raise exc
+
+        return "\033[33m" + error_msg
 
 
 def header_trigger(s):
