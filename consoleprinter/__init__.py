@@ -1129,13 +1129,13 @@ def console(*args, **kwargs):
         arglist = [kwargs["msg"]]
 
     prefix = check_for_positional_argument(kwargs, "prefix", default=None)
-    stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=0)
+    stackpointer = check_for_positional_argument(kwargs, "stackpointer", default=1)
     line_num_only = check_for_positional_argument(kwargs, "line_num_only", default=3)
     print_stack = check_for_positional_argument(kwargs, "print_stack")
     plainprint = check_for_positional_arguments(kwargs, ["plaintext", "plain_text", "plainprint", "plain_print"])
     return_string = check_for_positional_arguments(kwargs, ["ret_str", "retval", "ret_val"])
     newline = check_for_positional_argument(kwargs, "newline", default=True)
-    fileref = check_for_positional_argument(kwargs, "fileref", default=False)
+    fileref = check_for_positional_argument(kwargs, "fileref", default=True)
     iterate_members = check_for_positional_argument(kwargs, "iterate_members", default=False)
     indent = ""
 
@@ -2678,7 +2678,7 @@ def humansize(inbytes, system=g_sizesystem_alternative_lower, color=True):
         inbytes = int(inbytes)
     except ValueError:
         return str(inbytes)
-    
+
     factor = 1
     suffix = "b."
 
