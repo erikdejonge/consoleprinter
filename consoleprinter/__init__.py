@@ -2365,7 +2365,7 @@ def get_safe_filename_string(filepath):
     @return: string
     """
     s = os.path.basename(filepath).replace(' ', '_').replace('-', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
-    s = consoleprinter.get_safe_string(s)
+    s = get_safe_string(s)
     return s
 
 def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False, iterate_members=False):
