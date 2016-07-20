@@ -1588,6 +1588,7 @@ def coolname():
     """
     coolname
     """
+<<<<<<< HEAD
     names = """
     Aldous
     Ara
@@ -1799,6 +1800,225 @@ def coolname():
     coolname = names[randomnumbername] + " " +lastnames[randomnumberlastname]
     print(coolname)
     print(coolname.lower().replace(' ', ''))
+=======
+    happy = False
+    while not happy:
+        names = """
+        Aldous
+        Ara
+        Azarias
+        Balthazar
+        Barnaby
+        Bastien
+        Berlin
+        Birch
+        Bridge
+        Cabe
+        Cabot
+        Calixto
+        Callaghan
+        Calloway
+        Carlson
+        Christo
+        Chuck
+        Clovis
+        Columbus
+        Connelly
+        Costello
+        Cyprian
+        Dermot
+        Detroit
+        Drexel
+        Driver
+        Fergus
+        Finbar
+        Finch
+        Fitzpatrick
+        Gardner
+        Garth
+        Griffith
+        Grover
+        Hanan
+        Harrington
+        Hawthorne
+        Heron
+        Horatio
+        Huckleberry
+        Humphrey
+        Hunt
+        Jupiter
+        Keene
+        Keir
+        Kelso
+        Kermit
+        Kipling
+        Kristof
+        Lambert
+        Lancelot
+        Lanier
+        Laurent
+        Leib
+        Llewellyn
+        Loch
+        Mackson
+        Mcgregor
+        Mcguire
+        Mercury
+        Morocco
+        Moss
+        Nicasio
+        Oak
+        Octavion
+        Ogden
+        Oracio
+        Osborn
+        Osias
+        Osric
+        Pacer
+        Park
+        Phelan
+        Pilot
+        Primo
+        Quint
+        Racer
+        Rafferty
+        Ralston
+        Raoul
+        Redmond
+        Reynolds
+        Romulus
+        Saber
+        Sadler
+        Satchel
+        Sender
+        Severus
+        Spence
+        best
+        Thurman
+        Topher
+        Wagner
+        Waldo
+        Wally
+        Webster
+        Witt
+        Yale
+        Zed
+        Zoran
+        """
+        lastnames = """
+        Abernathy
+        Abner
+        Aldaine
+        Amor
+        Amherst
+        Armstrong
+        Angeles
+        Annesley
+        Archer
+        Ash
+        Bancroft
+        Bandini
+        Banner
+        Barringer
+        Blackwood
+        Blood
+        Bloom
+        Boulder
+        Cadwell
+        Cage
+        Carmichael
+        Chase
+        Cobain
+        Cohen
+        Colburn
+        Colt
+        Crabtree
+        Crassus
+        Creed
+        Crew
+        Cullen
+        Dalton
+        Danger
+        Davenport
+        Dillinger
+        Duke
+        East
+        Fall
+        Fawn
+        Freeze
+        Gamble
+        Granger
+        Gryffon
+        Gunn
+        Halifax
+        Havoc
+        Hilton
+        Holly
+        Hope
+        Hunter
+        Ice
+        Iris
+        Iver
+        Ivy
+        Jarvis
+        Joy
+        Kelly
+        Kennicot
+        King
+        Knight
+        Lily
+        Love
+        Mayhem
+        Merry
+        Noble
+        North
+        Paris
+        Pendleton
+        Pevensie
+        Phoenix
+        Poe
+        Potter
+        Power
+        Quake
+        Radcliffe
+        Raven
+        River
+        Rose
+        Savage
+        Slade
+        Slayer
+        Star
+        Stratton
+        Stryker
+        Styles
+        Tatum
+        Tremaine
+        Troublefield
+        Underwood
+        Verbeck
+        Violet
+        Vow
+        Waldgrave
+        Walker
+        Winter
+        Wolf
+        York
+        Young
+        Zedler
+        Zimmerman
+        """
+
+        names = [x.strip() for x in names.split("\n") if x]
+        lastnames = [x.strip() for x in lastnames.split("\n") if x]
+        randomnumbername = random.randint(0, len(names) - 1)
+        randomnumberlastname = random.randint(0, len(names) - 1)
+        coolname = ' '.join([names[randomnumbername], lastnames[randomnumberlastname]])
+        username = coolname.replace(' ', '').lower()
+        print("----------")
+        print(coolname)
+        print(username)
+        print
+        happy = not query_yes_no('again?')
 
 
 def dasherize(word):

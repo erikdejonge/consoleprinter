@@ -7,7 +7,15 @@ license: GNU-GPL2
 
 from setuptools import setup
 setup(name='consoleprinter',
+<<<<<<< HEAD
       version='87',
+=======
+<<<<<<< HEAD
+      version='79',
+=======
+      version='83',
+>>>>>>> d4e9fa98a2fb984457359c42a9c969c7b9223bd6
+>>>>>>> bf0cc69d204b0cff83ae59db93abc3014d4ef3fb
       description='Console printer with linenumbers, stacktraces, logging, conversions and coloring..',
       url='https://github.com/erikdejonge/consoleprinter',
       author='Erik de Jonge',
