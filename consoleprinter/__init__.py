@@ -1796,7 +1796,9 @@ def coolname():
     lastnames = [x.strip() for x in lastnames.split("\n") if x]
     randomnumbername = random.randint(0, len(names) - 1)
     randomnumberlastname = random.randint(0, len(names) - 1)
-    print(names[randomnumbername], lastnames[randomnumberlastname])
+    coolname = names[randomnumbername] + " " +lastnames[randomnumberlastname]
+    print(coolname)
+    print(coolname.lower().replace(' ', ''))
 
 
 def dasherize(word):
@@ -2366,6 +2368,15 @@ def get_safe_filename_string(filepath):
     """
     s = os.path.basename(filepath).replace(' ', '_').replace('-', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
     s = get_safe_string(s)
+    return s
+
+def get_safe_filepath_string(filepath):
+    """
+    @type filepath: string
+    @return: string
+    """
+    s = filepath.replace(' ', '_').replace('-', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
+    s = get_safe_string(s, extrachars='/')
     return s
 
 def get_value_as_text(colors, indent, return_string, value, dbs, plaintext=False, iterate_members=False):
