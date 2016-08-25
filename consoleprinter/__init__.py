@@ -1594,46 +1594,65 @@ def coolname():
         names = """
         Aldous
         Ara
+        Ash
+        Asia
         Azarias
         Balthazar
         Barnaby
         Bastien
+        Beckett
         Berlin
         Birch
+        Booker
         Bridge
+        Bronwyn
         Cabe
         Cabot
         Calixto
         Callaghan
         Calloway
+        Cameron
         Carlson
         Christo
         Chuck
         Clovis
         Columbus
         Connelly
+        Cormac
         Costello
+        Cruz
         Cyprian
+        Dashiell
+        Delaney
+        Delilah
         Dermot
         Detroit
+        Donovan
         Drexel
         Driver
+        Elvis
         Fergus
         Finbar
         Finch
+        Finn
         Fitzpatrick
         Gardner
         Garth
+        Georgia
         Griffith
         Grover
+        Gus
         Hanan
         Harrington
         Hawthorne
         Heron
         Horatio
         Huckleberry
+        Hudson
         Humphrey
         Hunt
+        Jackson
+        Jude
         Jupiter
         Keene
         Keir
@@ -1644,17 +1663,23 @@ def coolname():
         Lambert
         Lancelot
         Lanier
+        Lark
         Laurent
         Leib
         Llewellyn
         Loch
+        Lola
         Mackson
+        Maisie
+        Matteo
         Mcgregor
         Mcguire
         Mercury
+        Miles
         Morocco
         Moss
         Nicasio
+        Nico
         Oak
         Octavion
         Ogden
@@ -1663,6 +1688,7 @@ def coolname():
         Osias
         Osric
         Pacer
+        Paloma
         Park
         Phelan
         Pilot
@@ -1675,21 +1701,27 @@ def coolname():
         Redmond
         Reynolds
         Romulus
+        Rowan
         Saber
         Sadler
+        Sam
+        Sasha
         Satchel
         Sender
         Severus
+        Siena
         Spence
-        best
         Thurman
         Topher
+        Violet
         Wagner
         Waldo
         Wally
         Webster
+        Willa
         Witt
         Yale
+        Zane
         Zed
         Zoran
         """
@@ -1739,6 +1771,7 @@ def coolname():
         Gryffon
         Gunn
         Halifax
+        Harder
         Havoc
         Hilton
         Holly
@@ -1796,10 +1829,10 @@ def coolname():
         Zimmerman
         """
 
-        names = [x.strip() for x in names.split("\n") if x]
-        lastnames = [x.strip() for x in lastnames.split("\n") if x]
+        names = [x.strip() for x in names.split("\n") if x.strip()]
+        lastnames = [x.strip() for x in lastnames.split("\n") if x.strip()]
         randomnumbername = random.randint(0, len(names) - 1)
-        randomnumberlastname = random.randint(0, len(names) - 1)
+        randomnumberlastname = random.randint(0, len(lastnames) - 1)
         coolname = ' '.join([names[randomnumbername], lastnames[randomnumberlastname]])
         username = coolname.replace(' ', '').lower()
         print("----------")
