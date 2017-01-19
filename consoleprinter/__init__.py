@@ -2407,8 +2407,12 @@ def get_safe_filename_string(filepath):
     @type filepath: string
     @return: string
     """
+    hiddenfile = os.path.basename(filepath).startswith(".")
+
     s = os.path.basename(filepath).replace(' ', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
     s = get_safe_string(s)
+    if hiddenfile:
+        s = "."+s
     return s
 
 def get_safe_filepath_string(filepath):
