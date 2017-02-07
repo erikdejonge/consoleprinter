@@ -156,7 +156,7 @@ g_sizesystem_si = [
 
 UNCOUNTABLES = {'equipment', 'fish', 'information', 'jeans', 'money', 'rice', 'series', 'sheep', 'species'}
 
-SALPHA = "~ |_.-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+SALPHA = "~ |_.-$#!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 SAFECHARS = [ord(ch) for ch in SALPHA]
 
 g_column_resize_threshold = None
