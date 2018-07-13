@@ -2409,7 +2409,7 @@ def get_safe_filename_string(filepath):
     """
     hiddenfile = os.path.basename(filepath).startswith(".")
 
-    s = os.path.basename(filepath).replace(' ', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
+    s = os.path.basename(filepath).replace('.', '_').replace(' ', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
     s = get_safe_string(s)
     if hiddenfile:
         s = "."+s
@@ -2420,7 +2420,7 @@ def get_safe_filepath_string(filepath):
     @type filepath: string
     @return: string
     """
-    s = filepath.replace(' ', '_').replace('-', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
+    s = filepath.replace('.', '_').replace(' ', '_').replace('-', '_').replace('__', '_').replace('___', '_').replace('..', '.').replace('._', '_').lower().replace('|', '_').replace('\'', '').lower().strip('_')
     s = get_safe_string(s, extrachars='/')
     return s
 
