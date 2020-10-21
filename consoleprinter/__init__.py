@@ -656,7 +656,7 @@ def strex(val):
     @type val: str
     @return: None
     """
-    return val is not "" and val is not None
+    return val != "" and val is not None
 
 
 def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
@@ -2260,7 +2260,7 @@ def get_input_answer(default):
 
     answer = get_safe_string(answer.strip())
 
-    if answer is "" and default is not None:
+    if answer == "" and default is not None:
         answer = default
     try:
         answeri = int(answer)
@@ -2318,7 +2318,7 @@ def get_print_yaml(yamlmystring):
         currnumdashes = numdashes
         numspaces = i.count(" ") - i.lstrip(" ").count(" ")
 
-        if numspaces is 0 and currnumspaces > 0:
+        if numspaces == 0 and currnumspaces > 0:
             if not s.endswith("\n\n"):
                 s += "\n"
 
