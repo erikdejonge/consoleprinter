@@ -657,7 +657,6 @@ def strex(val):
     @return: None
     """
     return val != "" and val != None
-    #return val is not "" and val is not None
 
 
 def camel_case(mystring, uppercase_first_letter=True, remove_spaces=True):
